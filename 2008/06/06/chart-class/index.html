@@ -1,0 +1,914 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="大学时代,Windows," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="最近在做一个课题，要显示几条数值曲线。不过不想借助其它控件，或其它公司提供的开发包，如MATCOM，用这些的话就太简单不过了。下面是一个自己设计的一个类，用API堆的，这样既可以在基于SDK应用开发应用，又可以在MFC框架中应用。下面几个图是测试时截的。在此声明一下，我是一新手，难免设计的不合理甚至错误百出，敬请见谅！点此下载源代码和示例代码(http://download.csdn.net/de">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个用于显示数值曲线的类">
+<meta property="og:url" content="http://yoursite.com/2008/06/06/chart-class/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="最近在做一个课题，要显示几条数值曲线。不过不想借助其它控件，或其它公司提供的开发包，如MATCOM，用这些的话就太简单不过了。下面是一个自己设计的一个类，用API堆的，这样既可以在基于SDK应用开发应用，又可以在MFC框架中应用。下面几个图是测试时截的。在此声明一下，我是一新手，难免设计的不合理甚至错误百出，敬请见谅！点此下载源代码和示例代码(http://download.csdn.net/de">
+<meta property="og:image" content="http://yoursite.com/images/2008-06-06-1.JPG">
+<meta property="og:image" content="http://yoursite.com/images/2008-06-06-2.JPG">
+<meta property="og:image" content="http://yoursite.com/images/2008-06-06-3.JPG">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.453Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个用于显示数值曲线的类">
+<meta name="twitter:description" content="最近在做一个课题，要显示几条数值曲线。不过不想借助其它控件，或其它公司提供的开发包，如MATCOM，用这些的话就太简单不过了。下面是一个自己设计的一个类，用API堆的，这样既可以在基于SDK应用开发应用，又可以在MFC框架中应用。下面几个图是测试时截的。在此声明一下，我是一新手，难免设计的不合理甚至错误百出，敬请见谅！点此下载源代码和示例代码(http://download.csdn.net/de">
+<meta name="twitter:image" content="http://yoursite.com/images/2008-06-06-1.JPG">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2008/06/06/chart-class/"/>
+
+
+  <title> 一个用于显示数值曲线的类 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                一个用于显示数值曲线的类
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2008-06-06T03:50:00+09:00" content="2008-06-06">
+              2008-06-06
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index">
+                    <span itemprop="name">Windows</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2008/06/06/chart-class/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2008/06/06/chart-class/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>最近在做一个课题，要显示几条数值曲线。不过不想借助其它控件，或其它公司提供的开发包，如MATCOM，用这些的话就太简单不过了。下面是一个自己设计的一个类，用API堆的，这样既可以在基于SDK应用开发应用，又可以在MFC框架中应用。下面几个图是测试时截的。在此声明一下，我是一新手，难免设计的不合理甚至错误百出，敬请见谅！点此下载源代码和示例代码(<a href="http://download.csdn.net/detail/future_fighter/485567)。" target="_blank" rel="external">http://download.csdn.net/detail/future_fighter/485567)。</a></p>
+<p><img src="/images/2008-06-06-1.JPG" alt="显示多条曲线"></p>
+<p>图1  显示多条曲线</p>
+<p><img src="/images/2008-06-06-2.JPG" alt="显示坐标提示"></p>
+<p>图2 显示坐标提示</p>
+<p><img src="/images/2008-06-06-3.JPG" alt="坐标系显示范围缩放"></p>
+<p>图3 坐标系显示范围缩放</p>
+<p>类名为CChart，其基类为CChartBase。CChartBase主要用于显示，设置坐标系的一些属性，比如x，y轴可以显示的范围、坐标系边框颜色、背景颜色等；而CChart则用于显示坐标系和多条曲线，曲线颜色、线宽、等凡是可见的属性都可以设定。用法如下：</p>
+<p>1． 将DispChart.h和DispChart.cpp包含至用使用该类的Project中，若为基于MFC项目，则在DispChart.cpp中添加#include ”stdafx.h”。</p>
+<p>2． 定义一个该类的变量，CChart chart(hWnd); hWnd是该坐标所在窗口的句柄。</p>
+<p>3． （可选）设置相应的属性。如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">chart.SetGridColor(RGB(255,0,0));    // 设置网格颜色  </div><div class="line">chart.SetGriddx(10);                 // 设置网格x轴间隔  </div><div class="line">chart.SetClrLabel(RGB(0,0,255));     // 标尺颜色  </div><div class="line">chart.SetXLabel(&quot;t/min&quot;);            // 轴标文字  </div><div class="line">chart.SetYLabel(&quot;V/v&quot;);  </div><div class="line">chart.SetRulerXFormat(&quot;%.2f&quot;);       // x轴标尺显示精度  </div><div class="line">chart.SetGriddy( 0.01);  </div><div class="line">chart.SetXRange( 0, 100);            // x轴可以显示的范围  </div><div class="line">chart.SetYRange( -5, 5);</div></pre></td></tr></table></figure>
+<p>4． 添加曲线数据连接，曲线数据必须是vector<double>型的。如：</double></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">   std::vector&lt;double&gt; data[3];</div><div class="line">   int length = 1000;</div><div class="line">   double amp = 5;</div><div class="line">   for(int i=0;i&lt;length;i++)</div><div class="line">   &#123;</div><div class="line">    double t = (20 * 3.1415926 / length) * i;</div><div class="line">    double y1 = amp*sin(t);</div><div class="line">    double y2 = (amp/2)*cos(t);</div><div class="line">    data[0].push_back(t);</div><div class="line">    data[1].push_back(y1);</div><div class="line">    data[2].push_back(y2);</div><div class="line">   &#125;</div><div class="line">   chart.AddMCurves(data,3);</div><div class="line">   chart.SetCurveColor(0,RGB(0,0,0));</div><div class="line">```   </div><div class="line"></div><div class="line"> </div><div class="line">5． 在WM_PAINT消息或其它地方绘制曲线。先设置显示在那个位置，然后绘制。</div></pre></td></tr></table></figure>
+<p>case WM_PAINT:<br>        hdc = BeginPaint(hWnd, &amp;ps);<br>        // TODO: 在此添加任意绘图代码..<br>        RECT rect;<br>        GetClientRect(hWnd,&amp;rect);  </p>
+<pre><code>chart.SetChartDC(hdc);  
+
+chart.SetChartAndWindowPosition(rect);  
+
+ chart.ShowCurves();  
+
+EndPaint(hWnd, &amp;ps);  
+break;  
+</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"> </div><div class="line">6． （可选）若要动态缩放、平移、左键点击显示坐标提示窗口、右键框选缩放，则只需在相应的消息处理处添加相关操作即可。注意：由于我是用该类绘制周期性的曲线的，所以平移和缩放只是x轴的；若要同时平移或缩放，在CChart::OnMouseWheel函数中将ScaleX改变为ScaleCenter即可以完成x，y轴同时缩放，在CChart::OnMouseMove函数中修改Move的第二参数为-(y - m_ptLeftButtonDown.y) * GetYPerPix()即可以完成x，y轴同时移动。</div></pre></td></tr></table></figure>
+<p>if( m_ptLeftButtonDown.x != -1)<br>{<br> Move( -(x - m_ptLeftButtonDown.x) <em> GetXPerPix() , -(y - m_ptLeftButtonDown.y) </em> GetYPerPix());</p>
+<p> m_ptLeftButtonDown.x = x;<br> m_ptLeftButtonDown.y = y;</p>
+<p>// 绘制曲线和坐标系<br> ShowCurves();<br>}<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">示例代码：</div></pre></td></tr></table></figure></p>
+<p>case WM_LBUTTONDOWN:  </p>
+<pre><code>    chart.OnLeftButtonDown(LOWORD(lParam), HIWORD(lParam));  
+    break;  
+case WM_LBUTTONUP:  
+    chart.OnLeftButtonUp(LOWORD(lParam), HIWORD(lParam));  
+    break;  
+case WM_RBUTTONDOWN:  
+    chart.OnRightButtonDown(LOWORD(lParam), HIWORD(lParam));  
+    break;  
+case WM_RBUTTONUP:  
+    chart.OnRightButtonUp(LOWORD(lParam), HIWORD(lParam));  
+    break;  
+case WM_MOUSEMOVE:  
+    chart.OnMouseMove(LOWORD(lParam), HIWORD(lParam));  
+    break;  
+case 0x020A/*WM_MOUSEWHEEL*/:  
+    {  
+        POINT pt = { LOWORD(lParam), HIWORD(lParam) };  
+        ScreenToClient( hWnd,&amp;pt );  
+        chart.OnMouseWheel(wParam, pt.x, pt.y);  
+    }  
+    break;  
+</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure>
+<p>#ifndef _DISPCHART_H  </p>
+<p>#define _DISPCHART_H  </p>
+<p>#include <windows.h></windows.h>  </p>
+<p>#include <vector></vector>  </p>
+<p>#include <string></string>  </p>
+<p>// 图表基类:用于绘制坐标系和曲线<br>class CChartBase<br>{<br>protected:<br>    HDC       m_hChartDC;       // 图表绘制的DC<br>    RECT      m_rtWindow;       // 坐标窗口,其中包含图表显示区和坐标标尺,轴标等<br>    RECT      m_rtChart;        // 图标显示区(依赖域m_rtWindow)  </p>
+<pre><code>// 坐标显示边界  
+double    m_xStart;         // 实数域内x轴起点  
+double    m_xEnd;           //         x轴终点  
+double    m_yStart;         //         y轴起点  
+double    m_yEnd;           //         y轴终点  
+
+// 显示图表区  
+COLORREF  m_clrChartBg;     // 显示区背景色  
+COLORREF  m_clrChartBorder; //       边框色  
+
+// 网格  
+bool      m_bGridOn;        // 控制网格是否显示  
+double    m_dxGrid;         // 网格单元宽  
+double    m_dyGrid;         // 网格单元高  
+COLORREF  m_clrGrid;        // 网格线颜色  
+
+// 坐标轴,轴标,标尺  
+char      m_xLabel[20];  
+char      m_yLabel[20];  
+bool      m_bxLabelOn;   
+bool      m_byLabelOn;  
+
+bool      m_bxRulerOn;  
+bool      m_byRulerOn;  
+char      m_szRulerXFormat[128];  
+char      m_szRulerYFormat[128];  
+
+COLORREF  m_clrLabel;      // 轴标文字和刻度文字颜色  
+
+// 文字字体  
+LOGFONT     m_logFont;  
+
+// 曲线数据  
+</code></pre><p>public:  </p>
+<pre><code>// 辅助函数  
+void SetChartDC(HDC hdc);  
+HDC  GetChartDC() const ;  
+void SetChartWindowPosition(RECT rect);  
+void SetChartWindowPosition(int left, int top, int right, int bottom);  
+RECT GetChartWindowPosition() const;  
+void SetChartPosition(RECT rect);  
+void SetChartPosition(int left, int top, int right, int bottom);  
+
+RECT GetChartPosition() const;  
+int  GetChartWidth()const  { return m_rtChart.right - m_rtChart.left ; };  
+int  GetChartHeight()const { return m_rtChart.bottom - m_rtChart.top ; };  
+int  GetChartWindowWidth() const { return m_rtWindow.right - m_rtWindow.left; };  
+int  GetChartWindowHeight() const{ return m_rtWindow.bottom - m_rtWindow.top; };  
+
+// 坐标显示边界  
+double SetXStart(double xStart);  
+double SetXEnd(double xEnd);  
+void   SetXRange(double xStart,double xEnd);  
+double SetYStart(double yStart);  
+double SetYEnd(double yEnd);  
+void   SetYRange(double yStart,double yEnd);  
+double GetXStart()const;  
+double GetXEnd()const;  
+double GetYStart()const;  
+double GetYEnd()const;  
+
+// 显示图表区  
+void      SetClrChartBg(COLORREF clr);  
+COLORREF  GetClrChartGb()const;  
+void      SetClrChartBorder(COLORREF clr);  
+COLORREF  GetClrChartBorder()const;  
+
+// 网格  
+double   SetGriddx(double dxGrid);              // 设置网格宽度,返回前一个值  
+double   SetGriddy(double dyGrid);              // 设置网格高度,返回前一个值  
+void     SetGridxy(double dxGrid,double dyGrid);  
+COLORREF SetGridColor(COLORREF color);          // 设置网格颜色,返回前一个值  
+void SetGridOn();                               // 设置网格为显示状态  
+void SetGridOff();                              // 设置网格为关闭状态  
+
+double   GetGriddx()const;  
+double   GetGriddy()const;  
+COLORREF GetGridColor()const;  
+bool     GetGridStatus()const;  
+
+// 坐标轴,轴标,标尺  
+void    SetXLabel(const char* xLabel);  
+void    SetYLabel(const char* yLabel);  
+void    SetXLabelOn();  
+void    SetXLabelOff();  
+BOOL    GetXLabelStatus()const;  
+void    SetYLabelOn();  
+void    SetYLabelOff();  
+BOOL    GetYLabelStatus()const;  
+
+void    SetXRulerOn();  
+void    SetXRulerOff();  
+BOOL    GetXRulerStatus()const;  
+void    SetYRulerOn();  
+void    SetYRulerOff();  
+BOOL    GetYRulerStatus()const;  
+
+void    SetRulerXFormat(const char str[]) { strcpy(m_szRulerXFormat, str);};  
+void    SetRulerYFormat(const char str[]) { strcpy(m_szRulerXFormat, str);};  
+
+void     SetClrLabel(COLORREF clr);  
+COLORREF GetClrLabel()const;  
+
+// 字体  
+void    SetLogFont(LOGFONT logFont);  
+LOGFONT GetLogFont()const;  
+
+
+// 每一个象素所代表的实数值  
+double GetYPerPix() const;  
+double GetXPerPix() const;  
+</code></pre><p>protected:<br>    int  ShowChartBg();<br>    int  ShowGrid();<br>    int  ShowRuler();<br>    int  ShowLabel();  </p>
+<p>public:<br>    CChartBase();<br>    ~CChartBase();  </p>
+<pre><code>int ShowAt(int left, int top, int right, int bottom); // 在rect中显示该图标窗口,外部最好用该函数  
+int ShowAt(RECT rect);  
+int Show();                                           // 通过设置各种参数显示  
+
+// 坐标转换 r--real  s--screen 2--to  
+int rx2sx(double rx);    
+int ry2sy(double ry);  
+double sx2rx(int sx);  
+double sy2ry(int sy);  
+
+// 坐标变换  
+void Move(double drx, double dry);                   // 坐标系平移  
+void ScaleCenter(double times);                      // 坐标以坐标框的中心放缩  
+                                                     // times&gt;1时,显示范围扩大,起到缩小的作用  
+                                                     // times&lt;1时,显示范围缩小,起到放大的作用  
+void ScaleX(double times);                           // X轴范围缩放（以x轴中心）  
+void ScaleY(double times);                           // Y轴范围缩放（以y轴中心）  
+</code></pre><p>};  </p>
+<p>class CChart:public CChartBase<br>{<br>private:<br>    HWND       m_hWnd;           // 图表所在的窗口，该窗口可以处理消息（用于实现坐标变换等）<br>    HDC        m_memDCWindow;    // 存储整个绘图窗用的内存句柄<br>    HBITMAP    m_bmpInDCWindow;<br>    HDC        m_memDCChart;     // 存储chart的内存设备句柄<br>    HBITMAP    m_bmpInDCChart;   // 图表所对应的位图句柄  </p>
+<pre><code>// 曲线数据  
+</code></pre><p>public:  </p>
+<pre><code>std::vector  
+</code></pre><p>``` </p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/大学时代/" rel="tag">#大学时代</a>
+          
+            <a href="/tags/Windows/" rel="tag">#Windows</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2008/05/24/bitmap-open-save/" rel="next" title="位图文件的打开和保存">
+                <i class="fa fa-chevron-left"></i> 位图文件的打开和保存
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2008/06/11/main-windows-handle/" rel="prev" title="已知进程句柄，如何知道此进程的主窗口句柄">
+                已知进程句柄，如何知道此进程的主窗口句柄 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2008/06/06/chart-class/"
+     data-title="一个用于显示数值曲线的类"
+     data-content=""
+     data-url="http://yoursite.com/2008/06/06/chart-class/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2008/06/06/chart-class/"
+           data-title="一个用于显示数值曲线的类" data-url="http://yoursite.com/2008/06/06/chart-class/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">此文章未包含目录</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

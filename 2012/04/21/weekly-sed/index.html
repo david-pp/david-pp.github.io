@@ -1,0 +1,771 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="做网络游戏服务器端，最烦人的就是查后台日志。外面的玩家报BUG或者其他异常的时候，客服搞不定的时候，就需要服务器的程序去查日志。分析日志需要一些比较好的文本分析工具，grep和sed都是不错的文本分析工具，还有awk，再过复杂的日志分析估计就要写脚本了，推荐使用Python。
+（其实我一直在纳闷，数据分析这些事情，怎么老是需要服务器程序去查，有专门的数据中心、运维和客服部门，人家才是专业的，工具比">
+<meta property="og:type" content="article">
+<meta property="og:title" content="每周一荐：流编辑器sed">
+<meta property="og:url" content="http://yoursite.com/2012/04/21/weekly-sed/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="做网络游戏服务器端，最烦人的就是查后台日志。外面的玩家报BUG或者其他异常的时候，客服搞不定的时候，就需要服务器的程序去查日志。分析日志需要一些比较好的文本分析工具，grep和sed都是不错的文本分析工具，还有awk，再过复杂的日志分析估计就要写脚本了，推荐使用Python。
+（其实我一直在纳闷，数据分析这些事情，怎么老是需要服务器程序去查，有专门的数据中心、运维和客服部门，人家才是专业的，工具比">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.483Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="每周一荐：流编辑器sed">
+<meta name="twitter:description" content="做网络游戏服务器端，最烦人的就是查后台日志。外面的玩家报BUG或者其他异常的时候，客服搞不定的时候，就需要服务器的程序去查日志。分析日志需要一些比较好的文本分析工具，grep和sed都是不错的文本分析工具，还有awk，再过复杂的日志分析估计就要写脚本了，推荐使用Python。
+（其实我一直在纳闷，数据分析这些事情，怎么老是需要服务器程序去查，有专门的数据中心、运维和客服部门，人家才是专业的，工具比">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2012/04/21/weekly-sed/"/>
+
+
+  <title> 每周一荐：流编辑器sed | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                每周一荐：流编辑器sed
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2012-04-21T00:45:00+09:00" content="2012-04-21">
+              2012-04-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/每周一荐/" itemprop="url" rel="index">
+                    <span itemprop="name">每周一荐</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2012/04/21/weekly-sed/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2012/04/21/weekly-sed/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>做网络游戏服务器端，最烦人的就是查后台日志。外面的玩家报BUG或者其他异常的时候，客服搞不定的时候，就需要服务器的程序去查日志。分析日志需要一些比较好的文本分析工具，grep和sed都是不错的文本分析工具，还有awk，再过复杂的日志分析估计就要写脚本了，推荐使用Python。</p>
+<p>（其实我一直在纳闷，数据分析这些事情，怎么老是需要服务器程序去查，有专门的数据中心、运维和客服部门，人家才是专业的，工具比咱用的更“专业”吧。最后想了想，公司流程不完善，游戏后台日志分析自己这边还是做起来，不然搞的太被动了也不好。）</p>
+<p>下面是sed的一个快速参考，更加详细的介绍，还有用法实例，可以参考《sed and awk》那本书。或者本文后面的那几个链接，都有很好的介绍。</p>
+<h3 id="命令行语法"><a href="#命令行语法" class="headerlink" title="命令行语法"></a>命令行语法</h3><p>有两种调用sed的方式：</p>
+<pre><code>sed [-n] [-e] &apos;command&apos; file(s)
+sed [-n] -f scriptfile file(s)
+</code></pre><p>第一种方式允许在命令行指定一个编辑命令，用单引号括起来。第二种形式允许指定一个scriptfile，即包含sed命令的文件。两种形式可以一起使用，并且他们可以被多次使用。编辑的结构是将命令和脚本文件串联起来。</p>
+<p>下面是可识别的选项：</p>
+<p>-n<br>    仅打印用p命令或s命令标记指定的行</p>
+<p>-e cmd<br>    下一个参数是编辑命令。当指定多个脚本时很有用。</p>
+<p>-f file<br>    下一个参数是一个包含编辑命令的文件。</p>
+<p>如果脚本的第一行是”#n”，sed将按-n指定的方式工作。</p>
+<p>频繁使用sed脚本通常是通过shell脚本来调用的。</p>
+<h3 id="sed命令语法"><a href="#sed命令语法" class="headerlink" title="sed命令语法"></a>sed命令语法</h3><p>sed命令的一般形式为：</p>
+<pre><code>[address[,address]][!]command[arguments]
+</code></pre><p>sed将每个输入行拷贝到一个模式空间。sed指令由地址和编辑命令组成。如果命令的地址和模式空间中的行匹配，那么这个命令将被应用于匹配行。如果一个命令没有地址，那么它被应用于每个输入行。如果一个命令改变了模式空间的内容，后续的命令地址将被应用与模式空间中的当前行，而不是原始的输入行。</p>
+<h4 id="模式寻址"><a href="#模式寻址" class="headerlink" title="模式寻址"></a>模式寻址</h4><p>地址可以是一个行号或是由斜杠包含着的一个模式（/pattern/）。模式是用正则表达式表示的。另外，\n可以用来与模式空间（N命令的结果）的任意换行符匹配，但模式空间底部的换行符除外。<br>如果没有指定模式，相应的命令将被应用于所有的行。如果只指定一个地址，那么相应的命令将被应用于和这个地址匹配的行。如果指定了两个用逗号分隔的地址，这个命令将被应用于位于第一个和第二个地址范围之间的所有行。一些命令只接收一个地址，包括a,i,r,q和=。</p>
+<p>在地址后面的”!”操作符使sed将相应的命令作用于所有与该地址不匹配的行。</p>
+<p>大括号（{}）被sed用于地址的嵌套或对同一个地址应用多个命令。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[/pattern/[,/pattern/]] &#123;</div><div class="line">	command1</div><div class="line">	command2</div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+<p>左大括号必须在一行的末尾，而右括号必须单独在一行。确保大括号后面没有空格。</p>
+<h4 id="sed中的正则表达式元字符"><a href="#sed中的正则表达式元字符" class="headerlink" title="sed中的正则表达式元字符"></a>sed中的正则表达式元字符</h4><p>.<br>    匹配除换行符以为的任意单个字符</p>
+<p>*<br>    匹配任意个（包括0个）在它前面的字符（包括由正则表达式指定的字符）</p>
+<p>[…]<br>    匹配广括号中的字符中的任意一个字符。其它所有的元字符被指定为其中成员时都会失去它们原来的含义。如果方括号第一个字符为脱字符（^）则匹配除了换行符和列出的那些字符以为的所有字符。连字符（-）用来表示字符的范围。如果其中第一个字符为右方括号（]），则表示它是这个类的成员。</p>
+<p>{n,m}<br>    它前面的某个范围内单个字符出现的次数（保护正则表达式指定的字符）。{n}将匹配n次出现，{n,}匹配大于等于n次出现的。</p>
+<p>^<br>    定位位于行起始位置后面的正则表达式。只有当^符号出现在正则表达式的起始位置时才是特殊的。</p>
+<p>$<br>    定位位于行末尾的正则表达式，只有当$符号出现在正则表达式的末尾时才是特殊的。</p>
+<p>\<br>    转义随后的特殊字符</p>
+<p>( )<br>    将包含在””和””之间的模式保存到一个特殊的保持空间。用这种方法在一行中可以最多保存9个模式。用转义序列”\1″ 到 “\9″ 可以重新使用它们。</p>
+<p>\n<br>    匹配前面””和””保存的第n个模式，这里n是一个从1到9的数字，前面保存的模式从行的左边开始编号。</p>
+<p>&amp;<br>    当在替换字符串中使用时打印整个被匹配的文本</p>
+<h4 id="sed命令参考"><a href="#sed命令参考" class="headerlink" title="sed命令参考"></a>sed命令参考</h4><p>: :lable<br>    在脚本中标记一行，用于实现由b或t的控制转移。label最多可以包含7个字符。（GNU sed允许标签的长度任意）</p>
+<p>= [address]=<br>    将所寻址的行编号写到标准输出。</p>
+<p>a [address]a\ .. text<br>    在与address匹配的每行后面追加text。如果text多于一行，必须用反斜杠将这些行前面的换行符“隐藏”起来。text将被没有用这种方法隐藏的第一个换行符结束。text在模式空间中不是可用的并且后续命令不能应用于它。当编辑命令的列表用完时这个命令的结果将被输送到标准输出，而不管在模式空间中的当前行发生了什么。</p>
+<p>c [address1[,address2]]c \ .. text<br>    用text代替（改变）由地址选定的行。当指定的是一个行范围时，将所有的这些行为作为一个组由text的一个副本来代替。每个text行后面的换行符必须用反斜杠将其转义，但最后一行除外。实际上，模式空间的内容被删除，因此后续的命令不能应用于它（或应用于text）</p>
+<p>d [address1[,address2]]d<br>    从模式空间中删除行。因此行没有被传递到标准输出。一个新的输入行被读取，并用脚本的第一个命令来编辑。</p>
+<p>D [address1[,address2]]D<br>    删除由命令N穿件的多行模式空间中的第一部分（直接嵌入的换行符），并且用脚本的第一条命令恢复编辑。如果这个命令使模式空间为空，那么将读取一个新的输入行，和执行了d命令。</p>
+<p>g [address1[,address2]]g<br>    将保持空间中的内容复制到模式空间。如果保持空间为空，则将换行符添加到模式空间。</p>
+<p>G [address1[,address2]]G<br>    将保持空间中的内容追加到模式空间。如果保持空间为空，则将换行符添加到模式空间。</p>
+<p>h [address1[,address2]]h<br>    将模式空间的内容复制到保持空间，即一个特殊的临时缓冲区。保持空间的当前内容被清楚。</p>
+<p>H [address1[,address2]]H<br>    将换行符和模式空间的内容追加到保持空间中，即使保持空间为空，这个命令也追加换行符。</p>
+<p>i [address]i\ .. text<br>    将text插入到每个和address匹配的行的前面。</p>
+<p>l [address1[,address2]]l<br>    列出模式空间的内容，将不可打印的字符表示为ASCII码。长的行被折行。</p>
+<p>n [address1[,address2]]n<br>    读取下一个输入行到模式空间。当前行被送到标准输出。新行成为当前行并递增计数器。将控制转到n后面的命令，而不是恢复到脚本的顶部。</p>
+<p>N [address1[,address2]]N<br>    将下一个输入行追加到模式空的内容之后；新添加的行与模式空间的当前内容用换行符分隔（这个命令用于实现两行的模式匹配。利用\n来匹配嵌入的换行符，则可以实现多行模式匹配）</p>
+<p>p [address1[,address2]]p<br>    打印所寻址的行。注意这将导致输出的重复，除非默认的输出用”#n”或”-n”命令行选项限制。常用于改变流控制（d,n,b）的命令之前并可能阻止当前行被输出。</p>
+<p>P [address1[,address2]]P<br>    打印由N命令创建的多行模式空间的地一部分（直接嵌入的换行符）。如果没有将N应用于某一行则和p相同。</p>
+<p>q [address]q<br>    当遇到address时退出。寻址的行首先被写到输出（如果没有限制默认输出），包括用前面的a或r命令为它追加的文本。</p>
+<p>r [address]r file<br>    读取file的内容并追加到模式空间内容的后面。必须在r和文件名file之间保留一个空格。</p>
+<p>s [address1[,address2]]s/pattern/replacement/[flags]<br>    用replacement代替每个寻址行的pattern。如果使用了模式地址，那么模式//表示最后指定的模式地址。可指定下面的标志。</p>
+<p>n<br>    替代每个寻址的行的地n个/pattern/。n是1到512之间的任意数值，并默认致为1。</p>
+<p>g<br>    替代每个寻址的行的所有/pattern/，而不只是第一个。</p>
+<p>p<br>    如果替换成功则打印这一行。如果成功进行了多次替换，将打印这个行的多个副本。</p>
+<p>w file<br>    如果发生一次替换则将这行写入file。最多可以打开10个不同的file。</p>
+<p>t [address1[,address2]]t [label]<br>    测试在寻址的行范围内是否成功执行了替换，如果是，则转移到有lable标志的行。如果没有给出lable，控制转移到脚本的底部。</p>
+<p>w [address1[,address2]]w file<br>    将模式空间的内容追加到file。这个动作是在遇到命令时发生而不是在输出模式空间内容时发生。必须在w和这个文件名之间保留一个空格。在脚本中可以打开的最大文件数是10。如果文件不存在，这个命令将创建一个文件。如果文件存在，则每次执行脚步时将修改其内容，多重写入命令直接将输出写入到同一个文件并追加到这个文件的末端。</p>
+<p>x [address1[,address2]]x<br>    交换模式空间和保持空间的内容。</p>
+<p>y [address1[,address2]]y/abc/xyz/<br>    安位置将字符串abc中的字符转换成字符串xyz中的相应该字符。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2012/04/13/weekly-movie-treeoflife/" rel="next" title="每周一荐：《生命之树》、《水上音乐》">
+                <i class="fa fa-chevron-left"></i> 每周一荐：《生命之树》、《水上音乐》
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2012/04/24/badsmell-of-code/" rel="prev" title="代码的坏味道">
+                代码的坏味道 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2012/04/21/weekly-sed/"
+     data-title="每周一荐：流编辑器sed"
+     data-content=""
+     data-url="http://yoursite.com/2012/04/21/weekly-sed/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2012/04/21/weekly-sed/"
+           data-title="每周一荐：流编辑器sed" data-url="http://yoursite.com/2012/04/21/weekly-sed/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#命令行语法"><span class="nav-number">1.</span> <span class="nav-text">命令行语法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sed命令语法"><span class="nav-number">2.</span> <span class="nav-text">sed命令语法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#模式寻址"><span class="nav-number">2.1.</span> <span class="nav-text">模式寻址</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sed中的正则表达式元字符"><span class="nav-number">2.2.</span> <span class="nav-text">sed中的正则表达式元字符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sed命令参考"><span class="nav-number">2.3.</span> <span class="nav-text">sed命令参考</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

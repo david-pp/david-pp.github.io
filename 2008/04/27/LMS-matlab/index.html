@@ -1,0 +1,729 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="大学时代,LMS," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="LMS自适应滤波器是使滤波器的输出信号与期望响应之间的误差的均方值为最小，因此称为最小均方（LMS）自适应滤波器。其原理及推导见http://download.csdn.net/source/432206。
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LMS算法MatLab实现">
+<meta property="og:url" content="http://yoursite.com/2008/04/27/LMS-matlab/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="LMS自适应滤波器是使滤波器的输出信号与期望响应之间的误差的均方值为最小，因此称为最小均方（LMS）自适应滤波器。其原理及推导见http://download.csdn.net/source/432206。
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525">
+<meta property="og:image" content="http://yoursite.com/images/2008-04-27-1.bmp">
+<meta property="og:image" content="http://yoursite.com/images/2008-04-27-2.bmp">
+<meta property="og:image" content="http://yoursite.com/images/2008-04-27-3.bmp">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.450Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LMS算法MatLab实现">
+<meta name="twitter:description" content="LMS自适应滤波器是使滤波器的输出信号与期望响应之间的误差的均方值为最小，因此称为最小均方（LMS）自适应滤波器。其原理及推导见http://download.csdn.net/source/432206。
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525">
+<meta name="twitter:image" content="http://yoursite.com/images/2008-04-27-1.bmp">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2008/04/27/LMS-matlab/"/>
+
+
+  <title> LMS算法MatLab实现 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                LMS算法MatLab实现
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2008-04-27T07:00:00+09:00" content="2008-04-27">
+              2008-04-27
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/课程设计/" itemprop="url" rel="index">
+                    <span itemprop="name">课程设计</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2008/04/27/LMS-matlab/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2008/04/27/LMS-matlab/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>LMS自适应滤波器是使滤波器的输出信号与期望响应之间的误差的均方值为最小，因此称为最小均方（LMS）自适应滤波器。其原理及推导见<a href="http://download.csdn.net/source/432206。" target="_blank" rel="external">http://download.csdn.net/source/432206。</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div></pre></td><td class="code"><pre><div class="line">       </div><div class="line">function [yn,W,en]=LMS(xn,dn,M,mu,itr)</div><div class="line">% LMS(Least Mean Squre)算法</div><div class="line">% 输入参数:</div><div class="line">%     xn   输入的信号序列      (列向量)</div><div class="line">%     dn   所期望的响应序列    (列向量)</div><div class="line">%     M    滤波器的阶数        (标量)</div><div class="line">%     mu   收敛因子(步长)      (标量)     要求大于0,小于xn的相关矩阵最大特征值的倒数    </div><div class="line">%     itr  迭代次数            (标量)     默认为xn的长度,M&lt;itr&lt;length(xn)</div><div class="line">% 输出参数:</div><div class="line">%     W    滤波器的权值矩阵     (矩阵)</div><div class="line">%          大小为M x itr,</div><div class="line">%     en   误差序列(itr x 1)    (列向量)  </div><div class="line">%     yn   实际输出序列             (列向量)</div><div class="line"></div><div class="line">% 参数个数必须为4个或5个</div><div class="line">if nargin == 4                 % 4个时递归迭代的次数为xn的长度 </div><div class="line">    itr = length(xn);</div><div class="line">elseif nargin == 5             % 5个时满足M&lt;itr&lt;length(xn)</div><div class="line">    if itr&gt;length(xn) | itr&lt;M</div><div class="line">        error(&apos;迭代次数过大或过小!&apos;);</div><div class="line">    end</div><div class="line">else</div><div class="line">    error(&apos;请检查输入参数的个数!&apos;);</div><div class="line">end</div><div class="line"></div><div class="line"></div><div class="line">% 初始化参数</div><div class="line">en = zeros(itr,1);             % 误差序列,en(k)表示第k次迭代时预期输出与实际输入的误差</div><div class="line">W  = zeros(M,itr);             % 每一行代表一个加权参量,每一列代表-次迭代,初始为0</div><div class="line"></div><div class="line">% 迭代计算</div><div class="line">for k = M:itr                  % 第k次迭代</div><div class="line">    x = xn(k:-1:k-M+1);        % 滤波器M个抽头的输入</div><div class="line">    y = W(:,k-1).&apos; * x;        % 滤波器的输出</div><div class="line">    en(k) = dn(k) - y ;        % 第k次迭代的误差</div><div class="line">    </div><div class="line">    % 滤波器权值计算的迭代式</div><div class="line">    W(:,k) = W(:,k-1) + 2*mu*en(k)*x;</div><div class="line">end</div><div class="line"></div><div class="line">% 求最优时滤波器的输出序列</div><div class="line">yn = inf * ones(size(xn));</div><div class="line">for k = M:length(xn)</div><div class="line">    x = xn(k:-1:k-M+1);</div><div class="line">    yn(k) = W(:,end).&apos;* x;</div><div class="line">end</div><div class="line">    </div><div class="line">        LMS函数的一个实例：</div><div class="line">%function main()</div><div class="line">close  all</div><div class="line"></div><div class="line">% 周期信号的产生 </div><div class="line">t=0:99;</div><div class="line">xs=10*sin(0.5*t);</div><div class="line">figure;</div><div class="line">subplot(2,1,1);</div><div class="line">plot(t,xs);grid;</div><div class="line">ylabel(&apos;幅值&apos;);</div><div class="line">title(&apos;it&#123;输入周期性信号&#125;&apos;);</div><div class="line"></div><div class="line">% 噪声信号的产生</div><div class="line">randn(&apos;state&apos;,sum(100*clock));</div><div class="line">xn=randn(1,100);</div><div class="line">subplot(2,1,2);</div><div class="line">plot(t,xn);grid;</div><div class="line">ylabel(&apos;幅值&apos;);</div><div class="line">xlabel(&apos;时间&apos;);</div><div class="line">title(&apos;it&#123;随机噪声信号&#125;&apos;);</div><div class="line"></div><div class="line">% 信号滤波</div><div class="line">xn = xs+xn;</div><div class="line">xn = xn.&apos; ;   % 输入信号序列</div><div class="line">dn = xs.&apos; ;   % 预期结果序列</div><div class="line">M  = 20   ;   % 滤波器的阶数</div><div class="line"></div><div class="line">rho_max = max(eig(xn*xn.&apos;));   % 输入信号相关矩阵的最大特征值</div><div class="line">mu = rand()*(1/rho_max)   ;    % 收敛因子 0 &lt; mu &lt; 1/rho</div><div class="line"></div><div class="line">[yn,W,en] = LMS(xn,dn,M,mu);</div><div class="line"></div><div class="line">% 绘制滤波器输入信号</div><div class="line">figure;</div><div class="line">subplot(2,1,1);</div><div class="line">plot(t,xn);grid;</div><div class="line">ylabel(&apos;幅值&apos;);</div><div class="line">xlabel(&apos;时间&apos;);</div><div class="line">title(&apos;it&#123;滤波器输入信号&#125;&apos;);</div><div class="line"></div><div class="line">% 绘制自适应滤波器输出信号</div><div class="line">subplot(2,1,2);</div><div class="line">plot(t,yn);grid;</div><div class="line">ylabel(&apos;幅值&apos;);</div><div class="line">xlabel(&apos;时间&apos;);</div><div class="line">title(&apos;it&#123;自适应滤波器输出信号&#125;&apos;);</div><div class="line"></div><div class="line">% 绘制自适应滤波器输出信号,预期输出信号和两者的误差</div><div class="line">figure </div><div class="line">plot(t,yn,&apos;b&apos;,t,dn,&apos;g&apos;,t,dn-yn,&apos;r&apos;);grid;</div><div class="line">legend(&apos;自适应滤波器输出&apos;,&apos;预期输出&apos;,&apos;误差&apos;);</div><div class="line">ylabel(&apos;幅值&apos;);</div><div class="line">xlabel(&apos;时间&apos;);</div><div class="line">title(&apos;it&#123;自适应滤波器&#125;&apos;);</div></pre></td></tr></table></figure>
+<p>运行后的结果如下：</p>
+<p><img src="/images/2008-04-27-1.bmp" alt="LMS"><br><img src="/images/2008-04-27-2.bmp" alt="LMS"><br><img src="/images/2008-04-27-3.bmp" alt="LMS"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/大学时代/" rel="tag">#大学时代</a>
+          
+            <a href="/tags/LMS/" rel="tag">#LMS</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2008/04/27/LMS/" rel="next" title="什么是滤波器？">
+                <i class="fa fa-chevron-left"></i> 什么是滤波器？
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2008/05/24/mem-file/" rel="prev" title="内存映射文件">
+                内存映射文件 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2008/04/27/LMS-matlab/"
+     data-title="LMS算法MatLab实现"
+     data-content=""
+     data-url="http://yoursite.com/2008/04/27/LMS-matlab/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2008/04/27/LMS-matlab/"
+           data-title="LMS算法MatLab实现" data-url="http://yoursite.com/2008/04/27/LMS-matlab/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">此文章未包含目录</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

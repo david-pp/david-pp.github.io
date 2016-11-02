@@ -1,0 +1,785 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="大学时代,Windows,dll," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="动态链接库为模块化应用程序提供了一种方式，使得更新和重用程序更加方便。当几个应用程序在同一时间使用相同的函数时，它也帮助减少内存消耗，这是因为虽然每个应用程序有独立的数据拷贝，但是它们的代码却是共享的。
+动态连接库的概念动态链接库是应用程序的一个模块，这个模块用于到处一些函数和数据供程序中的其他模块使用。应该从以下三个方面来理解：
+
+动态连接库是应用程序的一部分，它的任何操作大都是代表应用程序进行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows动态链接库">
+<meta property="og:url" content="http://yoursite.com/2008/02/29/windows-dll/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="动态链接库为模块化应用程序提供了一种方式，使得更新和重用程序更加方便。当几个应用程序在同一时间使用相同的函数时，它也帮助减少内存消耗，这是因为虽然每个应用程序有独立的数据拷贝，但是它们的代码却是共享的。
+动态连接库的概念动态链接库是应用程序的一个模块，这个模块用于到处一些函数和数据供程序中的其他模块使用。应该从以下三个方面来理解：
+
+动态连接库是应用程序的一部分，它的任何操作大都是代表应用程序进行">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.444Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Windows动态链接库">
+<meta name="twitter:description" content="动态链接库为模块化应用程序提供了一种方式，使得更新和重用程序更加方便。当几个应用程序在同一时间使用相同的函数时，它也帮助减少内存消耗，这是因为虽然每个应用程序有独立的数据拷贝，但是它们的代码却是共享的。
+动态连接库的概念动态链接库是应用程序的一个模块，这个模块用于到处一些函数和数据供程序中的其他模块使用。应该从以下三个方面来理解：
+
+动态连接库是应用程序的一部分，它的任何操作大都是代表应用程序进行">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2008/02/29/windows-dll/"/>
+
+
+  <title> Windows动态链接库 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Windows动态链接库
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2008-02-29T00:00:00+09:00" content="2008-02-29">
+              2008-02-29
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index">
+                    <span itemprop="name">Windows</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2008/02/29/windows-dll/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2008/02/29/windows-dll/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>动态链接库为模块化应用程序提供了一种方式，使得更新和重用程序更加方便。当几个应用程序在同一时间使用相同的函数时，它也帮助减少内存消耗，这是因为虽然每个应用程序有独立的数据拷贝，但是它们的代码却是共享的。</p>
+<h3 id="动态连接库的概念"><a href="#动态连接库的概念" class="headerlink" title="动态连接库的概念"></a>动态连接库的概念</h3><p>动态链接库是应用程序的一个模块，这个模块用于到处一些函数和数据供程序中的其他模块使用。应该从以下三个方面来理解：</p>
+<ol>
+<li>动态连接库是应用程序的一部分，它的任何操作大都是代表应用程序进行的。所以动态链接库文件和可执行文件在本质上来说是一样的，都是作为模块被进程加载到自己的空间地址的。</li>
+<li>动态链接库在程序在编译时不会被插入到可执行文件中，在程序运行时整个库的代码才会调入内存，这就是所谓的“动态链接”。</li>
+<li>如果多个程序用到同一个动态链接库，Windows在物理内存中只保留一份库的代码，仅通过分页机制将这份代码映射到不同的进程中。这样不管有多少个程序同时使用一个库，库代码实际占用的物理内存永远只有一份。</li>
+</ol>
+<p>动态链接库（Dynamic Link Library）的缩写为DLL，大部分动态链接库镜像文件的扩展名为dll，但扩展名为其他的文件也有可能是动态链接库，如系统中的某些exe文件，各种控件（ocx）等都是动态链接库</p>
+<h3 id="动态链接库的入口点函数"><a href="#动态链接库的入口点函数" class="headerlink" title="动态链接库的入口点函数"></a>动态链接库的入口点函数</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">BOOL APIENTRY DllMain( HANDLE hModule,</div><div class="line">                       DWORD ul_reason_for_call,</div><div class="line">                       LPVOID lpReserved</div><div class="line">                                    )</div><div class="line">&#123;</div><div class="line">    switch (ul_reason_for_call)</div><div class="line">       &#123;</div><div class="line">              case DLL_PROCESS_ATTACH:</div><div class="line">              case DLL_THREAD_ATTACH:</div><div class="line">              case DLL_THREAD_DETACH:</div><div class="line">              case DLL_PROCESS_DETACH:</div><div class="line">                     break;</div><div class="line">    &#125;</div><div class="line">    return TRUE;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>hModule</strong><br>    参数是本DLL模块的句柄，即本动态链接库模块的实例句柄，数值上是这个文件的映像加载到进程的地址空间时使用的基地址。需要注意的是，在动态链接库中通过“GetModuleHandle(NULL)”语句得到的是主模块（可执行文件的映像）的基地址，而不是DLL文件的基地址。</p>
+<p><strong>ul_reason_for_call</strong><br>    参数表示本次调用的原因，可能是下4中情况的一种：</p>
+<pre><code>1. DLL_PROCESS_ATTACH      表示动态链接库刚被某个进程加载，程序可以在这里做一些初始化工作，并返回TRUE表示初始化成功，返回FALSE表示初始化出错，这样库的装载就会失败。这给动态链接库一个机会来阻止自己被装入。
+2. DLL_PROCESS_DETACH      此时相反，表示动态链接库将被卸载，程序可以在这里进行一些资源的释放工作。
+3. DLL_THREAD_ATTACH表示应用程序创建了一个线程。
+4. DLL_THREAD_DETACH       表示某个线程正常终止了。
+</code></pre><h3 id="动态链接库中的函数"><a href="#动态链接库中的函数" class="headerlink" title="动态链接库中的函数"></a>动态链接库中的函数</h3><p>DLL能够定义两种函数，导出函数和内部函数。导出函数可以被其他模块调用，也可以被定这个模块调用，而内部函数只能被定义这个函数的模块调用。</p>
+<p>动态链接库的主要功能是向外导出函数，供进程中其他模块使用。动态链接库中代码的编写也没什么特别之处，还要包含文件还可以使用资源，C++类等。</p>
+<p>动态链接库工程编译后，在工程的Debug或者Release目录下会生成两个个有用的文件，.dll文件就是动态链接库，.lib文件是供程序开发用的导入库，.h文件包含了导出函数的声明。</p>
+<h3 id="导出函数的使用"><a href="#导出函数的使用" class="headerlink" title="导出函数的使用"></a>导出函数的使用</h3><p>调用DLL中的导出函数有两种方法：</p>
+<p><strong>第一种. 装载期间动态链接。</strong></p>
+<p>模块可以像调用本地函数一样调用从其他模块导出的函数（API函数就是这样用的）。装载期间链接必须使用DLL的导入库（.lib文件），它为系统提供了加载这个DLL和定位这个DLL中的导出函数所需的所有信息。</p>
+<p>所谓装载期间链接，就是应用程序启动时由加载器（加载应用程序的组件）载入dll。载入器如何知道要载入哪些DLL呢？这些信息记录在可执行文件（PE文件）的idata节中。使用这种方法不用自己写代码显式的加载DLL。在程序只需：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">#include “ xxx.h”</div><div class="line">#pragma comment(lib,”xxx”)</div></pre></td></tr></table></figure>
+<p>或者直接将xxx.lib文件添加到工程中，效果是一样的。</p>
+<p><strong>注意：</strong></p>
+<ol>
+<li>发布软件时必须将该软件使用的DLL与程序一起发布。载入器在加载DLL文件时，默认情况是在应用程序的当前目录下查找，如果找不到就会到系统盘“/windows/system32”文件夹下查找，如果还是找不到就安错误处理。这种方法加载DLL库的缺点很明显，如果用户丢失了DLL文件，那么程序永远也不能启动了。所以很多时候要采取运行期间动态链接的方法。</li>
+<li>运行期间动态链接。模块也可以使用LoadLibray或者LoadLibrayEx函数在运行期间加载这个DLL。DLL被加载之后，加载模块调用GetProcAddress函数获得DLL导出函数的地址，然后通过函数地址调用DLL中的函数。</li>
+</ol>
+<p><strong>第二种. 运行期间动态链接是在程序运行过程中显示地去加载DLL库，从中导出所需的函数。</strong></p>
+<p>为了能够运行期动态的导出函数，一般需要在工程中建立一个DEF文件来指定要导出的函数。在新添的.def文件中写入如下内容：</p>
+<pre><code>EXPORTS              
+ xxxFunction
+</code></pre><p>这两行说明此DLL库要向外导出xxxFunction函数。</p>
+<p>调用DLL导出函数时分两步进行。</p>
+<p>1&gt;. 加载目标DLL，如下代码：</p>
+<pre><code>HMODULE hModule=LoadLibrary(“xxx.dll”);
+</code></pre><p>LoadLibrary函数的作用是加载指定目录下的DLL库到进程的虚拟地址空间，函数执行成功返回此DLL模块的句柄，否则返回NULL。事实上，载入器也是调用这个函数加载DLL的。在不使用DLL模块时，应该调用FreeLibrary函数释放它所占的资源。</p>
+<p>2&gt;. 取得目标DLL中导出函数的地址，这项工作由GetProcAddress函数来完成。</p>
+<pre><code>FARPROC GetProcAddress(
+     HMODULE hModule, // 函数所在模块的模块句柄
+     LPCSTR lpProcName // 函数的名称
+)
+</code></pre><p>函数执行成功返会函数的地址，失败返回NULL。</p>
+<p>在使用方法一时，三个文件都会被用到，使用第二种方法时，只有.dll文件会被用到。</p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><ul>
+<li><strong>生成DLL</strong></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">// DllTest.cpp : Defines the entry point for the DLL application.</div><div class="line">// 生成DLL文件，.def文件用于运行期间动态链接，若为静态则不需该文件</div><div class="line"></div><div class="line">#include &quot;stdafx.h&quot;</div><div class="line">#include &quot;DllTest.h&quot;</div><div class="line">#include &lt;stdio.h&gt;</div><div class="line"></div><div class="line">HMODULE g_hModule;</div><div class="line"></div><div class="line">BOOL APIENTRY DllMain( HANDLE hModule, </div><div class="line">                       DWORD  ul_reason_for_call, </div><div class="line">                       LPVOID lpReserved</div><div class="line">                     )</div><div class="line">&#123;</div><div class="line">    switch(ul_reason_for_call)</div><div class="line">    &#123;</div><div class="line">    case DLL_PROCESS_ATTACH:   // 刚被某个进程加载</div><div class="line">        g_hModule = (HMODULE) hModule;</div><div class="line">        break;</div><div class="line">    &#125;</div><div class="line">    return TRUE;</div><div class="line"></div><div class="line">&#125;</div><div class="line"></div><div class="line">// 自定义导出函数</div><div class="line"></div><div class="line">void DllTest1(LPCSTR pszContent)</div><div class="line">&#123;</div><div class="line">    char sz[MAX_PATH];</div><div class="line">    ::GetModuleFileName(g_hModule,sz,MAX_PATH);</div><div class="line">    MessageBox(NULL,pszContent,strrchr(sz,&apos;/&apos;)+1,MB_OK);</div><div class="line">&#125;</div><div class="line"> </div><div class="line">void DllTest2()</div><div class="line">&#123;</div><div class="line">    DllTest1(&quot;Hello world!  Hello Dll files!&quot;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">// DllTest.h</div><div class="line">// The following ifdef block is the standard way of creating macros which make exporting </div><div class="line">// from a DLL simpler. All files within this DLL are compiled with the DLLTEST_EXPORTS</div><div class="line">// symbol defined on the command line. this symbol should not be defined on any project</div><div class="line">// that uses this DLL. This way any other project whose source files include this file see </div><div class="line">// DLLTEST_API functions as being imported from a DLL, wheras this DLL sees symbols</div><div class="line">// defined with this macro as being exported.</div><div class="line">#ifdef DLLTEST_EXPORTS</div><div class="line">#define DLLTEST_API __declspec(dllexport)</div><div class="line">#else</div><div class="line">#define DLLTEST_API __declspec(dllimport)</div><div class="line">#endif</div><div class="line"></div><div class="line">// 声明要导出的函数</div><div class="line">DLLTEST_API void DllTest1(LPCSTR pszContent);</div><div class="line">DLLTEST_API void DllTest2();</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">// DllTest.def</div><div class="line">EXPORTS</div><div class="line"> DllTest1</div><div class="line"> DllTest2</div></pre></td></tr></table></figure>
+<ul>
+<li><strong>使用Dll动态链接库</strong> </li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">// DllUse1.cpp : Defines the entry point for the console application.</div><div class="line">// 装载期间动态链接</div><div class="line"></div><div class="line">#include &quot;stdafx.h&quot;</div><div class="line">#include &quot;DllTest.h&quot;</div><div class="line">#pragma comment(lib,&quot;DllTest&quot;)</div><div class="line"></div><div class="line">int main(int argc, char* argv[])</div><div class="line">&#123;</div><div class="line">    DllTest2();</div><div class="line">    return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">// DllUse2.cpp : Defines the entry point for the console application.</div><div class="line">// 运行期间动态链接</div><div class="line"></div><div class="line">#include &quot;stdafx.h&quot;</div><div class="line">#include &lt;windows.h&gt;</div><div class="line"></div><div class="line">typedef void(*PFNDLLTEST2)(void);</div><div class="line"></div><div class="line">int main(int argc, char* argv[])</div><div class="line">&#123;</div><div class="line">    // 加载DLL</div><div class="line">    HMODULE hModule = LoadLibrary(&quot;DllTest.dll&quot;);</div><div class="line">    if(hModule != NULL)</div><div class="line">    &#123;</div><div class="line">        // 取得DllTest的导出函数的地址</div><div class="line">        PFNDLLTEST2 mDllTest2 = (PFNDLLTEST2)GetProcAddress(hModule, &quot;DllTest2&quot;);</div><div class="line">        if(mDllTest2 != NULL)</div><div class="line">        &#123;    </div><div class="line">            mDllTest2();</div><div class="line">        &#125;</div><div class="line">        // 卸载DLL</div><div class="line">        FreeLibrary(hModule);</div><div class="line">    &#125;</div><div class="line">    return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/大学时代/" rel="tag">#大学时代</a>
+          
+            <a href="/tags/Windows/" rel="tag">#Windows</a>
+          
+            <a href="/tags/dll/" rel="tag">#dll</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2008/02/28/windows-hook/" rel="next" title="Windows钩子">
+                <i class="fa fa-chevron-left"></i> Windows钩子
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2008/03/11/windows-message-cycle/" rel="prev" title="应用程序的消息循环">
+                应用程序的消息循环 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2008/02/29/windows-dll/"
+     data-title="Windows动态链接库"
+     data-content=""
+     data-url="http://yoursite.com/2008/02/29/windows-dll/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2008/02/29/windows-dll/"
+           data-title="Windows动态链接库" data-url="http://yoursite.com/2008/02/29/windows-dll/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#动态连接库的概念"><span class="nav-number">1.</span> <span class="nav-text">动态连接库的概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态链接库的入口点函数"><span class="nav-number">2.</span> <span class="nav-text">动态链接库的入口点函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态链接库中的函数"><span class="nav-number">3.</span> <span class="nav-text">动态链接库中的函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导出函数的使用"><span class="nav-number">4.</span> <span class="nav-text">导出函数的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#例子"><span class="nav-number">5.</span> <span class="nav-text">例子</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

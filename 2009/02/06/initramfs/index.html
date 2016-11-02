@@ -1,0 +1,787 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Linux,内核学习," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="译自: http://linuxdevices.com/articles/AT4017834659.html (by Rob Landley, TimeSys (Mar. 15, 2005))
+问题当 Linux 内核启动系统时，它必须找到并执行第一个用户程序，通常是 init。用户程序存在于文件系统，故 Linux 内核必须找到并挂载上第一个(根)文件系统，方能成功开机。
+通常，可用的文件系统都">
+<meta property="og:type" content="article">
+<meta property="og:title" content="initramfs 简介，一个新的 initial RAM disks 模型">
+<meta property="og:url" content="http://yoursite.com/2009/02/06/initramfs/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="译自: http://linuxdevices.com/articles/AT4017834659.html (by Rob Landley, TimeSys (Mar. 15, 2005))
+问题当 Linux 内核启动系统时，它必须找到并执行第一个用户程序，通常是 init。用户程序存在于文件系统，故 Linux 内核必须找到并挂载上第一个(根)文件系统，方能成功开机。
+通常，可用的文件系统都">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.460Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="initramfs 简介，一个新的 initial RAM disks 模型">
+<meta name="twitter:description" content="译自: http://linuxdevices.com/articles/AT4017834659.html (by Rob Landley, TimeSys (Mar. 15, 2005))
+问题当 Linux 内核启动系统时，它必须找到并执行第一个用户程序，通常是 init。用户程序存在于文件系统，故 Linux 内核必须找到并挂载上第一个(根)文件系统，方能成功开机。
+通常，可用的文件系统都">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2009/02/06/initramfs/"/>
+
+
+  <title> initramfs 简介，一个新的 initial RAM disks 模型 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                initramfs 简介，一个新的 initial RAM disks 模型
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2009-02-06T15:00:00+09:00" content="2009-02-06">
+              2009-02-06
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2009/02/06/initramfs/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2009/02/06/initramfs/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>译自: <a href="http://linuxdevices.com/articles/AT4017834659.html" target="_blank" rel="external">http://linuxdevices.com/articles/AT4017834659.html</a> (by Rob Landley, TimeSys (Mar. 15, 2005))</p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>当 Linux 内核启动系统时，它必须找到并执行第一个用户程序，通常是 init。用户程序存在于文件系统，故 Linux 内核必须找到并挂载上第一个(根)文件系统，方能成功开机。</p>
+<p>通常，可用的文件系统都列在 /etc/fstab，所以 mount 可以找到它们。但 /etc/fstab 它本身就是一个文件，存在于文件系统中。找到第一个文件系统成为鸡生蛋蛋生鸡的问题，而且为了解决它，内核开发者建立内核命令列选项 root=，用来指定 root 文件系统存在于哪个设备上。</p>
+<p>十五年前，root= 很容易解释。它可以是软盘或硬盘上的分区。如今 root 文件系统可以存在于各种不同类型的硬件(SCSI, SATA, flash MTD) ，或是由不同类型硬件所建立的 RAID 上。它的位置随着不同启动而不同，像可热插拔的 USB 设备被插到有多个 USB 孔的系统上 - 当有多个 USB 设备时，哪一个是正确的？root 文件系统也可能被压缩(如何？)，被加密(用什么 keys？)，或 loopback 挂载(哪里？)。它甚至可以存在外部的网络服务器，需要内核去取得 DHCP 地址，完成 DNS lookup，并登入到远程服务器(需账号及密码)，全部都在内核可以找到并执行第一个 userspace 程序之前。</p>
+<p>如今，root= 已没有足够的信息。即使将所有特殊案例的行为都放进内核也无法帮助设备列举，加密，或网络登入这些随着系统不同而不同的系统。更糟的是，替核心加入这些复杂的工作，就像是用汇编语言写 web 软件 ：可以做到，但使用适当的工具会更容易完成。核心是被设计成服从命令，而不是给命令。</p>
+<p>为了这个不断增加复杂度的工作， 核心开发者决定去寻求更好的方法来解决这整个问题。</p>
+<h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><p>Linux 2.6 核心将一个小的 ram-based initial root filesystem(initramfs) 包进内核，且若这个文件系统包含一个程序 init，核心会将它当作第一个程序执行。此时，找寻其它文件系统并执行其它程序已不再是内核的问题，而是新程序的工作。</p>
+<p>initramfs 的内容不需是一般功能。若给定系统的 root 文件系统存在于一个加密过的网络块设备，且网络地址、登入、加密都存在 USB 设备 “larry” (需密码方能存取)里，系统的 initramfs 可以有特殊功能的程序，它知道这些事，并使这可以运作。</p>
+<p>对系统而言，不需要很大的 root 文件系统，也不需要寻址或切换到任何其它 root 文件系统。</p>
+<h3 id="这跟-initrd-有何不同"><a href="#这跟-initrd-有何不同" class="headerlink" title="这跟 initrd 有何不同?"></a>这跟 initrd 有何不同?</h3><p>Linux kernel 已经有方法提供 ram-based root filesystem，initrd 机制。对 2.4 及更早的 kernel 来说，initrd 仍然是唯一的方法去做这一连串的事。但 kernel 开发者选择在 2.6 实现一个新的机制是有原因的。</p>
+<h3 id="ramdisk-vs-ramfs"><a href="#ramdisk-vs-ramfs" class="headerlink" title="ramdisk vs ramfs"></a>ramdisk vs ramfs</h3><p>ramdisk (如 initrd) 是 基于ram的块设备，这表明它是一块固定大小的内存，它可以被格式化及挂载，就像磁盘一样。这表明 ramdisk 的内容需先格式化并用特殊的工具(像是 mke2fs 及 losetup)做前置作业，而且如同所有的块设备，它需要文件系统驱动程序在执行时期解释数据。这也有人工的大小限制不论是浪费空间(若 ramdisk 没有满，已被占用的额外的内存也不能用来做其它事)或容量限制(若 ramdisk 满了，但其它仍有闲置的内存，也不能不经由重新格式化将它扩展)。</p>
+<p>但 ramdisk 由于缓冲机制（caching）实际上浪费了更多内存。Linux 被设计为将所有的文件及目录做缓存，不论是对块设备的读出或写入，所以 Linux 复制数据到 ramdisk及从 ramdisk 复制数据出来，page cache 给 file data 用，而 dentry cache 给目录用。ramdisk 的下面则伪装为块设备。</p>
+<p>几年前，Linus Torvalds 有一个巧妙的想法：Linux 的缓存是否可以被挂载一个文件系统？只要保持文件在缓存中且不要将它们清除，直到它们被删除或系统重新启动？Linus 写了一小段程序将缓存包起来，称它为 ramfs，而其它的 kernel 开发者建立一个加强版本称为 tmpfs(它可以写数据到 swap，及限制挂载点的大小，所以在它消耗完所有可用的内存前它会填满)。initramfs 就是 tmpfs 的一个实例。<br>这些基于ram的文件系统自己改变大小以符合数据所需的大小。增加文件到 ramfs(或增大原有的文件)会自动配置更多的内存，并删除或截去文件以释放内存。在块设备及缓存间没有复制动作，因为没有实际的块设备。在缓存中的只是数据的复制。更好的是这并不是新的程序代码，而是已存在的 Linux 缓存程序代码新的应用，这表示它几乎没有增加大小，非常简单，且基于已经历测试的基础上。</p>
+<p>系统使用 initramfs 作为它的 root 文件系统甚至不需要将文件系统驱动程序内建到 kernel，因为没有块设备要用来做文件服务器。只是存在内存中的文件罢了。</p>
+<h3 id="initrd-vs-initramfs"><a href="#initrd-vs-initramfs" class="headerlink" title="initrd vs initramfs"></a>initrd vs initramfs</h3><p>底层架构的改变是 kernel 开发者建立一个新的实现的理由，但当他们在那里时他们清除了很多不好的行为及假设。<br>initrd 被设计为旧的 root= 的 root 设备检测程序代码的前端，而不是取代它。它执行 /linuxrc，这被用来完成设定功能(像是登入网络，决定哪个设备含有 root 分区，或用文件做为 loopback 设备)，告诉 kernel 哪个块设备含有真的 root 设备(通过写入de_t 数据到 /proc/sys/kernel/real-root-dev)，且回传给 kernel，所以 kernel 可以挂载真的 root 设备及执行真的 init 程序。</p>
+<p>这里假设“真的根设备”是块设备而不是网络共享的，同时也假设 initrd 自己不是做为真的 root 文件系统。kernel 也不会执行 /linuxrc 而做为特殊的进程（ID=1），因为这个 process ID(它有特殊的属性，像是做为唯一无法被以 kill -9 的 process) 被保留给 init，kernel 在它挂载真的 root 文件系统后会等它执行。</p>
+<p>用 initramfs，kernel 开发者移除所有的假设。当 kernel 启动了在 initramfs 外的 /init，kernel 即做好决定并回去等待接受命令。用 initramfs，kernel 不需要关心真的 root 档案系统在哪里，而在 initramfs 的 /init 被执行为真的 init，以 PID 1。(若 initramfs 的 init 需要不干涉特别的 PID 给其它程序，它可以用 exec() 系统呼叫，就像其它人一样)</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>传统的 root= kernel 命令列选项仍然被支持且可用。但在开发支持initial RAM disk支持内核时，提供了许多优化和灵活性。</p>
+<h3 id="译者注"><a href="#译者注" class="headerlink" title="译者注"></a>译者注</h3><p><strong>查看initramfs的内容</strong></p>
+<pre><code># mkdir initrd
+# cd intrd
+# cp /boot/initrd.img initrd.img
+# gunzip initrd.img
+# cpio -i --make-directories &lt; initrd.img
+#
+</code></pre><p><strong>创建initramfs</strong></p>
+<p>a. mkinitramf</p>
+<pre><code># mkinitramfs -o /boot/initrd.img 2.6.2
+</code></pre><p>Note: 2.6.25是需要创建initramfs的kernel版本号，如果是给当前kernel制作initramfs，可以用uname -r查看当前的版本号。提供kernel版本号的主要目的是为了在initramfs中添加指定kernel的驱动模块。mkinitramfs会把/lib/modules/${kernel_version}/ 目录下的一些启动会用到的模块添加到initramfs中。</p>
+<p>b. update-initramfs</p>
+<p>更新当前kernel的initramfs</p>
+<pre><code># update-initramfs -u
+</code></pre><p>在添加模块时，initramfs tools只会添加一些必要模块，用户可以通过在/etc/initramfs-tools/modules文件中加入模块名称来指定必须添加的模块。</p>
+<p>命令：mkinitramfs, update-initramfs</p>
+<p><strong>mkinitcpio</strong></p>
+<p>在Arch Linux中，有一个新一代的initramfs制作工具。相对于老的mkinitrd和mkinitramfs，它有以下很多优点。查看详细《使用mkinitcpio》。</p>
+<p><strong>参考链接</strong>：</p>
+<ul>
+<li>精通initramfs构建 <a href="http://linuxman.blog.ccidnet.com/blog-htm-do-list-uid-60710-type-blog-dirid-14402.html" target="_blank" rel="external">http://linuxman.blog.ccidnet.com/blog-htm-do-list-uid-60710-type-blog-dirid-14402.html</a> </li>
+<li>制作initramfs镜像 <a href="http://www.diybl.com/course/6_system/linux/Linuxjs/200888/135080.html" target="_blank" rel="external">http://www.diybl.com/course/6_system/linux/Linuxjs/200888/135080.html</a>  </li>
+</ul>
+<hr>
+<p>原文如下：</p>
+<hr>
+<h3 id="The-problem-Why-“root-”-doesn’t-scale"><a href="#The-problem-Why-“root-”-doesn’t-scale" class="headerlink" title="The problem. (Why “root=” doesn’t scale.)"></a>The problem. (Why “root=” doesn’t scale.)</h3><p>When the Linux kernel boots the system, it must find and run the first user program, generally called “init”. User programs live in filesystems, so the Linux kernel must find and mount the first (or “root”) filesystem in order to boot successfully.</p>
+<p>Ordinarily, available filesystems are listed in the file /etc/fstab so the mount program can find them. But /etc/fstab is itself a file, stored in a filesystem. Finding the very first filesystem is a chicken and egg problem, and to solve it the kernel developers created the kernel command line option “root=”, to specify which device the root filesystem lives on.</p>
+<p>Fifteen years ago, “root=” was easy to interpret. It was either a floppy drive or a partition on a hard drive. These days the root filesystem could be on dozens of different types of hardware (SCSI, SATA, flash MTD), or even spread across several of them in a RAID. Its location could move around from boot to boot, such as hot pluggable USB devices on a system with multiple USB ports – when there are several USB devices, which one is correct? The root filesystem might be compressed (how?), encrypted (with what keys?), or loopback mounted (where?). It could even live out on a network server, requiring the kernel to acquire a DHCP address, perform a DNS lookup, and log in to a remote server (with username and password), all before the kernel can find and run the first userspace program.</p>
+<p>These days, “root=” just isn’t enough information. Even hard-wiring tons of special case behavior into the kernel doesn’t help with device enumeration, encryption keys, or network logins that vary from system to system. Worse, programming the kernel to perform these kind of complicated multipart tasks is like writing web software in assembly language: it can be done, but it’s considerably easier to simply use the proper tools for the job. The kernel is designed to follow orders, not give them.</p>
+<p>With no end to this ever-increasing complexity in sight, the kernel developers decided to back up and find a better way to deal with the whole problem.</p>
+<h3 id="The-solution"><a href="#The-solution" class="headerlink" title="The solution"></a>The solution</h3><p>Linux 2.6 kernels bundle a small ram-based initial root filesystem into the kernel, and if this filesystem contains a program called “/init” the kernel runs that as its first program. At that point, finding some other filesystem containing some other program to run is no longer the kernel’s problem, but is now the job of the new program.</p>
+<p>The contents of initramfs don’t have to be general purpose. If a given system’s root filesystem lives on an encrypted network block device, and the network address, login, and decryption key are all to be found on a USB device named “larry” (which requires a password to access), that system’s initramfs can have a special-purpose program that knows all about that, and makes it happen.</p>
+<p>For systems that don’t need a large root filesystem, there’s no need to locate or switch to any other root filesystem.</p>
+<h3 id="How-is-this-different-from-initrd"><a href="#How-is-this-different-from-initrd" class="headerlink" title="How is this different from initrd?"></a>How is this different from initrd?</h3><p>The linux kernel already had a way to provide a ram-based root filesystem, the initrd mechanism. For 2.4 and earlier kernels, initrd is still the only way to do this sort of thing. But the kernel developers chose to implement a new mechanism in 2.6 for several reasons.</p>
+<h3 id="ramdisk-vs-ramfs-1"><a href="#ramdisk-vs-ramfs-1" class="headerlink" title="ramdisk vs ramfs"></a>ramdisk vs ramfs</h3><p>A ramdisk (like initrd) is a ram based block device, which means it’s a fixed size chunk of memory that can be formatted and mounted like a disk. This means the contents of the ramdisk have to be formatted and prepared with special tools (such as mke2fs and losetup), and like all block devices it requires a filesystem driver to interpret the data at runtime. This also imposes an artificial size limit that either wastes space (if the ramdisk isn’t full, the extra memory it takes up still can’t be used for anything else) or limits capacity (if the ramdisk fills up but other memory is still free, you can’t expand it without reformatting it).</p>
+<p>But ramdisks actually waste even more memory due to caching. Linux is designed to cache all files and directory entries read from or written to block devices, so Linux copies data to and from the ramdisk into the “page cache” (for file data), and the “dentry cache” (for directory entries). The downside of the ramdisk pretending to be a block device is it gets treated like a block device.</p>
+<p>A few years ago, Linus Torvalds had a neat idea: what if Linux’s cache could be mounted like a filesystem? Just keep the files in cache and never get rid of them until they’re deleted or the system reboots? Linus wrote a tiny wrapper around the cache called “ramfs”, and other kernel developers created an improved version called “tmpfs” (which can write the data to swap space, and limit the size of a given mount point so it fills up before consuming all available memory). Initramfs is an instance of tmpfs.</p>
+<p>These ram based filesystems automatically grow or shrink to fit the size of the data they contain. Adding files to a ramfs (or extending existing files) automatically allocates more memory, and deleting or truncating files frees that memory. There’s no duplication between block device and cache, because there’s no block device. The copy in the cache is the only copy of the data. Best of all, this isn’t new code but a new application for the existing Linux caching code, which means it adds almost no size, is very simple, and is based on extremely well tested infrastructure.</p>
+<p>A system using initramfs as its root filesystem doesn’t even need a single filesystem driver built into the kernel, because there are no block devices to interpret as filesystems. Just files living in memory.</p>
+<h3 id="Initrd-vs-initramfs"><a href="#Initrd-vs-initramfs" class="headerlink" title="Initrd vs initramfs"></a>Initrd vs initramfs</h3><p>The change in underlying infrastructure was a reason for the kernel developers to create a new implementation, but while they were at it they cleaned up a lot of bad behavior and assumptions.</p>
+<p>Initrd was designed as front-end to the old “root=” root device detection code, not a replacement for it. It ran a program called “/linuxrc” which was intended to perform setup functions (like logging on to the network, determining which of several devices contained the root partition, or associating a loopback device with a file), tell the kernel which block device contained the real root device (by writing the de_t number to /proc/sys/kernel/real-root-dev), and then return to the kernel so the kernel could mount the real root device and execute the real init program.</p>
+<p>This assumed that the “real root device” was a block device rather than a network share, and also assumed that initrd wasn’t itself going to be the real root filesystem. The kernel didn’t even execute “/linuxrc” as the special process ID 1, because that process ID (and its special properties like being the only process that can not be killed with “kill -9”) was reserved for init, which the kernel was waiting to run after it mounted the real root filesystem.</p>
+<p>With initramfs, the kernel developers removed all these assumptions. Once the kernel launches “/init” out of initramfs, the kernel is done making decisions and can go back to following orders. With initramfs, the kernel doesn’t care where the real root filesystem is (it’s initramfs until further notice), and the “/init” program from initramfs is run as a real init, with PID 1. (If initramfs’s init needs to hand that special Process ID off to another program, it can use the exec() syscall just like everybody else.)</p>
+<h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><p>The traditional root= kernel command-line option is still supported and usable, but new developments in the types of initial RAM disks supported by the kernel provide many optimizations and much-needed flexibility for the future of the Linux kernel. The next article in this series, available in next month’s issue of TimeSource, explains how you can start making the transition to the new initramfs initial RAM disk mechanism.</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag">#Linux</a>
+          
+            <a href="/tags/内核学习/" rel="tag">#内核学习</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2009/02/05/posix-thread-cn/" rel="next" title="POSIX多线程程序设计">
+                <i class="fa fa-chevron-left"></i> POSIX多线程程序设计
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2009/02/10/pthread-1/" rel="prev" title="深入Phtread(一)：线程的一生">
+                深入Phtread(一)：线程的一生 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2009/02/06/initramfs/"
+     data-title="initramfs 简介，一个新的 initial RAM disks 模型"
+     data-content=""
+     data-url="http://yoursite.com/2009/02/06/initramfs/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2009/02/06/initramfs/"
+           data-title="initramfs 简介，一个新的 initial RAM disks 模型" data-url="http://yoursite.com/2009/02/06/initramfs/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解决方法"><span class="nav-number">2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#这跟-initrd-有何不同"><span class="nav-number">3.</span> <span class="nav-text">这跟 initrd 有何不同?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ramdisk-vs-ramfs"><span class="nav-number">4.</span> <span class="nav-text">ramdisk vs ramfs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#initrd-vs-initramfs"><span class="nav-number">5.</span> <span class="nav-text">initrd vs initramfs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#译者注"><span class="nav-number">7.</span> <span class="nav-text">译者注</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#The-problem-Why-“root-”-doesn’t-scale"><span class="nav-number">8.</span> <span class="nav-text">The problem. (Why “root=” doesn’t scale.)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#The-solution"><span class="nav-number">9.</span> <span class="nav-text">The solution</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#How-is-this-different-from-initrd"><span class="nav-number">10.</span> <span class="nav-text">How is this different from initrd?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ramdisk-vs-ramfs-1"><span class="nav-number">11.</span> <span class="nav-text">ramdisk vs ramfs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Initrd-vs-initramfs"><span class="nav-number">12.</span> <span class="nav-text">Initrd vs initramfs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Summary"><span class="nav-number">13.</span> <span class="nav-text">Summary</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="重构,编码规范," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="一屏之地，一览无余！对的！要的就是短小精悍！
+
+翻开项目的代码，处处可见成百上千行的函数，函数体里面switch-case、if、for等交错在一起，一眼望不到头的感觉。有些变态的函数，长度可能得按公里计算了。神啊，请赐予我看下去的勇气吧！先不论逻辑如何，首先这长度直接就把人给吓到了。这些超大号函数是怎么来得呢？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编码之道：小函数的大威力">
+<meta property="og:url" content="http://yoursite.com/2015/02/12/zoc-cleancode-3/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="一屏之地，一览无余！对的！要的就是短小精悍！
+
+翻开项目的代码，处处可见成百上千行的函数，函数体里面switch-case、if、for等交错在一起，一眼望不到头的感觉。有些变态的函数，长度可能得按公里计算了。神啊，请赐予我看下去的勇气吧！先不论逻辑如何，首先这长度直接就把人给吓到了。这些超大号函数是怎么来得呢？">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.508Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="编码之道：小函数的大威力">
+<meta name="twitter:description" content="一屏之地，一览无余！对的！要的就是短小精悍！
+
+翻开项目的代码，处处可见成百上千行的函数，函数体里面switch-case、if、for等交错在一起，一眼望不到头的感觉。有些变态的函数，长度可能得按公里计算了。神啊，请赐予我看下去的勇气吧！先不论逻辑如何，首先这长度直接就把人给吓到了。这些超大号函数是怎么来得呢？">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/02/12/zoc-cleancode-3/"/>
+
+
+  <title> 编码之道：小函数的大威力 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                编码之道：小函数的大威力
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2015-02-12T22:05:00+09:00" content="2015-02-12">
+              2015-02-12
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/编码之道/" itemprop="url" rel="index">
+                    <span itemprop="name">编码之道</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/02/12/zoc-cleancode-3/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/02/12/zoc-cleancode-3/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>一屏之地，一览无余！对的！要的就是短小精悍！</p>
+</blockquote>
+<p>翻开项目的代码，处处可见成百上千行的函数，函数体里面switch-case、if、for等交错在一起，一眼望不到头的感觉。有些变态的函数，长度可能得按公里计算了。神啊，请赐予我看下去的勇气吧！先不论逻辑如何，首先这长度直接就把人给吓到了。这些超大号函数是怎么来得呢？</p>
+<a id="more"></a>
+<ul>
+<li>直接从别处COPY一段代码，随便改改即可，造成大量重复代码。</li>
+<li>缺少封装，甚至说就没有封装，完全就是随意乱加一气，造成各个抽象层次的代码混合在一起，混乱不堪。</li>
+<li>成篇的异常处理和特殊处理，核心逻辑或许就是函数体开头、中间或结束那么几行而已。</li>
+</ul>
+<p>这些超长的函数，给我们造成了很大的麻烦：阅读代码找BUG几乎是不可能的事情，没有调试器估计撞墙的心都有了；重复代码造成修改困难，漏掉任何一处迟早是要出问题的；各个层次的代码混在一起，阅读代码相当吃力，人的临时记忆是有限的，不断在各个层次之间切换，一会儿就给绕晕了。</p>
+<p>解决这些问题最重要的就是要保持函数的短小，短小的函数阅读起来要好得多，同时短小的函数意味着较好的封装。下面谈谈关于函数，应该遵循的一些原则：</p>
+<h3 id="1-原则-取个描述性的名字"><a href="#1-原则-取个描述性的名字" class="headerlink" title="1. 原则:取个描述性的名字"></a>1. 原则:取个描述性的名字</h3><ul>
+<li>取个一眼就看出函数意图的名字很重要</li>
+<li>长而具有描述性的名称，要比短而让人费解的好（长度适中，也不能过分长）</li>
+<li>使用动词或动词+名词短语</li>
+</ul>
+<p>在<a href="/posts/zoc-cleancode-2/">编码之道：取个好名字</a>中已经介绍过，好名字的重要性，不再赘述。</p>
+<h3 id="2-原则-保持参数列表的简洁"><a href="#2-原则-保持参数列表的简洁" class="headerlink" title="2. 原则:保持参数列表的简洁"></a>2. 原则:保持参数列表的简洁</h3><ul>
+<li>无参数最好，其次一元，再次二元，三元尽量避免</li>
+<li>尽量避免标识参数</li>
+<li>使用参数对象</li>
+<li>参数列表</li>
+<li>避免输出和输入混用，无法避免则输出在左，输入在右</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">isBossNpc</span><span class="params">()</span></span>;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">summonNpc</span><span class="params">(<span class="keyword">int</span> id)</span></span>;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">summonNpc</span><span class="params">(<span class="keyword">int</span> id, <span class="keyword">int</span> type)</span></span>;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">summonNpc</span><span class="params">(<span class="keyword">int</span> id, <span class="keyword">int</span> state, <span class="keyword">int</span> type)</span></span>; <span class="comment">// 还能记得参数顺序吗？</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">showCurrentEffect</span><span class="params">(<span class="keyword">int</span> state, <span class="keyword">bool</span> show)</span></span>; <span class="comment">// Bad!!!</span></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">showCurrentEffect</span><span class="params">(<span class="keyword">int</span> state)</span></span>; <span class="comment">// Good!!</span></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">hideCurrentEffect</span><span class="params">(<span class="keyword">int</span> state)</span></span>; <span class="comment">// 新加个函数也没多难吧？</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">needWeapon</span><span class="params">(DWORD skillid, BYTE&amp; failtype)</span></span>; <span class="comment">// Bad!!!</span></div></pre></td></tr></table></figure>
+<h3 id="3-原则-保持函数短小"><a href="#3-原则-保持函数短小" class="headerlink" title="3. 原则:保持函数短小"></a>3. 原则:保持函数短小</h3><ul>
+<li>第一规则：要短小</li>
+<li>第二规则：还要更短小</li>
+<li>要做到“一屏之地，一览无余”更好</li>
+</ul>
+<h3 id="4-原则-只做一件事"><a href="#4-原则-只做一件事" class="headerlink" title="4. 原则:只做一件事"></a>4. 原则:只做一件事</h3><ul>
+<li>函数应该只做一件事，做好这件事</li>
+<li>且只做这一件事</li>
+</ul>
+<h3 id="5-原则-每个函数位于同一抽象层级"><a href="#5-原则-每个函数位于同一抽象层级" class="headerlink" title="5. 原则:每个函数位于同一抽象层级"></a>5. 原则:每个函数位于同一抽象层级</h3><ul>
+<li>要确保函数只做一件事，函数中的语句都要在同一个抽象层级上</li>
+<li>自顶下下读代码</li>
+</ul>
+<h3 id="6-原则-无副作用"><a href="#6-原则-无副作用" class="headerlink" title="6. 原则:无副作用"></a>6. 原则:无副作用</h3><ul>
+<li>谎言，往往名不副实</li>
+</ul>
+<h3 id="7-原则-操作和检查要分离"><a href="#7-原则-操作和检查要分离" class="headerlink" title="7. 原则:操作和检查要分离"></a>7. 原则:操作和检查要分离</h3><ul>
+<li>要么是做点什么，要么回答点什么，但二者不可兼得”)</li>
+<li>混合使用—副作用的肇事者</li>
+</ul>
+<h3 id="8-原则-使用异常来代替返回错误码"><a href="#8-原则-使用异常来代替返回错误码" class="headerlink" title="8. 原则:使用异常来代替返回错误码"></a>8. 原则:使用异常来代替返回错误码</h3><ul>
+<li>操作函数返回错误码轻微违法了操作与检查的隔离原则</li>
+<li>用异常在某些情况下会更好点</li>
+<li>抽离try-cacth</li>
+<li>错误处理也是一件事情，也应该封装为函数</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> RedisClient::connect(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; host, <span class="keyword">uint16_t</span> port)</div><div class="line">&#123;</div><div class="line">	<span class="keyword">this</span>-&gt;host = host;</div><div class="line">	<span class="keyword">this</span>-&gt;port = port;</div><div class="line">	<span class="keyword">this</span>-&gt;close();</div><div class="line">	</div><div class="line">	<span class="keyword">try</span> </div><div class="line">	&#123;</div><div class="line">		redis_cli = <span class="keyword">new</span> redis::client(host, port);</div><div class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">catch</span> (redis::redis_error&amp; e) </div><div class="line">	&#123;</div><div class="line">		redis_cli = <span class="literal">NULL</span>;</div><div class="line">		<span class="built_in">std</span>::<span class="built_in">cerr</span> &lt;&lt; <span class="string">"error:"</span> &lt;&lt; e.what() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</div><div class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="9-原则-减少重复代码”"><a href="#9-原则-减少重复代码”" class="headerlink" title="9. 原则:减少重复代码”"></a>9. 原则:减少重复代码”</h3><blockquote>
+<p>重复是一些邪恶的根源！！！</p>
+</blockquote>
+<h3 id="10-原则-避免丑陋不堪的switch-case"><a href="#10-原则-避免丑陋不堪的switch-case" class="headerlink" title="10. 原则:避免丑陋不堪的switch-case"></a>10. 原则:避免丑陋不堪的switch-case</h3><ul>
+<li>天生要做N件事情的货色</li>
+<li>多次出现就要考虑用多态进行重构</li>
+</ul>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">saveBinary</span><span class="params">(type, data)</span> </span>&#123;</div><div class="line">   <span class="keyword">switch</span> (type) &#123;</div><div class="line">     <span class="keyword">case</span> TYPE_OBJECT:</div><div class="line">           ....</div><div class="line">          <span class="keyword">break</span>;</div><div class="line">     <span class="keyword">case</span> TYPE_SKILL:</div><div class="line">           ...</div><div class="line">          <span class="keyword">break</span>;</div><div class="line">     ....</div><div class="line">   &#125;</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">needSaveBinary</span><span class="params">(type)</span> </span>&#123;</div><div class="line">   <span class="keyword">switch</span> (type) &#123;</div><div class="line">     <span class="keyword">case</span> TYPE_OBJECT:</div><div class="line">          <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">     <span class="keyword">case</span> TYPE_SKILL:</div><div class="line">           ...</div><div class="line">          <span class="keyword">break</span>;</div><div class="line">     ....</div><div class="line">   &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">class</span> BinaryMember</div><div class="line">&#123;</div><div class="line">  <span class="function">BinaryMember* <span class="title">createByType</span><span class="params">(type)</span></span>&#123;</div><div class="line">   <span class="keyword">switch</span> (type) &#123;</div><div class="line">     <span class="keyword">case</span> TYPE_OBJECT:</div><div class="line">          <span class="keyword">return</span> <span class="keyword">new</span> ObjectBinaryMember;</div><div class="line">     <span class="keyword">case</span> TYPE_SKILL:</div><div class="line">          <span class="keyword">return</span> <span class="keyword">new</span> SkillBinaryMember;</div><div class="line">     ....</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">bool</span> <span class="title">save</span><span class="params">(data)</span></span>;</div><div class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">bool</span> <span class="title">needSave</span><span class="params">(data)</span></span>;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">class</span> ObjectBinaryMember : <span class="keyword">public</span> BinaryMember</div><div class="line">&#123;</div><div class="line">   <span class="function"><span class="keyword">bool</span> <span class="title">save</span><span class="params">(data)</span></span>&#123;</div><div class="line">       ....</div><div class="line">   &#125;</div><div class="line">   <span class="function"><span class="keyword">bool</span> <span class="title">needSave</span><span class="params">(data)</span></span>&#123;</div><div class="line">       ....</div><div class="line">   &#125;</div><div class="line">&#125;;<span class="string">")))</span></div></pre></td></tr></table></figure>
+<h3 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h3><p>上面提到的原则，若要理解的更加深刻，建议去阅读《代码整洁之道》，里面有许多详尽的例子，对于写过几年代码的人来说，总会发现一些自己所在项目经常犯的毛病。</p>
+<p>知道了这些原则，我们应该这样做:</p>
+<p><strong>当在添加新函数的时候：</strong></p>
+<ul>
+<li>刚下手时违反规范和原则没关系</li>
+<li>开发过程中逐步打磨</li>
+<li>保证提交后的代码是整洁的即可</li>
+</ul>
+<p><strong>重构现有的函数，有下面情况的，见一个消灭一个：</strong></p>
+<ul>
+<li>冗长而复杂</li>
+<li>有太多缩进和嵌套循环</li>
+<li>参数列表过长</li>
+<li>名字随意取</li>
+<li>重复了三次以上</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/重构/" rel="tag">#重构</a>
+          
+            <a href="/tags/编码规范/" rel="tag">#编码规范</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/02/11/zoc-cleancode-2/" rel="next" title="编码之道：取个好名字很重要">
+                <i class="fa fa-chevron-left"></i> 编码之道：取个好名字很重要
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/03/02/self-mastery/" rel="prev" title="自我超越之路">
+                自我超越之路 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2015/02/12/zoc-cleancode-3/"
+     data-title="编码之道：小函数的大威力"
+     data-content=""
+     data-url="http://yoursite.com/2015/02/12/zoc-cleancode-3/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2015/02/12/zoc-cleancode-3/"
+           data-title="编码之道：小函数的大威力" data-url="http://yoursite.com/2015/02/12/zoc-cleancode-3/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-原则-取个描述性的名字"><span class="nav-number">1.</span> <span class="nav-text">1. 原则:取个描述性的名字</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-原则-保持参数列表的简洁"><span class="nav-number">2.</span> <span class="nav-text">2. 原则:保持参数列表的简洁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-原则-保持函数短小"><span class="nav-number">3.</span> <span class="nav-text">3. 原则:保持函数短小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-原则-只做一件事"><span class="nav-number">4.</span> <span class="nav-text">4. 原则:只做一件事</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-原则-每个函数位于同一抽象层级"><span class="nav-number">5.</span> <span class="nav-text">5. 原则:每个函数位于同一抽象层级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-原则-无副作用"><span class="nav-number">6.</span> <span class="nav-text">6. 原则:无副作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-原则-操作和检查要分离"><span class="nav-number">7.</span> <span class="nav-text">7. 原则:操作和检查要分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-原则-使用异常来代替返回错误码"><span class="nav-number">8.</span> <span class="nav-text">8. 原则:使用异常来代替返回错误码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-原则-减少重复代码”"><span class="nav-number">9.</span> <span class="nav-text">9. 原则:减少重复代码”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-原则-避免丑陋不堪的switch-case"><span class="nav-number">10.</span> <span class="nav-text">10. 原则:避免丑陋不堪的switch-case</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最后"><span class="nav-number">11.</span> <span class="nav-text">最后</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

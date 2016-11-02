@@ -1,0 +1,1807 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>TinyLab</title>
+  <subtitle>Keep eyes on the star and feet on the ground.</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2016-11-02T09:52:35.319Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>David++</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>C++构建系统的选择</title>
+    <link href="http://yoursite.com/2016/10/28/build-system/"/>
+    <id>http://yoursite.com/2016/10/28/build-system/</id>
+    <published>2016-10-27T15:00:00.000Z</published>
+    <updated>2016-11-02T09:52:35.319Z</updated>
+    
+    <content type="html"><![CDATA[<p>C++少说也用了十年了，从简单的Hello World到200万行的游戏项目，编译和构建的工具也经历了各种升级。最终的开发环境，选择了Clang+GDB+CMake。当然不断改进和升级开发工具的脚步尚未停止，只要能提高开发效率，怎样折腾都是值得的。</p>
+<p>期间经历了：</p>
+<ol>
+<li>直接调用编译和链接命令</li>
+<li>使用Makefile</li>
+<li>使用CMake</li>
+<li>不断尝试其他构建系统，如：b2、WAF、SCons</li>
+</ol>
+<p><img src="/images/2016-10-28-build-system.jpg" alt=" C++构建系统的选择"></p>
+<a id="more"></a>
+<h3 id="对构建系统的要求"><a href="#对构建系统的要求" class="headerlink" title="对构建系统的要求"></a>对构建系统的要求</h3><p>由于C/C++本身的特性，如：跨平台、高性能等、编写复杂等，对构建系统也是提出了一定的要求：</p>
+<ul>
+<li><p><strong>支持并行编译</strong>：构建系统能否支持并行编译？对于编译速度的要求，我给自己定的目标是&lt;10min，超过10min要么换机器，要么想办法优化代码依赖。上百万行的代码，并行编译时必须的，否则一不小心改一行代码等个把小时，这样开发时间白白浪费在编译上太不值得了。</p>
+</li>
+<li><p><strong>自动生成依赖</strong>：构建系统是否仅仅编译刚修改过的及其依赖的文件？代码的依赖关系，要我们自己去手动写脚本（一般gcc/clang的话，使用<code>gcc -M xx.cpp</code>）？</p>
+</li>
+<li><p><strong>跨平台</strong>：构建系统能否仅写一份构建脚本，支持多种平台？有些项目需要进行交叉编译，测试环境和运行环境是在不同的平台环境下。</p>
+</li>
+<li><p><strong>支持自定义构建目标</strong>： 构建系统必须支持扩展，支持自定义Target等。如：protobuf文件可以根据依赖规则自动生成.h、.cpp；自定义一些用于打包或测试的命令（<code>make pack</code>、<code>make test</code>）。</p>
+</li>
+</ul>
+<p>本文下面大概介绍一下刚提到的构建系统，具体用法不赘述，官方网站是最好的开始地方。若有必要会另起文章详细讲解如何使用及其工作原理。</p>
+<h3 id="基于make的"><a href="#基于make的" class="headerlink" title="基于make的"></a>基于make的</h3><h4 id="GNU-Make"><a href="#GNU-Make" class="headerlink" title="GNU Make"></a>GNU Make</h4><p>对于玩Linux的人来说，这是太熟悉不过的东西了。小规模的项目或仅自己玩的项目，手写Makefile完全就足够了。</p>
+<p>GNU Make 是一个控制源码生成可执行文件或其他文件的工具。需要一个叫Makefile的文件来说明构建的目标和规则。</p>
+<p>最简单的规则大概是这样的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">target:   dependencies ...</div><div class="line">          commands</div><div class="line">          ...</div></pre></td></tr></table></figure>
+<p>意思是：生成<code>target</code>，依赖于<code>dependencies</code>，如果<code>dependencies</code>有修改或者<code>target</code>不存在，就逐个执行下面的<code>commands</code>去生成<code>target</code>。</p>
+<p>下面贴一个复杂的Makefile感受下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">CXX      = g++</div><div class="line">CXXFLAGS = -g -I../proto.client -I../common</div><div class="line">LDFLAGS  = -L../common  -L../proto.client/ -lproto.client -L/usr/local/lib -lzmq -lprotobuf -ltinyworld</div><div class="line"></div><div class="line">OBJS = main.o</div><div class="line"></div><div class="line">SRCS = $(OBJS:%.o=%.cpp)</div><div class="line">DEPS = $(OBJS:%.o=.%.d) </div><div class="line"></div><div class="line">TARGET=gateserver</div><div class="line"></div><div class="line">.PHONY: all clean</div><div class="line"></div><div class="line">all : $(TARGET)</div><div class="line"></div><div class="line">include $(DEPS)</div><div class="line">$(DEPS): $(SRCS)</div><div class="line">	@$(CXX) -M $(CXXFLAGS) $&lt; &gt; $@.$$$$; \</div><div class="line">		sed &apos;s,\($*\)\.o[ :]*,\1.o $@ : ,g&apos; &lt; $@.$$$$ &gt;$@; \</div><div class="line">		rm -f $@.$$$$</div><div class="line"></div><div class="line">$(OBJS): %.o: %.cpp</div><div class="line">	$(CXX) -c $(CXXFLAGS) $&lt; -o $@</div><div class="line"></div><div class="line">$(TARGET): $(OBJS) ../common/libtinyworld.a</div><div class="line">	$(CXX) $(OBJS) -o $@ $(CXXFLAGS) $(LDFLAGS)</div><div class="line"></div><div class="line">clean:</div><div class="line">	@rm -rf $(TARGET)</div></pre></td></tr></table></figure>
+<h4 id="Microsoft-NMake"><a href="#Microsoft-NMake" class="headerlink" title="Microsoft NMake"></a>Microsoft NMake</h4><p>在Windows下面做开发，Visual Studio基本上完全胜任。微软自己的IDE功能强大，对于项目构建的管理IDE帮着你搞定了。VS的构建的管理其实用的是微软自己的Make，叫NMAKE。脚本还是IDE，各有千秋：IDE好处就是它什么都帮你干了，简单方便；坏处就是对构建的方式和过程了解的比较浅，自由度没那么大，遇到大型项目的特殊需求时要各种查资料。</p>
+<p>MSDN上面的NMAKE脚本示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"># Sample makefile</div><div class="line"></div><div class="line">!include &lt;win32.mak&gt;</div><div class="line"></div><div class="line">all: simple.exe challeng.exe</div><div class="line"></div><div class="line">.c.obj:</div><div class="line">  $(cc) $(cdebug) $(cflags) $(cvars) $*.c</div><div class="line"></div><div class="line">simple.exe: simple.obj</div><div class="line">  $(link) $(ldebug) $(conflags) -out:simple.exe simple.obj $(conlibs) lsapi32.lib</div><div class="line"></div><div class="line">challeng.exe: challeng.obj md4c.obj</div><div class="line">  $(link) $(ldebug) $(conflags) -out:challeng.exe $** $(conlibs)</div></pre></td></tr></table></figure></p>
+<h3 id="自动生成make脚本的"><a href="#自动生成make脚本的" class="headerlink" title="自动生成make脚本的"></a>自动生成make脚本的</h3><p>手动写make脚本自由度大，为了自由度，它的设计比较简单，有许多上述对构建系统的要求它没法支持。如：GUN Make没法自己知道代码的依赖，需要借助编译器来自己写脚本；跨平台就更不可能了。</p>
+<p>还有一个重要的影响就是对于环境的自动检测。如果你的代码发布出去，任何一个人下载下来需要进行编译，他的编译器、操作系统环境、依赖的第三方库的位置和版本都会有差异，如何进行编译？难到要下载你代码的人去手动修改你的Makefile吗？当然不是，这个时候在编译之前还需要一步：检测当前编译环境、操作系统环境、第三方库的位置等，不满足要求就直接报错，检测到所有依赖后再根据这些信息生成适合你当前系统的Makefile，然后才能进行编译。</p>
+<h4 id="GNU-Build-System"><a href="#GNU-Build-System" class="headerlink" title="GNU Build System"></a>GNU Build System</h4><p>认识GNU Build System可以从两个角度入手：使用者和开发者。主要包含三大模块：</p>
+<ul>
+<li>Autoconf</li>
+<li>Automake</li>
+<li>Libtool</li>
+</ul>
+<p><strong>站在使用者的角度</strong>，GNU Build System为我们提供了源码包<strong>编译安装</strong>的方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">tar -xvzf package-name.version.tar.gz <span class="comment"># tar -xvjf package-name.version.tar.bz2 </span></div><div class="line"><span class="built_in">cd</span> package-name.version</div><div class="line">./configure --prefix=xxx</div><div class="line">make</div><div class="line">make install</div></pre></td></tr></table></figure>
+<p>其中的<code>configure</code>就是检测环境，生成Makefile的脚本。大概的过程如下：</p>
+<p><img src="/images/gnu-build-system-1.jpg" alt="构建和安装"></p>
+<p><strong>站在开发者的角度</strong>，GNU Build System 为我们广大程序员提供了<strong>编写构建规则和检查安装环境</strong>的功能。</p>
+<p><img src="/images/gnu-build-system-2.jpg" alt="GNU Build System"></p>
+<p>要发布自己的源码，首先需要一个Autoconf的<code>configure.ac</code>，最简单的长这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">AC_INIT([hello], [1.0]) </div><div class="line">AC_CONFIG_SRCDIR([hello.c]) </div><div class="line">AC_CONFIG_HEADERS(config.h) </div><div class="line">AC_PROG_CC </div><div class="line">AC_CONFIG_FILES(Makefile) </div><div class="line">AC_PROG_INSTALL </div><div class="line">AC_OUTPUT</div></pre></td></tr></table></figure>
+<p>其次还需要一个Automake的<code>Makefile.am</code>来描述构建规则，看起来这这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">AC_INIT([hello], [1.0]) </div><div class="line">AC_CONFIG_SRCDIR([hello.c]) </div><div class="line">AC_CONFIG_HEADERS(config.h) </div><div class="line">AM_INIT_AUTOMAKE </div><div class="line">AC_PROG_CC </div><div class="line">AC_CONFIG_FILES(Makefile) </div><div class="line">AC_PROG_INSTALL </div><div class="line">AC_OUTPUT</div></pre></td></tr></table></figure>
+<p>定义好检查环境和配置的<code>configure.ac</code>和描述构建规则的<code>Makefile.am</code>，生成一个可以发布的源码包大概过程如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">aclocal </div><div class="line">autoconf </div><div class="line">autoheader </div><div class="line">touch NEWS README AUTHORS ChangeLog </div><div class="line">automake <span class="_">-a</span> </div><div class="line">./configure </div><div class="line">make </div><div class="line">make dist</div></pre></td></tr></table></figure>
+<h4 id="CMake"><a href="#CMake" class="headerlink" title="CMake"></a>CMake</h4><p><img src="/images/cmake-logo.jpg" alt="CMake"></p>
+<p>CMake是一个跨平台的安装（编译）工具，可以用简单的语句来描述所有平台的安装（编译过程）。他能够输出各种各样的Makefile或者project文件，能检查编译器所支持的C++特性，类似UNIX下的automake。CMake 并不直接建构出最终的软件，而是产生标准的建构脚本（如Unix 的 Makefile 或 Windows Visual C++ 的 projects/workspaces），然后再使用相应的工具进行编译。</p>
+<p>CMak的特点主要有：</p>
+<ol>
+<li>开放源代码， 使用类 BSD 许可发布。 <a href="http://cmake.org/HTML/Copyright" target="_blank" rel="external">http://cmake.org/HTML/Copyright</a>. html</li>
+<li>跨平台， 并可生成 native 编译配置文件， 在 Linux/Unix 平台， 生成 makefile， 在苹果平台， 可以生成 xcode， 在 Windows 平台， 可以生成 MSVC 的工程文件。</li>
+<li>能够管理大型项目， KDE4 就是最好的证明。</li>
+<li>简化编译构建过程和编译过程。 CMake 的工具链非常简单： <code>cmake+make</code>。</li>
+<li>可扩展， 可以为 cmake 编写特定功能的模块， 扩充 cmake 功能。</li>
+</ol>
+<p>其实CMake工具包不仅仅提供了编译，还有：支持单元测试的CTest，支持不同平台打包的CPack，自动化测试及其展示的CDash。有兴趣的访问官方网站学习：<a href="https://cmake.org/" target="_blank" rel="external">https://cmake.org/</a></p>
+<p>一般，在每个源码目录下都有一个 CMakeLists.txt，看起来是这样的：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">cmake_minimum_required</span> (VERSION <span class="number">2.6</span>)</div><div class="line"><span class="keyword">project</span> (Tutorial)</div><div class="line"><span class="comment"># The version number.</span></div><div class="line"><span class="keyword">set</span> (Tutorial_VERSION_MAJOR <span class="number">1</span>)</div><div class="line"><span class="keyword">set</span> (Tutorial_VERSION_MINOR <span class="number">0</span>)</div><div class="line"> </div><div class="line"><span class="comment"># configure a header file to pass some of the CMake settings</span></div><div class="line"><span class="comment"># to the source code</span></div><div class="line"><span class="keyword">configure_file</span> (</div><div class="line">  <span class="string">"$&#123;PROJECT_SOURCE_DIR&#125;/TutorialConfig.h.in"</span></div><div class="line">  <span class="string">"$&#123;PROJECT_BINARY_DIR&#125;/TutorialConfig.h"</span></div><div class="line">  )</div><div class="line"> </div><div class="line"><span class="comment"># add the binary tree to the search path for include files</span></div><div class="line"><span class="comment"># so that we will find TutorialConfig.h</span></div><div class="line"><span class="keyword">include_directories</span>(<span class="string">"$&#123;PROJECT_BINARY_DIR&#125;"</span>)</div><div class="line"> </div><div class="line"><span class="comment"># add the executable</span></div><div class="line"><span class="keyword">add_executable</span>(Tutorial tutorial.cxx)</div></pre></td></tr></table></figure>
+<p>使用的时候：</p>
+<p>第一步：根据CMakeLists.txt生成Makefile，命令如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mkdir path-to-build</div><div class="line"><span class="built_in">cd</span> path-to-build</div><div class="line">cmake path-to-source</div></pre></td></tr></table></figure>
+<p>cmake的过程可以分为<strong>配置</strong>和<strong>生成</strong>过程。配置的时候优先从CMakeCache.txt中读取设置，然后再扫一遍CMakeList.txt中的设置，该步骤会检查第三方库和构建过程的变量；生成步骤则根据当前的环境和平台，生成不同的构建脚本，如Linux的Makefile，Windows的VC工程文件。</p>
+<p><img src="/images/cmake-process.png" alt="CMake的过程"></p>
+<p>第二步：编译。没啥好说的，Linux下直接<code>make -jxx</code>，其他的操作系统的IDE直接打开点一下build按钮即可。</p>
+<h3 id="非基于make的"><a href="#非基于make的" class="headerlink" title="非基于make的"></a>非基于make的</h3><p>非基于make的构建系统五花八门，这里只大概介绍一下我所知的几个。</p>
+<h4 id="SCons"><a href="#SCons" class="headerlink" title="SCons"></a>SCons</h4><p>SCons 是一个开放源代码、以 Python 语言编写的下一代的程序建造工具。作为下一代的软件建造工具，SCons 的设计目标就是让开发人员更容易、更可靠和更快速的建造软件。与传统的 make 工具比较，SCons 具有以下优点：</p>
+<ul>
+<li>使用 Python 脚本做为配置文件。</li>
+<li>对于 C，C++,Fortran，内建支持可靠自动依赖分析 。不用像 make 工具那样需要 执行”make depends”和”make clean”就可以获得所有的依赖关系。</li>
+<li>内建支持 C, C++, D, Java, Fortran, Yacc, Lex, Qt，SWIG 以及 Tex/Latex。 用户还可以根据自己的需要进行扩展以获得对需要编程语言的支持。</li>
+<li>支持 make -j 风格的并行建造。相比 make -j, SCons 可以同时运行 N 个工作，而 不用担心代码的层次结构。</li>
+<li>使用 Autoconf 风格查找头文件，函数库，函数和类型定义。</li>
+<li>良好的夸平台性。SCons 可以运行在 Linux, AIX, BSD, HP/UX, IRIX, Solaris, Windows, Mac OS X 和 OS/2 上。</li>
+</ul>
+<p>SCons架构：</p>
+<p><img src="/images/scons-arch.jpg" alt="SCons架构"></p>
+<p>SCons的脚本名为SConstruct， 内容看起来是这样的：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Program(<span class="string">'helloscons2'</span>, [<span class="string">'helloscons2.c'</span>, <span class="string">'file1.c'</span>, <span class="string">'file2.c'</span>], </div><div class="line">    LIBS = <span class="string">'m'</span>, </div><div class="line">    LIBPATH = [<span class="string">'/usr/lib'</span>, <span class="string">'/usr/local/lib'</span>], </div><div class="line">    CCFLAGS = <span class="string">'-DHELLOSCONS'</span>)</div></pre></td></tr></table></figure>
+<p>其中，</p>
+<ul>
+<li>LIBS： 显示的指明要在链接过程中使用的库，如果有多个库，应该把它们放在一个列表里面。这个例子里，我们使用一个称为 m 的库。</li>
+<li>LIBPATH： 链接库的搜索路径，多个搜索路径放在一个列表中。这个例子里，库的搜索路径是 /usr/lib 和 /usr/local/lib。</li>
+<li>CCFLAGS： 编译选项，可以指定需要的任意编译选项，如果有多个选项，应该放在一个列表中。这个例子里，编译选项是通过 -D 这个 gcc 的选项定义了一个宏 HELLOSCONS。</li>
+</ul>
+<p>编译命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ scons -Q </div><div class="line"> gcc -o file1.o -c -DHELLOSCONS file1.c </div><div class="line"> gcc -o file2.o -c -DHELLOSCONS file2.c </div><div class="line"> gcc -o helloscons2.o -c -DHELLOSCONS helloscons2.c </div><div class="line"> gcc -o helloscons2 helloscons2.o file1.o file2.o -L/usr/lib -L/usr/<span class="built_in">local</span>/lib -lm</div></pre></td></tr></table></figure>
+<h4 id="WAF"><a href="#WAF" class="headerlink" title="WAF"></a>WAF</h4><h4 id="b2"><a href="#b2" class="headerlink" title="b2"></a>b2</h4><h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><a href="https://www.softprayog.in/tutorials/understanding-gnu-build-system" target="_blank" rel="external">https://www.softprayog.in/tutorials/understanding-gnu-build-system</a></li>
+<li><a href="https://www.gnu.org/software/make/" target="_blank" rel="external">https://www.gnu.org/software/make/</a></li>
+<li><a href="http://www.cmake.org/" target="_blank" rel="external">http://www.cmake.org/</a></li>
+<li><a href="http://scons.org/" target="_blank" rel="external">http://scons.org/</a></li>
+<li><a href="http://scons.org/doc/production/PDF/scons-design.pdf" target="_blank" rel="external">http://scons.org/doc/production/PDF/scons-design.pdf</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;C++少说也用了十年了，从简单的Hello World到200万行的游戏项目，编译和构建的工具也经历了各种升级。最终的开发环境，选择了Clang+GDB+CMake。当然不断改进和升级开发工具的脚步尚未停止，只要能提高开发效率，怎样折腾都是值得的。&lt;/p&gt;
+&lt;p&gt;期间经历了：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;直接调用编译和链接命令&lt;/li&gt;
+&lt;li&gt;使用Makefile&lt;/li&gt;
+&lt;li&gt;使用CMake&lt;/li&gt;
+&lt;li&gt;不断尝试其他构建系统，如：b2、WAF、SCons&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;/images/2016-10-28-build-system.jpg&quot; alt=&quot; C++构建系统的选择&quot;&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="开发环境" scheme="http://yoursite.com/categories/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/"/>
+    
+    
+      <category term="C++" scheme="http://yoursite.com/tags/C/"/>
+    
+      <category term="make" scheme="http://yoursite.com/tags/make/"/>
+    
+      <category term="cmake" scheme="http://yoursite.com/tags/cmake/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：写作得有个好工具才行</title>
+    <link href="http://yoursite.com/2015/10/30/review-editing/"/>
+    <id>http://yoursite.com/2015/10/30/review-editing/</id>
+    <published>2015-10-30T14:00:00.000Z</published>
+    <updated>2016-11-02T09:51:27.521Z</updated>
+    
+    <content type="html"><![CDATA[<p>一直在寻找好用的写作工具或平台，来来回回折腾从未休止。从CSDN、CNBLOGS的博客平台、自己建空间申请域名使用WordPress写技术文章，直到现在使用静态博客生成工具<code>Jekyll+Markdown+Github</code>。从07年开始到现在，中断了不少，因为各种原因就是无法坚持下去，没有一个好的平台和工具也是其中一个原因。</p>
+<p>文章托管在别人的博客平台上，好处就是一方面比较安全，不怕个人电脑出问题，另一方面是这些平台基本上会有相应的社区，写的文章被别人看到的几率会比较大。但是，这些博客平台都是在线编辑，在一个丑陋不堪的网页编辑框里面，小心翼翼地调整着格式，同时还要担心不要一不小心踢掉电源或者网线，刚刚写下的内容丢失（这样的事情曾经遇到过好几次）。最大的问题是，提供的编辑器多数都是半吊子，语法高亮、数学公式这些元素都不一定支持，纷繁的HTML格式总是让人有点抓狂的感觉，被这些形式的东西虐个几次之后，那里还有什么心思静下来写作。</p>
+<a id="more"></a>
+<h2 id="理想的文档编辑工具"><a href="#理想的文档编辑工具" class="headerlink" title="理想的文档编辑工具"></a>理想的文档编辑工具</h2><hr>
+<p>下面是我心目中理想的文档编辑工具应该具备的特点：</p>
+<ul>
+<li><p><strong>支持你需要的各种文档元素，支持插件或扩展</strong>。</p>
+<p>  必须支持各种必要的文档元素，最基本的段落、标题、列表、表格、图片对于多数人来说可以满足需求了。但是，对于专业性的功能最好有插件可以进行扩展，比如数学公式，代码语法高亮等等。假设你是个玩化学的？玩音乐的？能支持分子式，乐谱那就是一件很美妙的事情。</p>
+</li>
+<li><p><strong>能让人专心于内容而非形式</strong>。</p>
+<p>  写东西的时候最怕的就是分心，不要让形式化的东西有太多的干扰。敲一段文字，调整格式用了大半时间，这是一件非常让人恼火和打击写东西积极性的事情。</p>
+</li>
+<li><p><strong>可以进行版本控制</strong>。</p>
+<p>  玩代码的都知道劳动成果有多重要，及时保存，备份并不是最好的方式，更好的方式是把你写下来的东西进行版本控制，随意写，随意删改，大不了回退版本，各个版本的差异也是一目了然的。</p>
+</li>
+<li><p><strong>跨平台</strong>。</p>
+<p>  公司的电脑是Windows系统，家里用的MacBook Pro，总不能公司没写完的东西，拿到家里来因为工具不支持跨平台，或者版本兼容问题导致无法继续写下去。</p>
+</li>
+</ul>
+<h2 id="纸笔-Vs-电子文档"><a href="#纸笔-Vs-电子文档" class="headerlink" title="纸笔 Vs. 电子文档"></a>纸笔 Vs. 电子文档</h2><hr>
+<p>如今已不是纸笔的时代了，那时候当你要开始写点东西的时候，你的面前只有空白的纸，和可以随意书写或绘制的笔，自由度极高，你可以在纸上不加思索的写下脑子里面的文字、公式和图形，抛却一些的形式主义的东西，思想才能行云流水般地从笔尖流出。如今写文章多数都是用电脑完成的，如果仅仅是纯粹的文字，如小说或者心情日记类似的，那倒也没什么，效率肯定要高于手写。但作为技术文章，有时会用到图片、代码、数学公式等多种元素，同时还要注意文章的段落布局是否合理，格式是否清晰可辨，这样一来，如果写作的工具是个半吊子，想完成一篇排版漂亮的文章是需要一番折腾了，图片得想办法找专门的软件绘制、公式需要公式编辑器类似的软件编辑完后截图，如果不支持代码高亮，直接把代码插入到文章中，那阅读的人看起来也不舒服。</p>
+<p>写文章其实多数时候是为了整理一下思路，偶尔总结出来的东西能帮到别人那就再好不过了。我认为：</p>
+<blockquote>
+<p>纸和笔是思考的理想工具，电子档则是记录的理想工具。</p>
+</blockquote>
+<h2 id="文档工具：WYSIWYG-Vs-Literature-Programing"><a href="#文档工具：WYSIWYG-Vs-Literature-Programing" class="headerlink" title="文档工具：WYSIWYG Vs. Literature Programing"></a>文档工具：WYSIWYG Vs. Literature Programing</h2><hr>
+<p>WYSIWYG即所见即所得，这样的工具多的是，比如微软的Word、金山的WPS、开源的OpenOffice等。这些软件其实功能是挺强大的，强大到你其实根本不会用。要想编辑出一个看起来很漂亮的文章，你得好好下一番功夫了，公式编辑器、页眉页脚、行间距、字体、目录，列表等等，一不小心格式就乱掉了。跨平台也不是很好，版本控制基本上很难，因为相应的电子文档是二进制的，对比差异必须提供相应的差异插件才行。</p>
+<p>Literature Programing即文字式编程，代码及其文挡编制信息交替出现，该风格不提供独立版本的代码，相反，它使用计算机程序从单个源文件中提取信息，这些源文件是那些为印刷文挡准备的文件和那些需要编译的代码文件。文字式编程背后的主要理念在于，大多数源代码是用来给人们阅读，而不是用来执行的，因此提高可读性，并让其文档编制信息与代码保持一致是至关重要的。在使用文字式编程风格显示一个程序时，我们将它拆粉成几个小部分，定义并描述各部分的用途，再讲各部分组装起来构成整个程序，另一个重要理念在于，各部分可以按照任意顺序排列，包括自上而下或是自下而上的开发模式，或是某中混合模式（而不是按照编程语言规则所指定的顺序）。总之，让写作的人专心于内容，具体形式化的排版工作交给编译器去完成。</p>
+<p>作为一个玩命令行的程序员，其实并不是非常喜欢界面非常复杂的软件，总是感觉没有命令行来的那么爽快和直接，用命令的好处就是重复的事情可以随随便写成脚本执行，当然有些界面的软件支持宏录制，最感觉用着非常别扭。当然WYSIWYG和文字式编程各有千秋，选择适合的即可，若没有编程基础的话，使用文字式编程的文档工具会非常难，学习成本会比较高。</p>
+<p>作为一个程序员，我的选择是：文字式编程。像写代码一样来写文章，一心关注内容，排版通过一些简单的命令交给编译器去搞定，而编辑用的工具是任何你喜欢的文本编辑器即可，比如我一直在用的：vim、notepad++、sublime。我接触过的比较好用的语言有：Markdown、LaTex、Racket Scribble。</p>
+<ul>
+<li><p>Markdown</p>
+<p>  Markdown是一种可以使用普通文本编辑器编写的标记语言，通过简单的标记语法，它可以使普通文本内容具有一定的格式。</p>
+<p>  Markdown具有一系列衍生版本，用于扩展Markdown的功能（如表格、脚注、内嵌HTML等等），这些功能原初的Markdown尚不具备，它们能让Markdown转换成更多的格式，例如LaTeX，Docbook。Markdown增强版中比较有名的有Markdown Extra、MultiMarkdown、 Maruku等。这些衍生版本要么基于工具，如Pandoc；要么基于网站，如GitHub和Wikipedia，在语法上基本兼容，但在一些语法和渲染效果上有改动。</p>
+<p>  PS. 本文就是用Markdown写的。</p>
+</li>
+</ul>
+<ul>
+<li><p>LaTex</p>
+<p>  LaTeX（LATEX，音译“拉泰赫”）是一种基于ΤΕΧ的排版系统，由美国计算机学家莱斯利·兰伯特（Leslie Lamport）在20世纪80年代初期开发，利用这种格式，即使使用者没有排版和程序设计的知识也可以充分发挥由TeX所提供的强大功能，能在几天，甚至几小时内生成很多具有书籍质量的印刷品。对于生成复杂表格和数学公式，这一点表现得尤为突出。因此它非常适用于生成高印刷质量的科技和数学类文档。这个系统同样适用于生成从简单的信件到完整书籍的所有其他种类的文档。</p>
+</li>
+</ul>
+<ul>
+<li><p>Racket Scribber</p>
+<p>  Racket，原名PLT Scheme ，是一种计算机程序设计语言，在Lisp和Scheme基础上增加了对象、类型、惰性求值等，也是一个程序设计环境，可以让人们设计自己的程序语言。Racket其中有个包叫Scribble，简简单单几行scheme代码就能实现强大的文字处理能力。这个非常小众，之前玩过一段时间。有兴趣的同学都可以用这个实现一个静态博客生成器，绝对简单。</p>
+</li>
+</ul>
+<h2 id="博客工具：Dynamic-Vs-Static"><a href="#博客工具：Dynamic-Vs-Static" class="headerlink" title="博客工具：Dynamic Vs. Static"></a>博客工具：Dynamic Vs. Static</h2><hr>
+<p>Dymaic指的是动态网页，一般文章的内容是放在数据库里面的，页面的内容是根据数据库里里面存储的内容生成的，支持评论等动态功能。除了像CSDN、博客园、网易博客等平台以外，比较著名的开源博客平台应该就是WordPress了。博客文章的编辑功能基本上都是在网页上操作完成，功能一般都是比较简单，仅支持基本的文档元素，专业性的元素，必须转化成图片插入才可以。好处就是随时可以编辑，只需要打开网页即可，适合非程序专业的用户。</p>
+<p>Static指的是静态网页，一般是用某种文字式编程语言进行写作，然后使用编译器生成静态页面。这样生成的页面几乎没什么可交互性，比如评论功能就需要挂在第三方如：Disgus、友言等类似的服务。这样的博客方式是我心目中比较理想的方式：基于Jekyll+Markdown+Github（同时支持数学公式LaTex和代码高亮）。</p>
+<ul>
+<li><p>支持各种文档元素</p>
+<p>  公式：<code>MathJax</code>搞定<br>  代码高亮：<code>Pygments</code>、<code>coderay</code>、<code>rouge</code>都可以</p>
+<p>  Jekyll的配置如下（使用的是Markdonw渲染引擎是kramdown）：</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">markdown: kramdown</div><div class="line">kramdown:</div><div class="line">  input: GFM</div><div class="line">  toc_levels: 1..6</div><div class="line">  enable_coderay: true</div><div class="line">  syntax_highlighter: rouge # coderay</div><div class="line">  extensions:</div><div class="line">    - autolink</div><div class="line">    - footnotes</div><div class="line">    - smart</div><div class="line">  coderay:</div><div class="line">    coderay_line_numbers: nil  # :table  nil :inline</div></pre></td></tr></table></figure>
+<ul>
+<li>Markdown的简洁语法，Sublime编辑器的免打扰模式，可以一心于内容。</li>
+</ul>
+<p><img src="/images/review-edit-focus.jpg" alt="Sublime免打扰模式"></p>
+<ul>
+<li>所有内容托管在GitHub上，随意写，肆意改。</li>
+</ul>
+<p><img src="/images/review-edit-github.png" alt="GitHub"></p>
+<ul>
+<li>跨平台，无论使用的Windows、Linux还是MacBook，只要有文本编辑器就可以随时开写。</li>
+</ul>
+<h2 id="本周回顾"><a href="#本周回顾" class="headerlink" title="本周回顾"></a>本周回顾</h2><hr>
+<ul>
+<li><p>论文大纲。</p>
+<p>  大概理出了个思路，预计过程会比较艰辛，茫茫多的数学公式和算法，要狠狠补一把数学知识了。</p>
+</li>
+<li><p>同IP外挂方案的不足。</p>
+<p>  从一位安全中心的同事那里得知，破解这一行业果然是高手如云，客户端加密算法随随便便就可以被搞定。上周提出来的基于IP的判定有一个不足就是，长时间外挂制作者摸清了规则，可以多买一些网络资源，现在VPS服务貌似是很便宜的，他们可以买大量VPS，然后在上面运行脱机外挂。</p>
+</li>
+<li><p>博客Markdown使用kramdown渲染。</p>
+<p>  博客之前用的Jekyll版本比较老，用的Redcarpet渲染器，在Mac电脑上会有点问题，升级到kramdown后又发现了一些格式问题，比如代码不能高亮，甚至显示的乱七八糟。折腾了一下，终于恢复正常了。</p>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;一直在寻找好用的写作工具或平台，来来回回折腾从未休止。从CSDN、CNBLOGS的博客平台、自己建空间申请域名使用WordPress写技术文章，直到现在使用静态博客生成工具&lt;code&gt;Jekyll+Markdown+Github&lt;/code&gt;。从07年开始到现在，中断了不少，因为各种原因就是无法坚持下去，没有一个好的平台和工具也是其中一个原因。&lt;/p&gt;
+&lt;p&gt;文章托管在别人的博客平台上，好处就是一方面比较安全，不怕个人电脑出问题，另一方面是这些平台基本上会有相应的社区，写的文章被别人看到的几率会比较大。但是，这些博客平台都是在线编辑，在一个丑陋不堪的网页编辑框里面，小心翼翼地调整着格式，同时还要担心不要一不小心踢掉电源或者网线，刚刚写下的内容丢失（这样的事情曾经遇到过好几次）。最大的问题是，提供的编辑器多数都是半吊子，语法高亮、数学公式这些元素都不一定支持，纷繁的HTML格式总是让人有点抓狂的感觉，被这些形式的东西虐个几次之后，那里还有什么心思静下来写作。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：又是一波外挂来袭</title>
+    <link href="http://yoursite.com/2015/10/23/review-gamebot/"/>
+    <id>http://yoursite.com/2015/10/23/review-gamebot/</id>
+    <published>2015-10-23T13:25:00.000Z</published>
+    <updated>2016-11-02T09:51:27.520Z</updated>
+    
+    <content type="html"><![CDATA[<p>继上周陆续发布了一些防外挂的措施后，打金工作室（英文叫：Gold Farmer，真是太形象了）仅用了一天左右的时间就破解了客户端的通信秘钥生成算法，这个速度完全有点出乎我的意料，当然我也仅仅是猜测，工作室使用的是脱机外挂，否则很难同时登陆上万客户端，需要大量的硬件资源才可以做到。最近一段时间，打金工作室外挂集中在新开游戏服里面，大量创建角色并且登录游戏进行打金，有些游戏服外挂达到2W多，而正常用户仅有3-4K左右，同时进行操作时，对游戏服务器造成巨大压力，严重影响正常用户的游戏体验。本周在服务器端做了一些处理，效率有所好转，还有一点不理想的地方，下周还需进一步优化。</p>
+<a id="more"></a>
+<h3 id="到底是哪里出了问题？"><a href="#到底是哪里出了问题？" class="headerlink" title="到底是哪里出了问题？"></a>到底是哪里出了问题？</h3><p>到底是什么原因造成外挂成灾呢？</p>
+<ul>
+<li><p>客户端安全的失败</p>
+<p>  各种尝试一再证明，如果我们不是软件安全的专家，或者是破解软件的高手，客户端所做的任何措施都于事无补。通信加密仅仅能保障用户的账号和通信安全，不被中间监听或消息篡改。通信加密必须使用对称秘钥，也就意味着客户端和服务器两端都需要知道秘钥或者秘钥的生成算法，然而我们的客户端却是丢给用户的，而破解高手会通过脱壳、反汇编、动态调试等手段来推算秘钥的生成过程。</p>
+<p>  大家会有疑惑，那网银又是怎样保证通信安全的？为什么不使用非对称加密算法，不是更安全码？为什么不能借鉴呢？网银一般采用的是非对称加密和对称加密一起来解决安全问题的。非对称加密指的是公钥体系，如：RSA，对称加密算法，如：DES、3DES、AES等。在和网银建立连接的时候一般第一步先是使用公钥体系传输通信秘钥，然后用该秘钥来进行对称加密和网银服务器通信。但是，网银也仅仅保证的是个人用户的安全，保证个人用户的密码，通信不被监听和破解。而脱机外挂对于游戏服务器来说，它本身就是正常的游戏用户，它知道自己的账号和密码信息，就算使用银行的这种模式也是于是无补，因为你无法拒绝一个正常的用户的操作。只不过银行系统逻辑比较简单，限制比较严格，比如输错密码三次锁定，网络转账设上限等。而游戏就不能这样做，往往为了用户的便捷性，会让系统变的比较脆弱，容易被攻破。</p>
+</li>
+<li><p>账号注册太过便捷</p>
+<p>  大家会注意到，一般网站的账号的注册旁边总有一个奇形怪状的图形验证码，注册的账号的时候需要仔细辨认填写正确才能注册成功，现在图形识别越来越准了，图形验证码也是各种新招式，比如给你一个1+1请填写结果，或者需要提供手机号码，通过短信发送验证码。这样做的目的就是为了防止外挂自动注册，造成后台数据里面全是垃圾账户。</p>
+<p>  而网络游戏在运营的过程中，为了用户的便捷，吸引更多的玩家家，验证码都不需要填，这导致外挂可以随意创建账号。当然也有很多游戏的注册比较严格，不仅要正确输入验证码，还需要提供身份证信息，连接公安系统的网络进行验证。</p>
+</li>
+<li><p>免费的利益</p>
+<p>  工作室外挂一般都是奔着游戏系统免费产出的货币或道具而来，一般的MMORPG都会支持交易，而这些工作室外挂就通过大量的小号收集这些资源，最后以真实的RMB卖给游戏玩家。</p>
+<p>  能否砍掉免费的利益呢？能否关闭交易系统呢？多数游戏的答案都是NO，为了吸引真实的玩家，不得不赠送免费的利益，为了游戏经济系统的流通性，必须开放交易系统。当然也有游戏为了防止打钱工作室，而关闭交易系统，如著名的Diablo III，国服关闭了拍卖行，限制了玩家之间的交易。</p>
+</li>
+</ul>
+<h3 id="游戏开发者能做些什么？"><a href="#游戏开发者能做些什么？" class="headerlink" title="游戏开发者能做些什么？"></a>游戏开发者能做些什么？</h3><p>客户端安全是一场和破解高手的技术较量，如果我们都不知道破解，何谈对决？往往人家专门一心研究这方面的，而游戏开发者日常的功能开发早已身心疲惫，哪里还有心思去琢磨这些纷繁复杂的破解方法。这一场势不均力不敌的战争，往往以游戏开发者失败而告终。再加上需要长期坚持不断了解对手并思考改进之法，更是力不从心。</p>
+<p>对于游戏服务端来说，现在面临的问题是：客户端可以随意被破解，账号可以随意被创建，系统又有巨大的利益诱惑。我们能做些什么呢？下面大概介绍一下我的思路：</p>
+<h4 id="1-识别工作室外挂"><a href="#1-识别工作室外挂" class="headerlink" title="1. 识别工作室外挂"></a>1. 识别工作室外挂</h4><p>识别外挂是第一步，而外挂往往就像正常用户一样，很难识别。</p>
+<p>但作为工作室外挂，它们往往硬件和网络资源有限，导致同IP会登录很多用户，我们可以基于这个假设来进行识别。当然如果工作室搞一个巨大的机房，每台机器就跑一两个游戏客户端或脱机外挂，那就暂时没辙了。</p>
+<p>问题来了，有些同学会说，脱机外挂就不会修改一下IP包里面的源地址吗，欺骗一下游戏服务器不就完了，这就是所谓的IP地址欺骗（IP Address Spoofing）。</p>
+<blockquote>
+<p>IP地址欺骗是指行动产生的IP数据包为伪造的源IP地址，以便冒充其他系统或发件人的身份。这是一种黑客的攻击形式，黑客使用一台计算机上网,而借用另外一台机器的IP地址,从而冒充另外一台机器与服务器打交道。</p>
+</blockquote>
+<p>在网络安全领域，隐藏自己的一种手段就是IP欺骗——伪造自身的IP地址向目标系统发送恶意请求，造成目标系统受到攻击却无法确认攻击源，或者取得目标系统的信任以便获取机密信息。这两个目的对应着两种场景：</p>
+<ul>
+<li><p>场景一，常用于DDoS攻击（分布式拒绝攻击），在向目标系统发起的恶意攻击请求中，随机生成大批假冒源IP，如果目标防御较为薄弱，对收到的恶意请求也无法分析攻击源的真实性，从而达到攻击者隐藏自身的目的。<br>。</p>
+</li>
+<li><p>场景二，原本A主机信任B主机，也就是B可以畅通无阻地获取A的数据资源。而恶意主机C为了能同样获取到A的数据，就需要伪装成B去和A通信。这样C需要做两件事：第一、让B“把嘴堵上”，不再向A吐请求，比如向B主机发起DoS攻击（拒绝服务攻击），占用B的连接使其无法正常发出网络包；第二、伪装成B的IP和A交互。</p>
+</li>
+</ul>
+<p><img src="/images/ip-spoofing.jpg" alt="IP欺骗"></p>
+<p>IP地址欺骗对于需要和游戏服务器进行正常通信的脱机外挂来说是不可能的，就算它修改源地址，这个地址也必须是一个合法的IP地址，并且对应的IP地址上面也需要跑着脱机外挂，否则无法进行通信。</p>
+<p>为了简单快速地识别工作室外挂，我们就基于上面所说的简单假设：</p>
+<blockquote>
+<p>工作室外挂的网络资源是有限的，同IP会登录大量用户。</p>
+</blockquote>
+<p>基于这个假设的外挂识别会非常简单，只需要设定一个阈值，同IP登录超过N就认定是工作室外挂。但是要注意的是，如果在一个局域网内（出口IP相同）正常用户的数量超过这个N就会被误判，如网吧通常只有一个IP出口，如果大量玩家玩这个游戏就会被误判，所以N的取值要谨慎，假设需要加强一下：</p>
+<blockquote>
+<p>1&gt; 工作室外挂的网络资源是有限的，同IP会登录大量用户</p>
+<p>2&gt; 同一局域网内玩此游戏的数量超过N的可能性极低</p>
+</blockquote>
+<p>上述两条任何一个不满足就可能会被误判。</p>
+<h4 id="2-降低外挂请求处理的优先级"><a href="#2-降低外挂请求处理的优先级" class="headerlink" title="2. 降低外挂请求处理的优先级"></a>2. 降低外挂请求处理的优先级</h4><p>既然不能将这些工作室外挂拒之门外，那我们只好让它以不影响正常游戏玩家的情况下存在，不会因外挂太多造成正常玩家卡住。对用户请求的优先级做出调整，由上面判定的工作室外挂的消息处理优先级要低于正常用户，在服务器空闲的时候才去处理外挂的消息。这样就算服务器性能有问题了，率先卡住的是外挂，而不是正常用户。</p>
+<h4 id="3-限制外挂用户发送消息的频率"><a href="#3-限制外挂用户发送消息的频率" class="headerlink" title="3. 限制外挂用户发送消息的频率"></a>3. 限制外挂用户发送消息的频率</h4><p>一般游戏客户端给游戏服务器发送的消息是有频率限制的。若不做限制，真有外挂想捣乱，瞬间向服务器连续发送大量请求，那服务器是肯定吃不消的。工作室外挂一般会登陆大量虚假用户，整体的请求量还是很大的，为了降低整体请求量，可以限制外挂的消息发送频率，让该频率值小于正常用户。对于那些发送过快的直接进行踢线。</p>
+<h4 id="4-限制外挂用户的登录"><a href="#4-限制外挂用户的登录" class="headerlink" title="4. 限制外挂用户的登录"></a>4. 限制外挂用户的登录</h4><p>最直接的一招莫过于此，凡是判定为外挂的IP直接加入黑名单，禁止和游戏服务器建立连接，或者同IP同时登陆超过N个就拒绝登录。这一招效果肯定好，但是要慎用，除非有99.9%的把握能正确识别外挂，否则很有可能造成正常用户被拒之门外，万一是个大R玩家，那损失就大了。还有个原因游戏公司不想彻底把工作室外挂打掉：一方面是为了虚假繁荣，给正常用户造成一种错觉，这游戏真TM火爆，里面全是人；一方面是为了经济系统的平衡，给正常用户以非官方渠道以低价获得游戏中的虚拟货币的方式，只要不是太过分或者利用游戏漏洞去刷东西就行。</p>
+<h3 id="本周回顾"><a href="#本周回顾" class="headerlink" title="本周回顾"></a>本周回顾</h3><ul>
+<li><p>优化防外挂机制并持续观察外挂动态</p>
+<p>  这是一个持久的过程，与其奋斗，其乐无穷。抽空了可以研究一下软件破解相关的技术，知己知彼，才可百战不殆。</p>
+</li>
+<li><p>略读了一遍之前收集的论文，整理出比较重要的篇章</p>
+</li>
+</ul>
+<p><img src="/images/review-thesis.png" alt="整理论文"></p>
+<ul>
+<li><p>情绪有点低落</p>
+<p>周四又加了一个通宵；身边又有一位战友离职；自行车又被玩爆胎；手腕腱鞘炎再次发作。我去，都TM用到了“又”字，难怪心情不好。</p>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;继上周陆续发布了一些防外挂的措施后，打金工作室（英文叫：Gold Farmer，真是太形象了）仅用了一天左右的时间就破解了客户端的通信秘钥生成算法，这个速度完全有点出乎我的意料，当然我也仅仅是猜测，工作室使用的是脱机外挂，否则很难同时登陆上万客户端，需要大量的硬件资源才可以做到。最近一段时间，打金工作室外挂集中在新开游戏服里面，大量创建角色并且登录游戏进行打金，有些游戏服外挂达到2W多，而正常用户仅有3-4K左右，同时进行操作时，对游戏服务器造成巨大压力，严重影响正常用户的游戏体验。本周在服务器端做了一些处理，效率有所好转，还有一点不理想的地方，下周还需进一步优化。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：每逢节日必加班</title>
+    <link href="http://yoursite.com/2015/10/16/review-endless-quest/"/>
+    <id>http://yoursite.com/2015/10/16/review-endless-quest/</id>
+    <published>2015-10-16T01:35:00.000Z</published>
+    <updated>2016-11-02T09:51:27.519Z</updated>
+    
+    <content type="html"><![CDATA[<p>快到节假日的时候，总有那么一群人在苦逼加班中度过。运气好点的，节假日也可以顺顺利利地过了，运气差点的，节假日也别想过的安生。当很多人国庆节在外面旅游晒照的时候，我等却在担惊受怕地听候差遣。也真是奇了怪了，现在这个节日还真多，互联网行业莫名其妙弄出个双十一，后面又出来个双十二。每次遇到这两个互联网购物狂欢节的时候。你或是在电脑旁边守候到零点疯狂抢购，抱怨网络太卡，网银无法支付的时候，咒骂这该死的某宝或某东的时候，我却想到的是这些服务后台那些苦逼的程序猿和运维的同学，目不转睛地盯着屏幕，心中在默默祈祷不要出问题。哎，又该是一个不眠之夜了。</p>
+<p>我们做游戏后台的也好不到那里去，节日总是要开发点线上活动，拉拉收益的，何况是这些购物狂欢节呢。这不，国庆刚休假结束，有些同学还没缓过神来，又是一大波需求来袭，需要在短短两周内开发完成，说是什么周年庆。好吧，看来下面几个月都别想有好日子过了，加班是逃不掉的了。周年庆、双十一、双十二、圣诞节、元旦、春节。My Fucking God，怎么这么多节日啊！</p>
+<p>大家节日欢乐无限，我等码农只能唏嘘不已，默默跪拜图灵大神。</p>
+<a id="more"></a>
+<p>###【工作篇】</p>
+<h4 id="降低外挂对正常玩家的影响"><a href="#降低外挂对正常玩家的影响" class="headerlink" title="降低外挂对正常玩家的影响"></a>降低外挂对正常玩家的影响</h4><p>外挂是网游永远的痛，只要有利益就有工作室外挂的存在，它们在游戏中创建大量的角色，收集游戏中产生的可交易的货币，然后以RMB的形式低价转卖给其他玩家。而这些工作室，往往可以利用脱机外挂同时登陆大量的用户，从而对服务器造成较大的性能问题，影响正常玩家的游戏体验，这种有点类似拒绝服务攻击（DDOS）的感觉。</p>
+<p>而脱机外挂存在的根本原因是：游戏客户端和游戏服务没有一条安全的通信链路，脱机外挂的制作者可以对客户端进行反汇编、动态调试，找到通信的KEY或者KEY的生成方式，轻易地实现了一个不需要游戏客户端就可以直接和游戏服务器连接的程序，这就是脱机外挂。</p>
+<p>有道是，“道高一尺，魔高一丈”，客户端可执行文件加壳不就可以防止被反汇编了吗，不，破解者有脱壳工具，只要你代码能执行，就有办法利用一些工具如OllyDGB进行动态追踪，追踪可执行文件的执行机器指令，然后分析出KEY的位置或者生成KEY的算法。总之，无论你用到什么算法，什么工具，只要的你的执行文件可以执行，破解者都可以攻破，只是时间长与短罢了。</p>
+<p>于是我们提出了一种KEY的生成算法，根据用户ID和一个种子利用十几种算法生成KEY，那么对于外挂破解者来说，需要攻破我们的KEY就必须动态调试十几种算法才可以畅通无阻地利用脱机挂访问游戏服务器了。或许，攻破这些算法需要几天时间，那我们不断调整算法，或许可以恶心到破解者。想象总是美好的，而破解者总是有大神存在，事实证明，他们仅用了一天多的时间，就破解了十几种KEY的生成算法，不得不佩服这些大神的调试技能和逆向工程能力，真想把他们招致麾下，知己知彼方才百战不殆。</p>
+<p>有人说那你们动态修改指令的编号不就行了吗？同学，你又天真了，几年前就已证实不可行了。这些破解大神通过抓包分析你正常的消息，分分钟就知道正确的消息编号了。</p>
+<p>对于这些工作室外挂，想要彻底消灭，就需要让它无利可图，但这又是矛盾的，为了吸引用户，必须给用户免费的利益。一旦砍掉这些利益，那正常用户是要流失的了。</p>
+<p>防止脱机外挂，一方面加强客户端安全不被破解；一方面也需要服务器做下处理，比如按照同IP用户的数量超过指定的数量，对其做一些处理，比如限制登录、外挂的消息处理优先级低于正常用户等，当然脱机外挂跑在不同的虚拟机里面，那就真没辙了。</p>
+<p>外挂，永远的痛。无法根除，特别是以道具收费模式的MMORPG游戏来说，这是一场厂商与工作室的较量，往往以游戏厂商失败而告终。</p>
+<p>PS. 没怎么玩过Windows下的开发，更别提反汇编、动态追踪等逆向工程了。我觉得要加强客户端的安全，首先自己要先成为破解大神才可以。</p>
+<h4 id="高可用的数据库集群解决方案"><a href="#高可用的数据库集群解决方案" class="headerlink" title="高可用的数据库集群解决方案"></a>高可用的数据库集群解决方案</h4><p>写了一篇《高可用的数据库集群解决方案》，总结了一下自己的理解和一些现成的数据库集群解决方案。有它用，暂时不贴出来了，只说下大概内容：</p>
+<p>该文试图以一篇完整的理论加实践性的文字来介绍如何在优秀的开源操作系统Linux下创建低成本、高性能、高可用的数据服务集群系统。理论部分主要介绍负载均衡集群、高可用集群和可扩展数据库集群的基础知识和常见用法。这是所有搭建高可用数据库集群的基础，数据库产品名目众多，万变不离其宗，知道是什么，如何去做的知识比熟练掌握某一个数据库产品显得更重要。实践部分主要介绍两种比较有代表性的数据，关系型的MySQL和NoSQL的MongoDB，搭建一个高性能、高可用、高扩展性的数据库集群，以满足比较高QPS（每秒查询次数）和扩展需求。</p>
+<h4 id="功能开发、BUG修改"><a href="#功能开发、BUG修改" class="headerlink" title="功能开发、BUG修改"></a>功能开发、BUG修改</h4><p>4-5W行的功能代码，要在里面做优化，这是件非常痛苦的事情。好在有位测试同学这个功能更玩的比较溜，搭建过N次这个功能的服务，在他的帮助下，吭哧吭哧总算是码完了策划需要的修改。尚未开动测试，估计下周加班修BUG是逃不掉了，据说搭一个测试环境都要折腾个几个小时。</p>
+<p>离职的同学留下来的坑，经过一年之久的BUG，今日竟然才浮出水面，代码质量堪忧啊。</p>
+<h3 id="【总结篇】"><a href="#【总结篇】" class="headerlink" title="【总结篇】"></a>【总结篇】</h3><ul>
+<li><p>国庆长假正常的第一周，为了迎接周年庆，茫茫多的需求需要开发，本周几乎都在忙工作。</p>
+</li>
+<li><p>作为一个技术小领导，需要抽一些时间多给大家分享，技术氛围很重要。实在是精力有限，该坚持的却没坚持下来，再加上团队不稳定，离职率比较高，这个心劲给耗没了。</p>
+</li>
+<li><p>一晃乐宝宝都六个月了，爸爸却一直把大把的时间奉献给了公司。不过小家伙很给力，晚上都不怎么哭闹，六个月都可以爬了。</p>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;快到节假日的时候，总有那么一群人在苦逼加班中度过。运气好点的，节假日也可以顺顺利利地过了，运气差点的，节假日也别想过的安生。当很多人国庆节在外面旅游晒照的时候，我等却在担惊受怕地听候差遣。也真是奇了怪了，现在这个节日还真多，互联网行业莫名其妙弄出个双十一，后面又出来个双十二。每次遇到这两个互联网购物狂欢节的时候。你或是在电脑旁边守候到零点疯狂抢购，抱怨网络太卡，网银无法支付的时候，咒骂这该死的某宝或某东的时候，我却想到的是这些服务后台那些苦逼的程序猿和运维的同学，目不转睛地盯着屏幕，心中在默默祈祷不要出问题。哎，又该是一个不眠之夜了。&lt;/p&gt;
+&lt;p&gt;我们做游戏后台的也好不到那里去，节日总是要开发点线上活动，拉拉收益的，何况是这些购物狂欢节呢。这不，国庆刚休假结束，有些同学还没缓过神来，又是一大波需求来袭，需要在短短两周内开发完成，说是什么周年庆。好吧，看来下面几个月都别想有好日子过了，加班是逃不掉的了。周年庆、双十一、双十二、圣诞节、元旦、春节。My Fucking God，怎么这么多节日啊！&lt;/p&gt;
+&lt;p&gt;大家节日欢乐无限，我等码农只能唏嘘不已，默默跪拜图灵大神。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：代码移植没那么简单</title>
+    <link href="http://yoursite.com/2015/09/25/review-code-transplantation/"/>
+    <id>http://yoursite.com/2015/09/25/review-code-transplantation/</id>
+    <published>2015-09-25T12:00:00.000Z</published>
+    <updated>2016-11-02T09:51:27.518Z</updated>
+    
+    <content type="html"><![CDATA[<p>我们同时维护着多个游戏项目，游戏内容大同小异，程序和策划基本上也是同一批人，难免一些功能，在A项目中开发完运行稳定，策划感觉效果不错，就要求把该功能迁移到B项目中去。于是，代码移植就在我们这里经常发生了，随着时间各个项目之间的差异越来越大，代码移植往往就没有策划想象的那么简单了。程序需要抽丝剥茧，小心翼翼地把代码复制来复制去，稍有遗漏就会出问题。</p>
+<p>特别的，当策划同学在提出移植的时候，总是以为这是很简单的事情：“之前都不是已经实现了吗？照着抄不就完了？一天时间搞定如何？”。这时，心里真是一万匹草泥马在奔腾的感觉，在对功能需求不明确，时间有限的前提下来干这样一件事，这是让我们程序玩火自焚啊！</p>
+<a id="more"></a>
+<h3 id="代码移植是怎么回事？"><a href="#代码移植是怎么回事？" class="headerlink" title="代码移植是怎么回事？"></a>代码移植是怎么回事？</h3><p>代码移植一般来讲与代码的可重用性有一定的区别，代码移植往往是将不同平台、不同编译环境的程序代码经过修改转移到自己的系统中运行，这与代码的可重用性有着本质的区别。（From:百度百科）</p>
+<p>对于维护一个项目的同学来说，开发流程是这样的:</p>
+<p><img src="/images/code-transplantation-1.png" alt="分支合并"></p>
+<p>基本很少听见代码移植这样的事情。就算是新需求是抄其他项目的，提需求的人也需要提供详细的文档，经过严格的评审，程序才能介入然后实现。往往，想法COPY起来是很容易的，而代码COPY起来就没那么简单了：没有代码的，全部实现一遍；有代码的，只能仅作参考，系统架构差异已经决定了代码移植并非一件易事。</p>
+<p>那对于差异不大的项目，或者后续项目是在之前项目的基础上改出来的，代码移植该怎样进行呢？困难又在哪里？下面会大概介绍一下。</p>
+<p><img src="/images/code-transplantation-2.png" alt="分支合并"></p>
+<h3 id="代码移植的方式有那些？"><a href="#代码移植的方式有那些？" class="headerlink" title="代码移植的方式有那些？"></a>代码移植的方式有那些？</h3><ul>
+<li><p>工具</p>
+<p>在B项目从A项目分裂前期，差异不大的时候，工具（如：<code>svn merge</code>）基本上完全可以胜任这件事情。代码冲突会比较少，这个阶段代码移植是一件可以迅速完成的事情，只需要把相应功能的版本号找出来，然后使用<code>svn merge -c 版本号</code>进行合并，遇到代码冲突，修改一下即可。</p>
+</li>
+<li><p>手动复制</p>
+<p>随着时间和版本不断的迭代，项目A和项目B的差异越来越大，工具合并起来冲突一堆，解决这些冲突的时间，还不如手动复制代码来的快一些。</p>
+</li>
+<li><p>两者结合</p>
+<p>当某些功能的差异没那么大的时候，先用工具试着合并一下，如果冲突的文件数量大的可怕，那就手动复制；如果冲突量尚在可以接受的范围内，仅对于那些冲突特别严重的文件进行手动复制。工具和手动复制两者结合起来，比完全使用工具和手动复制效率要高一些。</p>
+</li>
+</ul>
+<p>总之，随着时间和版本差异变大，代码移植会越来越难进行下去！不过一定要记着：</p>
+<blockquote>
+<p>移植代码必须在对功能理解和看懂要移植代码的前提下进行，否则出问题就抓瞎，没有对错的标准，就没法进行正确性测试。就算工具可以完全搞定，这样做也是必须的，因为出了BUG还得你来改。</p>
+</blockquote>
+<h3 id="困难在哪里？"><a href="#困难在哪里？" class="headerlink" title="困难在哪里？"></a>困难在哪里？</h3><p>高内聚、低耦合，是我们在写代码所追求的，因为遵守这样规则的代码重用性会比较好。但实际上，能做到的却很少，同一份代码被无数人改了又改，代码复审和代码质量监督的缺失，代码不光耦合性高，同一功能的代码片段还散落在项目源代码的各个角落，毫无内聚性可言。 </p>
+<p>那对于同根分支的不同项目之间代码的移植的困难又在哪里呢？</p>
+<ul>
+<li><p>分支之间的差异</p>
+<p>上面已经说过，分支之间的差异太大，会造成合并时各种各样的冲突。</p>
+</li>
+<li><p>功能代码的依赖</p>
+<p>假设项目A开发功能X，依赖了代码Z，现在要把X功能移植到B项目主干，而代码Z是项目B之前所没有的，那么在移植功能X的时候，需要同时把代码Z移植过来，那么问题来了：Z代码还有其他依赖不在项目B中吗？Z代码提交的记录又要如何去找出来？（这让我想到了linux下面源码安装一些包的痛苦，编译不过缺少依赖项，结果依赖的那个包拿过来，又依赖另外一个）</p>
+</li>
+</ul>
+<p>对此，我们又能做些什么呢？</p>
+<p><strong>提高代码的模块化程度</strong>。功能代码尽量集中放在相关的一两个文件里面，尽量新建相应功能的.h和.cpp文件，提高代码的内聚性。功能代码也不大可能不动到其他相关文件，但应该尽量减少在其他文件中修改代码的行数。这样在移植的时候，工具冲突的可能性会比较小，就算手动复制也会比较快找到所有代码。</p>
+<h3 id="本周回顾"><a href="#本周回顾" class="headerlink" title="本周回顾"></a>本周回顾</h3><p>简单回顾一下，今天事情比较多。</p>
+<ul>
+<li><p>工作：移植一个小功能。</p>
+<p>一堆冲突，几乎都是手动复制的，好在没有代码依赖，基本上没出什么问题。</p>
+</li>
+<li><p>工作：优化数据解析脚本。</p>
+<p>都是些小改动，麻烦在于开发机器和外网是隔离的，转来转去非常麻烦。</p>
+</li>
+<li><p>学习：略读了一遍《Head First数据分析》。</p>
+<p>本书简单介绍了一些数据分析的思路和方法，内容比较浅显，适合刚接触数据分析的同学阅读。</p>
+</li>
+<li><p>学习：略读了几篇论文。</p>
+<p>《Empirical Analysis of User Data in Game Software Development》 -关于游戏软件开发玩家数据的经验分析的。<br>《A Data Mining Approach to Strategy Prediction》- RTS游戏策略识别和预测的。<br>《Analysis of revisitations in online games》- 在线游戏回访分析，来提高设计和改善用户体验。</p>
+</li>
+<li><p>学习：工具docear的用法。</p>
+<p>很早之前接触过，没怎么用，现在刚好派上用场。介绍参考之前的文章：<a href="/posts/weekly-docear/">《每周一荐：支持latex的思维导图软件docear》</a>。现在的功能更加完善和容易使用了。</p>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;我们同时维护着多个游戏项目，游戏内容大同小异，程序和策划基本上也是同一批人，难免一些功能，在A项目中开发完运行稳定，策划感觉效果不错，就要求把该功能迁移到B项目中去。于是，代码移植就在我们这里经常发生了，随着时间各个项目之间的差异越来越大，代码移植往往就没有策划想象的那么简单了。程序需要抽丝剥茧，小心翼翼地把代码复制来复制去，稍有遗漏就会出问题。&lt;/p&gt;
+&lt;p&gt;特别的，当策划同学在提出移植的时候，总是以为这是很简单的事情：“之前都不是已经实现了吗？照着抄不就完了？一天时间搞定如何？”。这时，心里真是一万匹草泥马在奔腾的感觉，在对功能需求不明确，时间有限的前提下来干这样一件事，这是让我们程序玩火自焚啊！&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：无意义的加班</title>
+    <link href="http://yoursite.com/2015/09/18/review-work-overtime/"/>
+    <id>http://yoursite.com/2015/09/18/review-work-overtime/</id>
+    <published>2015-09-18T12:00:00.000Z</published>
+    <updated>2016-11-02T09:51:27.517Z</updated>
+    
+    <content type="html"><![CDATA[<p>周三晚上加班到周四凌晨三点多，差两个小时就可以看日出了。一直处于无事等待状态，这样算是幸运的了。若这个时候有代码修改，那估计日出看定了。</p>
+<p>加班本该是赶进度的一种手段，偶尔为之也是可以理解的。天天加班都不说什么了，每周版本发布前夕非要搞到大家一起看日出，这样好吗？策划同学貌似零点过后状态奇佳，灵感一个接一个，测试同学不紧不慢地测着，相关程序则必须守着，多数时候，程序呆在哪里什么事情都没有，纯粹就是为了其他人安心而已。</p>
+<a id="more"></a>
+<p>这种加班的直接代价，就是：</p>
+<ul>
+<li><p>1&gt; <strong>修改代码出BUG的概率高</strong>。都吭哧吭哧码了一天代码了，深更半夜哪里还有什么精力去考虑那么多，说改什么就改什么，若测试同学再疏忽一下，第二天的版本肯定出BUG。</p>
+</li>
+<li><p>2&gt; <strong>修改代码的时间成本高</strong>。想象一下，面对百万行的C++代码，有时在一个小头文件里面修改一行代码，编译一遍就有得等了，编译完还需要部署更新，然后才能测试。完整做一遍版本也是会花不少时间的。所以，最不幸的就是晚上代码有修改，那真是雪上加霜，会拖的更晚。</p>
+</li>
+<li><p>3&gt;  <strong>出问题时相关人员都不在岗</strong>。第二天版本发布后如果有问题的话，相关人员都不在，都看日出了，是人就得要休息不是。换人查问题效率会非常低。当然，也可以把相关人员从被窝里面拽出来，然后无精打采，精神萎靡，骂爹骂娘地帮你找问题，效率也不会高到那里去。</p>
+</li>
+</ul>
+<p>长此以往的代价，就是：</p>
+<ul>
+<li><p>1&gt; <strong>作死</strong>。人类进化了多少年，日出而作日落而息。加班到看日出，这不是逆天吗？</p>
+</li>
+<li><p>2&gt; <strong>积怨</strong>。精神萎靡，心存抱怨，再正常不过的事情了。外面有更好的机会，不走更待何时？军心不稳，何谈攻城？</p>
+</li>
+</ul>
+<p>这样无意义的加班不是一次两次，而是长期如此，该反思了。我一直认为，加班是进度管理上的无能，一方面是自身进度管理能力不足，另一方面是因为领导并没有充分授权，没有权利拒绝一些无理的需求。还有一点，可能是人的劣根性，什么事情都要拖到最后，就像学生一般只会在考试临近的那一两周内加强复习，平时则不紧不慢的，这就就叫学生综合症。对于上面说的这种无意义的加班，一直都在提醒，制作版本放在白天进行，为什么每次都会拖到最后一刻？只能说是人性所为了。</p>
+<hr>
+<p>本周快成光杆司令了，离职的离职，休假的休假，什么事情都得上手了。所以，本周基本上都在忙工作，所以不分学习篇、工作篇了。</p>
+<h5 id="数据解析工具优化"><a href="#数据解析工具优化" class="headerlink" title="数据解析工具优化"></a>数据解析工具优化</h5><p>财务的同学反映，角色道具解析工具解析的道具名显示有乱码，只是一小部分角色的数据是这样的。在确认了数据的位置后，找运维的同学搭建测试环境，果不其然，有乱掉的。原因也很简单，对于那些流失的角色，长时间没有上线，道具数据结构有过变动，解析的时候没有考虑到兼容之前的历史数据。</p>
+<p>还有一个令人费解的地方，就是数据库中有某些角色的道具某些字段有异常，可能是某些时间，某些程序的BUG导致，无从追踪了。这个就真无能为力了，因为时间太久了，无从查起了。</p>
+<p>TIPS：在设计存档的时候，如果非要自己写，不用现成的库（如：protobuf,thrift等），可扩展性一定要做好！</p>
+<h5 id="新功能开发"><a href="#新功能开发" class="headerlink" title="新功能开发"></a>新功能开发</h5><p>被领导周一晚上快23点的时候，叫到办公室，说有一个紧急任务，本周内开发完成并发布。当时策划案子还没有了，当时心里就颤了一下，心想：这周估计能看几次日出了。周二上午，案子草草地过了一遍，和执行策划遇到一个难点僵持不下，直到下午领导有空，一句话就搞定了，相视一笑，开始码代码。 还好我已经是熟练代码民工了，吭哧吭哧码了一天半，在周三晚上基本开发完成，就等测试了。和QA开玩笑的说，“今天准备好看日出吧！” ，结果告诉我计划变了，下周发布。我勒个去啊。。不过也好，多测试几天，稳定性第一，安全第一。</p>
+<h5 id="查核日志"><a href="#查核日志" class="headerlink" title="查核日志"></a>查核日志</h5><p>最烦的就是当你在做一件事情的时候，中间各种打断。有时可能态度也不太好，发火也正常。先对那些在这种情况下，被我喷的人们说声对不起，性格使然，还望不要计较，呵呵。</p>
+<p>查日志是我们这些做后台的经常需要干的事情，验证角色的行为，查核一些BUG等等。往往时间很难确定，有时几分钟就可以搞定，有时查一天都没有结果。</p>
+<p>1&gt; 这一周因为机房割接导致有些游戏区全部掉线，并无法自动恢复，日志的结果看着是因为内部服务器之间的连接断掉导致，并一直无法重连，感觉是机器之间的网络不通，若要验证此感觉，要花费大量的时间去深究日志和底层代码，因为手头事情较多，就不处理了，割接这种事情也不是天天发生。之前并不知道割接是怎么一回事，于是google了一下：</p>
+<blockquote>
+<p>网络割接是对正在使用的线路、设备进行操作，将会直接影响到上面承载的业务，网络改造中最关键的一步就是网络割接。网络割接又叫网络迁移，是指运行网络物理或者逻辑上的更改。</p>
+</blockquote>
+<p>2&gt; 产出和消费数据对不上。就在开发功能的时候，接到一个超高优先级的任务，于是查核了好几个区的相关日志，过滤导入到Excel，最终还是都找到了原因，给出了合理的解释和说明。</p>
+<hr>
+<p>这一周过去了，忙碌中过去了，习以为常的工作内容总让人感觉没什么收获。少一些加班，让我们生活更美好吧。只能再次呼吁一下了！</p>
+<p>时间是我们有限的资源，工作并非一切，只是一种自我实现和赚钱的手段。我们还有自己的生活，还有家庭要照顾，还有嗷嗷待哺的宝宝需要大人的陪伴和共同成长，还有很多我们不能错过的东西。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;周三晚上加班到周四凌晨三点多，差两个小时就可以看日出了。一直处于无事等待状态，这样算是幸运的了。若这个时候有代码修改，那估计日出看定了。&lt;/p&gt;
+&lt;p&gt;加班本该是赶进度的一种手段，偶尔为之也是可以理解的。天天加班都不说什么了，每周版本发布前夕非要搞到大家一起看日出，这样好吗？策划同学貌似零点过后状态奇佳，灵感一个接一个，测试同学不紧不慢地测着，相关程序则必须守着，多数时候，程序呆在哪里什么事情都没有，纯粹就是为了其他人安心而已。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：重复就是犯罪</title>
+    <link href="http://yoursite.com/2015/09/11/review201509-2/"/>
+    <id>http://yoursite.com/2015/09/11/review201509-2/</id>
+    <published>2015-09-11T12:00:00.000Z</published>
+    <updated>2016-11-02T09:51:27.516Z</updated>
+    
+    <content type="html"><![CDATA[<p>整天和计算机打交道的人，如果一直用手工去做一些重复的事情，那么你就是在犯罪。如果说时间就是生命，那么重复就是在挥霍自己的生命，同时也在浪费别人的生命，因为当你手工低效率做事的时候，别人也在等着你。 </p>
+<p>程序员的世界，最讨厌的就是重复，重复的事情应该交给机器来帮你完成，而并非同样的事情手动敲了一遍又一遍。人脑最擅长的是通过思考总结、分析、抽象出模式，而机器最擅长的就是重复。机器执行重复的事情，准确性和效率要完胜手工。机器做重复的事情，当然是通过编程来实现，包括：脚本，宏，使用自己或别人开发的各种工具等。要做一个比较懒的程序员，学会使用工具和脚本，现有的工具不能满足你的要求，那么就需要自己挽起袖子自己造一个了。把重复的事情交给机器来做，你要做的就是分析抽象出重复的模式，然后将它转化成工具。</p>
+<blockquote>
+<p>事不过三，事不过三，事不过三！再重要的事情最多也只能说三遍，再说估计打我的心都有了！</p>
+</blockquote>
+<a id="more"></a>
+<h3 id="工作篇"><a href="#工作篇" class="headerlink" title="工作篇"></a>工作篇</h3><h5 id="搭建弹窗服务"><a href="#搭建弹窗服务" class="headerlink" title="搭建弹窗服务"></a>搭建弹窗服务</h5><p>一个流氓服务，运营就喜欢这样的东西，不得不接手搭建。花掉两天时间折腾，Mongo集群搭起来后，导数据和数据清理花了不少时间。近100G的数据文件，清理完差不多还剩50G左右。话说，代码量不大，看代码加上搭建测试环境调试花了半天基本就知道是怎么回事了，数据却让人折腾了好一番。之前也没搞过MongodDB集群的数据备份，直接把人家一个机器上的整个库目录复制过来了，问题层出不穷，一遍查文档一边折腾这些数据，最终还是跑起来了。处理客户端请求的服务效率还行，扛得住，后台管理员页面的处理那简直是玩死人的节奏啊，设计的明显有缺陷，有时一个操作可能涉及几百万用户时卡个2个小时才能搞定。后果可想而知，运营的同学们都抓狂了，我也无能无力了，改代码是来不及了。</p>
+<h5 id="游戏区重组脚本"><a href="#游戏区重组脚本" class="headerlink" title="游戏区重组脚本"></a>游戏区重组脚本</h5><p>干完运营的活，又得折腾策划的事情。合区之前是有的，非得搞一个变态的国家打乱重组，需要的区的数量还不定。很早之前，好像干过这么一次，两个区进行国际重组，也是仅有的一次，是运维同学自己写的SQL语句。如今，区的数量不定，如果还是手动写的话，SQL脚本随着区的数量增多会越来越复杂。</p>
+<p>重复就是犯罪，那么直接用Python脚本写吧。重组的规则由策划制定，使用XML做配置，形如：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">newzone</span> <span class="attr">id</span>=<span class="string">"200"</span> <span class="attr">newdb</span>=<span class="string">"new1"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"2"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"3"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"4"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">newzone</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">newzone</span> <span class="attr">id</span>=<span class="string">"201"</span> <span class="attr">newdb</span>=<span class="string">"new2"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"2"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"3"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"4"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">newzone</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">newzone</span> <span class="attr">id</span>=<span class="string">"202"</span> <span class="attr">newdb</span>=<span class="string">"new3"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"2"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"3"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">country</span> <span class="attr">id</span>=<span class="string">"4"</span> <span class="attr">db</span>=<span class="string">"XXX"</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">newzone</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>执行过程有两种做法：</p>
+<p>1&gt;. 创建好N个新区DB，然后从旧DB中拉数据。</p>
+<p>2&gt;. 把所有旧DB进行合并，复制成N份，然后每一个COPY删掉不相干的数据。</p>
+<p>第一种做法效率要高些，要安全些，不会产生多余的数据，上线后缺什么东西从旧DB里面拉过来就行了。那么问题来了，下周就要这么干了，这个过程从来没有测试过，万一出问题就玩大了。而之前合区的操作则是跑了好几年了，相对要稳定些，最后还是选择了后一种方式。暂时只是3个进行重组，合并后的DB有20G左右，以后如果要重组的个数较多，合区也需要点时间了。</p>
+<h3 id="学习篇"><a href="#学习篇" class="headerlink" title="学习篇"></a>学习篇</h3><h5 id="MongodDB集群"><a href="#MongodDB集群" class="headerlink" title="MongodDB集群"></a>MongodDB集群</h5><p>刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。完整介绍参考前一篇文章：<a href="/posts/mongodb-cluster/">高可用的MongoDB集群</a></p>
+<h5 id="写论文的利器XeLaTex"><a href="#写论文的利器XeLaTex" class="headerlink" title="写论文的利器XeLaTex"></a>写论文的利器XeLaTex</h5><p>论文里面要包含各种公式、图表、数据、代码，WORD难倒不能胜任吗？国内多数大学的论文模板都是WORD的，为啥不用WORD呢？写过论文的同学都知道，论文内容先不论，那破格式要求能把你折腾个半死，有多少人的论文被打回来都是因为格式不满足要求？</p>
+<p>TeX系统从它诞生的第一天，就是要让写作的人只关心内容，排版全部交给Tex系统搞定，有特殊的排版需求，只需要随便配置下即可。特别是对于数学公式的排版，那是相当的漂亮。Tex是什么？你可以Google一下，是计算机大神Donald E. Knuth（高德纳）发明的排版系统，在写作《计算机编程艺术》那几本神书的时候，发现没有合适的排版工具，大神就动手自己写了一套排版系统（忽然脑子里面飘过Linus大神的分布式版本控制工具git，也是在为linux内核找一个合适的开源版本管理工具的时候，发现没有合适的，于是乎自己整出来一个，有点异曲同工之处）。后来美国计算机学家莱斯利·兰伯特（Leslie Lamport）在20世纪80年代初期在TeX系统的基础上，做了一个宏包，就是有名的LaTex。这位是干啥的？分布式一致性算法：Paxos的作者，他对分布式系统的发展做出了许多牛逼的理论支持。之前的TeX和LaTex对于中文都不支持，需要挂载额外的包才可以正常的显示中文（如：CJK包），XeTex在原来TeX的基础上增加了对Unicode的支持，XeLaTex就是LaTex + XeTex，本身就支持中文和多国字体，不要挂载其它宏包了。关于TeX、LaTex还有其它类似的Tex系统有着说不完的故事，有兴趣的可以去Google一下。</p>
+<p>接触LaTeX是在本科的时候，没有像样的写过东西，只是觉得好玩。如今，刚好派上用场，专心内容，形式的东西交给XeLaTeX搞定。讽刺的是，国内论文竟然只收WORD的，无所谓了，大不了写完后再被WORD虐一遍，公式直接截图，总比使用什么MathType的要好得多。</p>
+<p>先秀一下LaTeX的Web显示（下面就是电磁场理论的核心：Maxwell’s Equations）：</p>
+<p><strong></strong></p>
+<p>LaTex脚本：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">\begin&#123;align&#125;</div><div class="line">  \nabla \times \vec&#123;\mathbf&#123;B&#125;&#125; -\, \frac1c\, \frac&#123;\partial\vec&#123;\mathbf&#123;E&#125;&#125;&#125;&#123;\partial t&#125; &amp; = \frac&#123;4\pi&#125;&#123;c&#125;\vec&#123;\mathbf&#123;j&#125;&#125; \\</div><div class="line">  \nabla \cdot \vec&#123;\mathbf&#123;E&#125;&#125; &amp; = 4 \pi \rho \\</div><div class="line">  \nabla \times \vec&#123;\mathbf&#123;E&#125;&#125;\, +\, \frac1c\, \frac&#123;\partial\vec&#123;\mathbf&#123;B&#125;&#125;&#125;&#123;\partial t&#125; &amp; = \vec&#123;\mathbf&#123;0&#125;&#125; \\</div><div class="line">  \nabla \cdot \vec&#123;\mathbf&#123;B&#125;&#125; &amp; = 0</div><div class="line">\end&#123;align&#125;</div></pre></td></tr></table></figure>
+<p>显示结果：</p>
+<!--
+<p>
+\begin{align}
+  \nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} & = \frac{4\pi}{c}\vec{\mathbf{j}} \\
+  \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
+  \nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
+  \nabla \cdot \vec{\mathbf{B}} & = 0
+\end{align}
+</p>
+-->
+<p><img src="/images/review201509-2.png" alt="公式"></p>
+<p>由衷的说声：真TM漂亮，公式漂亮，显示的也是相当漂亮。</p>
+<h3 id="总结篇"><a href="#总结篇" class="headerlink" title="总结篇"></a>总结篇</h3><ul>
+<li><p>忙碌却毫无意义。这一周基本上都是在忙工作上面的事情，办公室里面来回跑个不停，话说这座位安排的真TM的太不合理了，时间全浪费在跑路和沟通上面了。</p>
+</li>
+<li><p>懒应该是程序员的优良品德。这里的懒并不是指你什么事情都不做偷懒，而是说能让机器做的事情坚决不自己上手，节约的时间用来学习或者干其他事情。哎，在我们这里，无论你效率有多高，手里总有忙不完的事情。你牛，那就给你更多任务，你牛，那就给你更少时间。额，结果离职的离职，没离职的天天疲于奔命。偶尔，真的偷偷懒我看也是要得的，这不就在偷懒写什么每周回顾。哈哈。</p>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;整天和计算机打交道的人，如果一直用手工去做一些重复的事情，那么你就是在犯罪。如果说时间就是生命，那么重复就是在挥霍自己的生命，同时也在浪费别人的生命，因为当你手工低效率做事的时候，别人也在等着你。 &lt;/p&gt;
+&lt;p&gt;程序员的世界，最讨厌的就是重复，重复的事情应该交给机器来帮你完成，而并非同样的事情手动敲了一遍又一遍。人脑最擅长的是通过思考总结、分析、抽象出模式，而机器最擅长的就是重复。机器执行重复的事情，准确性和效率要完胜手工。机器做重复的事情，当然是通过编程来实现，包括：脚本，宏，使用自己或别人开发的各种工具等。要做一个比较懒的程序员，学会使用工具和脚本，现有的工具不能满足你的要求，那么就需要自己挽起袖子自己造一个了。把重复的事情交给机器来做，你要做的就是分析抽象出重复的模式，然后将它转化成工具。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;事不过三，事不过三，事不过三！再重要的事情最多也只能说三遍，再说估计打我的心都有了！&lt;/p&gt;
+&lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>高可用的MongoDB集群</title>
+    <link href="http://yoursite.com/2015/09/08/mongodb-cluster/"/>
+    <id>http://yoursite.com/2015/09/08/mongodb-cluster/</id>
+    <published>2015-09-08T13:46:00.000Z</published>
+    <updated>2016-11-02T09:51:27.515Z</updated>
+    
+    <content type="html"><![CDATA[<p>刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。</p>
+<p>使用集群的目的就是提高可用性。高可用性H.A.（High Availability）指的是通过尽量缩短因日常维护操作（计划）和突发的系统崩溃（非计划）所导致的停机时间，以提高系统和应用的可用性。它与被认为是不间断操作的容错技术有所不同。HA系统是目前企业防止核心计算机系统因故障停机的最有效手段。</p>
+<p>HA的三种工作方式：</p>
+<ul>
+<li><p>主从方式 （非对称方式）</p>
+<p> 工作原理：主机工作，备机处于监控准备状况；当主机宕机时，备机接管主机的一切工作，待主机恢复正常后，按使用者的设定以自动或手动方式将服务切换到主机上运行，数据的一致性通过共享存储系统解决。</p>
+</li>
+<li><p>双机双工方式（互备互援）</p>
+<p> 工作原理：两台主机同时运行各自的服务工作且相互监测情况，当任一台主机宕机时，另一台主机立即接管它的一切工作，保证工作实时，应用服务系统的关键数据存放在共享存储系统中。</p>
+</li>
+<li><p>集群工作方式（多服务器互备方式）</p>
+<p>工作原理：多台主机一起工作，各自运行一个或几个服务，各为服务定义一个或多个备用主机，当某个主机故障时，运行在其上的服务就可以被其它主机接管</p>
+</li>
+</ul>
+<a id="more"></a>
+<h3 id="主从架构（Master-Slave）"><a href="#主从架构（Master-Slave）" class="headerlink" title="主从架构（Master-Slave）"></a>主从架构（Master-Slave）</h3><p><img src="/images/mongodb-master-slave.png" alt="Mater-Slaves"></p>
+<p>主从架构一般用于备份或者做读写分离。由两种角色构成：</p>
+<ul>
+<li><p>主(Master)</p>
+<p>可读可写，当数据有修改的时候，会将oplog同步到所有连接的salve上去。</p>
+</li>
+<li><p>从(Slave)</p>
+<p>只读不可写，自动从Master同步数据。</p>
+</li>
+</ul>
+<p>特别的，对于Mongodb来说，并不推荐使用Master-Slave架构，因为Master-Slave其中Master宕机后不能自动恢复，推荐使用Replica Set，后面会有介绍，除非Replica的节点数超过50，才需要使用Master-Slave架构，正常情况是不可能用那么多节点的。</p>
+<p>还有一点，Master-Slave不支持链式结构，Slave只能直接连接Master。Redis的Master-Slave支持链式结构，Slave可以连接Slave，成为Slave的Slave。</p>
+<p>下面演示一下搭建过程：</p>
+<p>1&gt;. 启动Master</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongod --port 2000 --master --dbpath masterdb/</div></pre></td></tr></table></figure>
+<p>2&gt;. 启动Slave</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --slave --source 127.0.0.1:2000 --dbpath slavedb/</div></pre></td></tr></table></figure>
+<p>3&gt;. 给Master里面导入数据，查看Master和Slave的数据。你会发现导入Master的数据同时也会在Slave中出现。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongoimport --port 2000 <span class="_">-d</span> <span class="built_in">test</span> -c dataset dataset.json</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 2000 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; 25359</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 2001 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; 25359</div></pre></td></tr></table></figure>
+<p>4&gt;. 试一下Master和Slave的写操作。你会发现，只有Master才可以对数据进行修改，Slave修改时候会报错。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">mongo --port 2001 <span class="built_in">test</span></div><div class="line">db.dataset.drop()</div><div class="line"></div><div class="line">&gt;  Error: drop failed: &#123; <span class="string">"note"</span> : <span class="string">"from execCommand"</span>, <span class="string">"ok"</span> : 0, <span class="string">"errmsg"</span> : <span class="string">"not master"</span> &#125;</div><div class="line"></div><div class="line">mongoimport --port 2001 <span class="_">-d</span> <span class="built_in">test</span> -c dataset dataset.json</div><div class="line"></div><div class="line">&gt; Failed: error checking connected node <span class="built_in">type</span>: no reachable servers</div></pre></td></tr></table></figure>
+<h3 id="副本集架构（Replica-Set）"><a href="#副本集架构（Replica-Set）" class="headerlink" title="副本集架构（Replica Set）"></a>副本集架构（Replica Set）</h3><p>为了防止单点故障就需要引副本（Replication），当发生硬件故障或者其它原因造成的宕机时，可以使用副本进行恢复，最好能够自动的故障转移（failover）。有时引入副本是为了读写分离，将读的请求分流到副本上，减轻主（Primary）的读压力。而Mongodb的Replica Set都能满足这些要求。</p>
+<p>Replica Set的一堆<code>mongod</code>的实例集合，它们有着同样的数据内容。包含三类角色：</p>
+<ul>
+<li><p>主节点（Primary）</p>
+<p>接收所有的写请求，然后把修改同步到所有Secondary。一个Replica Set只能有一个Primary节点，当Primar挂掉后，其他Secondary或者Arbiter节点会重新选举出来一个主节点。默认读请求也是发到Primary节点处理的，需要转发到Secondary需要客户端修改一下连接配置。</p>
+</li>
+<li><p>副本节点（Secondary）</p>
+<p>与主节点保持同样的数据集。当主节点挂掉的时候，参与选主。</p>
+</li>
+<li><p>仲裁者（Arbiter）</p>
+<p>不保有数据，不参与选主，只进行选主投票。使用Arbiter可以减轻数据存储的硬件需求，Arbiter跑起来几乎没什么大的硬件资源需求，但重要的一点是，在生产环境下它和其他数据节点不要部署在同一台机器上。</p>
+</li>
+</ul>
+<p>注意，一个自动failover的Replica Set节点数必须为奇数，目的是选主投票的时候要有一个大多数才能进行选主决策。</p>
+<h5 id="应用客户端"><a href="#应用客户端" class="headerlink" title="应用客户端"></a>应用客户端</h5><p>客户端连接单个<code>mongod</code>和副本集的操作是相同，只需要配置好连接选项即可，比如下面是node.js连接Replica Set的方式：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongoose.connect(<span class="string">'mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]'</span> [, options]);</div></pre></td></tr></table></figure>
+<h5 id="Primary和Secondary搭建的Replica-Set"><a href="#Primary和Secondary搭建的Replica-Set" class="headerlink" title="Primary和Secondary搭建的Replica Set"></a>Primary和Secondary搭建的Replica Set</h5><p><img src="/images/mongodb-replica-set-1.png" alt="Replica Set"></p>
+<p>奇数个数据节点构成的Replica Set，下面演示精典的3个数据节点的搭建过程。</p>
+<p>1&gt; 启动3个数据节点，<code>--relSet</code>指定同一个副本集的名字 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --dbpath rs0-1 --replSet rs0</div><div class="line">mongod --port 2002 --dbpath rs0-2 --replSet rs0</div><div class="line">mongod --port 2003 --dbpath rs0-3 --replSet rs0</div></pre></td></tr></table></figure>
+<p>2&gt; 连接到其中一个，配置Replica Set，同时正在执行<code>rs.add</code>的节点被选为Primary。开发环境中<code>&lt;hostname&gt;</code>指的是机器名，生产环境下就是机器的IP。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">mongo --port <span class="number">2001</span></div><div class="line"></div><div class="line">rs.initiate()</div><div class="line">rs.add(<span class="string">"&lt;hostname&gt;:2002"</span>)</div><div class="line">rs.add(<span class="string">"&lt;hostname&gt;:2003"</span>)</div><div class="line">rs.conf()</div></pre></td></tr></table></figure>
+<p>3&gt; 连接Primary节点，导入数据成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mongoimport --port 2001 <span class="_">-d</span> <span class="built_in">test</span> -c dataset dataset.json</div><div class="line">mongo --port 2001 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; 25359</div></pre></td></tr></table></figure>
+<p>4&gt; 默认情况下，Secondary不能读和写。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 2003 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; Error: count failed: &#123; <span class="string">"note"</span> : <span class="string">"from execCommand"</span>, <span class="string">"ok"</span> : 0, <span class="string">"errmsg"</span> : <span class="string">"not master"</span> &#125;</div></pre></td></tr></table></figure>
+<p>注意，其中Secondary宕机，不受影响，若Primary宕机，会进行重新选主：</p>
+<p><img src="/images/mongodb-replica-set-2.png" alt="Replica Set"></p>
+<h5 id="使用Arbiter搭建Replica-Set"><a href="#使用Arbiter搭建Replica-Set" class="headerlink" title="使用Arbiter搭建Replica Set"></a>使用Arbiter搭建Replica Set</h5><p>偶数个数据节点，加一个Arbiter构成的Replica Set，下面演示精典的2个数据节点加一个仲裁者的搭建过程。<br>特别的，生产环境中的Arbiter节点，需要修改一下配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">journal.enabled = false</div><div class="line">smallFiles = true</div></pre></td></tr></table></figure>
+<p><img src="/images/mongodb-replica-set-3.png" alt="Replica Set"></p>
+<p>1&gt; 启动两个数据节点和一个Arbiter节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --dbpath rs0-1 --replSet rs0</div><div class="line">mongod --port 2002 --dbpath rs0-2 --replSet rs0</div><div class="line"></div><div class="line">mongod --port 2003 --dbpath arb --replSet rs0</div></pre></td></tr></table></figure>
+<p>2&gt; 连接到其中一个，添加Secondary和Arbiter。当仅需要添加Aribiter的时候，只需连接当前Replica Set的Primary，然后执行<code>rs.addArb</code>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">mongo --port <span class="number">2001</span></div><div class="line"></div><div class="line">rs.initiate()</div><div class="line">rs.add(<span class="string">"&lt;hostname&gt;:2002"</span>)</div><div class="line">rs.addArb(<span class="string">"&lt;hostname&gt;:2003"</span>)</div><div class="line">rs.conf()</div></pre></td></tr></table></figure>
+<h3 id="数据分片架构（Sharding）"><a href="#数据分片架构（Sharding）" class="headerlink" title="数据分片架构（Sharding）"></a>数据分片架构（Sharding）</h3><p>当数据量比较大的时候，我们需要把数据分片运行在不同的机器中，以降低CPU、内存和IO的压力，Sharding就是这样的技术。数据库主要由两种方式做Sharding：纵向，横向，纵向的方式就是添加更多的CPU，内存，磁盘空间等。横向就是上面说的方式，如图所示：</p>
+<p><img src="/images/mongodb-sharded-collection.png" alt="Sharding"></p>
+<h5 id="MongoDB的Sharding架构："><a href="#MongoDB的Sharding架构：" class="headerlink" title="MongoDB的Sharding架构："></a>MongoDB的Sharding架构：</h5><p><img src="/images/mongodb-sharded-cluster-production-architecture.png" alt="Sharding"></p>
+<h5 id="MongoDB分片架构中的角色："><a href="#MongoDB分片架构中的角色：" class="headerlink" title="MongoDB分片架构中的角色："></a>MongoDB分片架构中的角色：</h5><ul>
+<li><p>数据分片（Shards）</p>
+<p>保存数据，保证数据的高可用性和一致性。可以是一个单独的<code>mongod</code>实例，也可以是一个副本集。在生产环境下Shard是一个Replica Set，以防止该数据片的单点故障。所有Shard中有一个PrimaryShard，里面包含未进行划分的数据集合：</p>
+<p><img src="/images/mongodb-sharded-cluster-primary-shard.png" alt="Sharding"></p>
+</li>
+<li><p>查询路由（Query Routers）</p>
+<p><code>mongos</code>的实例，客户端直接连接<code>mongos</code>，由<code>mongos</code>把读写请求路由到指定的Shard上去。一个Sharding集群，可以有一个<code>mongos</code>，也可以有多<code>mongos</code>以减轻客户端请求的压力。</p>
+</li>
+</ul>
+<ul>
+<li><p>配置服务器（Config servers）</p>
+<p>保存集群的元数据（metadata），包含各个Shard的路由规则。</p>
+</li>
+</ul>
+<h5 id="搭建一个有2个shard的集群"><a href="#搭建一个有2个shard的集群" class="headerlink" title="搭建一个有2个shard的集群"></a>搭建一个有2个shard的集群</h5><p>1&gt; 启动两个数据分片节点。在此仅演示单个<code>mongod</code>的方式，Replica Set类似。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --shardsvr --dbpath shard1/</div><div class="line">mongod --port 2002 --shardsvr --dbpath shard2/</div></pre></td></tr></table></figure>
+<p>2&gt; 启动配置服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mongod --port 3001 --dbpath cfg1/</div><div class="line">mongod --port 3002 --dbpath cfg2/</div><div class="line">mongod --port 3003 --dbpath cfg3/</div></pre></td></tr></table></figure>
+<p>3&gt; 启动查询路由<code>mongos</code>服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongos --port 5000 --configdb 127.0.0.1:3001,127.0.0.1:3002,127.0.0.1:3003</div></pre></td></tr></table></figure>
+<p>4&gt; 连接mongos，为集群添加数据分片节点。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 5000 amdmin</div><div class="line"></div><div class="line">sh.addShard(<span class="string">"127.0.0.1:2001"</span>)</div><div class="line">sh.addShard(<span class="string">"127.0.0.1:2002"</span>)</div></pre></td></tr></table></figure>
+<p>如果Shard是Replica Set，添加Shard的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">sh.addShard(<span class="string">"rsname/host1:port,host2:port,..."</span>)</div><div class="line"></div><div class="line">rsname - 副本集的名字</div></pre></td></tr></table></figure>
+<p>5&gt; 可以连接<code>mongos</code>进行数据操作了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mongo --port 5000 <span class="built_in">test</span></div><div class="line"></div><div class="line">mongoimport.exe --port 5000 <span class="_">-d</span> <span class="built_in">test</span> dataset.json</div><div class="line">&gt; 25359</div><div class="line">`</div></pre></td></tr></table></figure>
+<h3 id="数据的备份和恢复"><a href="#数据的备份和恢复" class="headerlink" title="数据的备份和恢复"></a>数据的备份和恢复</h3><p>MongodDB的备份有多种方式，这里只简单介绍一下<code>mongodump</code>和<code>mongorestore</code>的用法。</p>
+<p>1&gt; 备份和恢复所有db</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mongodump -h IP --port PORT -o BACKUPPATH</div><div class="line"></div><div class="line">mongorestore -h IP --port PORT BACKUPPATH</div></pre></td></tr></table></figure>
+<p>2&gt; 备份和恢复指定db</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongodump -h IP --port PORT <span class="_">-d</span> DBNAME -o BACKUPPATH</div><div class="line"></div><div class="line">mongorestore -h IP --port PORT  <span class="_">-d</span> DBNAME BACKUPPATH</div><div class="line">mongorestore -h IP --port PORT --drop <span class="_">-d</span> DBNAME BACKUPPATH</div></pre></td></tr></table></figure>
+<p>3&gt; 备份和恢复指定collection</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongodump -h IP --port PORT <span class="_">-d</span> DBNAME -c COLLECTION -o xxx.bson</div><div class="line"></div><div class="line">mongorestore -h IP --port PORT  <span class="_">-d</span> DBNAME -c COLLECTION xxx.bson</div><div class="line">mongorestore -h IP --port PORT --drop <span class="_">-d</span> DBNAME -c COLLECTION xxx.bson</div></pre></td></tr></table></figure>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>MongoDB的集群能力还是很强的，搭建还算是简单。最关键的是要明白上面提到的3种架构的原理，才能用的得心应手。当然不限于MongoDB，或许其他数据库也多多少少支持类似的架构。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li>百度百科： <a href="http://baike.baidu.com/view/2850255.htm" target="_blank" rel="external">http://baike.baidu.com/view/2850255.htm</a></li>
+<li>MongodDB官网文档：<a href="http://docs.mongodb.org/" target="_blank" rel="external">http://docs.mongodb.org/</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。&lt;/p&gt;
+&lt;p&gt;使用集群的目的就是提高可用性。高可用性H.A.（High Availability）指的是通过尽量缩短因日常维护操作（计划）和突发的系统崩溃（非计划）所导致的停机时间，以提高系统和应用的可用性。它与被认为是不间断操作的容错技术有所不同。HA系统是目前企业防止核心计算机系统因故障停机的最有效手段。&lt;/p&gt;
+&lt;p&gt;HA的三种工作方式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;主从方式 （非对称方式）&lt;/p&gt;
+&lt;p&gt; 工作原理：主机工作，备机处于监控准备状况；当主机宕机时，备机接管主机的一切工作，待主机恢复正常后，按使用者的设定以自动或手动方式将服务切换到主机上运行，数据的一致性通过共享存储系统解决。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;双机双工方式（互备互援）&lt;/p&gt;
+&lt;p&gt; 工作原理：两台主机同时运行各自的服务工作且相互监测情况，当任一台主机宕机时，另一台主机立即接管它的一切工作，保证工作实时，应用服务系统的关键数据存放在共享存储系统中。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;集群工作方式（多服务器互备方式）&lt;/p&gt;
+&lt;p&gt;工作原理：多台主机一起工作，各自运行一个或几个服务，各为服务定义一个或多个备用主机，当某个主机故障时，运行在其上的服务就可以被其它主机接管&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="架构" scheme="http://yoursite.com/categories/%E6%9E%B6%E6%9E%84/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：直觉的力量</title>
+    <link href="http://yoursite.com/2015/09/06/review201509-1/"/>
+    <id>http://yoursite.com/2015/09/06/review201509-1/</id>
+    <published>2015-09-06T13:46:00.000Z</published>
+    <updated>2016-11-02T09:51:27.514Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>直觉（英语：Intuition），又称为直观，通常被描述为，一种不用经过太多思考过程，很快就能出现的直接想法、感觉、信念或者偏好。当我们有某种信仰，但是不确知它的原因时，通常会将它归于是一种直觉。认知科学认为这是因为生存的演化压力而产生的人类心智能力，让人类可以快速做出判断，采取行动，它通常与右脑连结在一起。心理学与超自然学对这个能力深感兴趣。(以上内容来自维基百科)</p>
+</blockquote>
+<p>有很多次，在我向新人演示或者帮助Ta解决宕机或BUG的时候，他们都会用诧异的眼神看着我，一脸疑惑地问道：“这么快地定位到问题，你是怎么做到的？”，然后我很装逼地对Ta说：“直觉”。当然，相视一笑之后，我还是会整理一下思路，然后解释一下推理过程。</p>
+<p>可以快速解决问题的直觉，并非朝夕之间就能获得的。至今做了七年服务器端开发，遇到过各种各样的宕机和BUG，凌晨三四点被叫到公司家常便饭，也就仅仅获得了针对我们游戏服务器出的问题的一些直觉而已，多数时候还是挺准的。每次当我遇到一些疑难问题的时候，我心里都会默默在念：Every thing happened has a reason。事出必有因，现在没有找到原因，只是因为对问题的认识和分析还不够，考虑的还不够全面，应该分析所有可能的已知因素。就这样，你必须熟练并理解手头的各种工具和代码。正所谓熟能生巧，见得多了，理解的深了，在别人看来很难的问题也不是问题了，这是一个持久的过程，需要大量的时间和机会，当然征服问题的信念也是很有必要的。</p>
+<p>当一个BUG/宕机出现的时候：</p>
+<ul>
+<li><p>首先要弄清楚问题，要了解正常的代码逻辑，若是中途接手别人的代码，那就得硬着头皮去理解别人的代码。</p>
+</li>
+<li><p>然后，思考问题出现的环节，然后针对出问题的环节仔细分析代码的每个分支，往往一些很难复现的BUG很容易在分析代码的过程中发现。</p>
+</li>
+<li><p>最后要想到的才是复现BUG并使用调试工具进行追踪调试。</p>
+</li>
+</ul>
+<p>PS. 记得之前在笔试阅卷的时候，看到一个关于调试器的回答，问题是：“请写下你的调试工具及其简单用法？”，有一个同学的回答：“脑子”。开始拿来当笑话，笑过之余，想一下还是挺有道理的，脑子才是最牛逼的调试器，可以进行情景模拟，还原问题发生的各种可能性，请问GDB可以吗？哈哈。</p>
+<a id="more"></a>
+<h3 id="工作篇"><a href="#工作篇" class="headerlink" title="工作篇"></a>工作篇</h3><p><strong>烦人的宕机</strong></p>
+<p>做游戏服务器开发的，宕机是永远的痛。话说，三个月前，自从某次维护后，只要有新服上线，在线人数过2W+，都会因同样的原因有几率宕机，当然影响范围非常小，每次可能也就几百人（相对于10W-20W而言），再加上几率比较小，其他事情比较多，多以每次看到同样的宕机文件，直接忽略了。</p>
+<p>宕机不可怕，可怕的是宕机生成的core文件堆栈是乱掉的，一上<code>gdb backtrace</code>命令全是问号，这货就属于这样的。这不，上周末就又遇到了，受不了这样的精神折磨了，下定决心周一搞定这个宕机。指派了两位同学去查代码，自己抱着那个堆栈乱掉的core文件，研究了一上午，去寻找各种蛛丝马迹。到了下午，发现了一个可用的地址，各种折腾，最后找到了事发的一个回调对象，print一下这个对象，然后折腾一会儿，再print一下这个对象，“我去，我的眼睛花掉了还是怎么回事，两次print的内容竟然不一样，真是见鬼了”，咒骂了几句然后继续去折腾那个破core文件去了。时间过去了一个多小时，失望透顶啊，全部希望寄托在检查代码上了，忽然想到之前print的那个回调，为什么会不一样，然后就去代码里面看看，原来在两个不同的cpp文件里面定义了一个结构几乎一模一样的回调类，成员函数实现有所不同，结果gdb一会儿看到的是前面一个，一会儿看到的是后面一个。问题找到了，代码在链接的时候，两个回调的成员函数指向了其中某一个，两个成员函数不同的部分和当前在线人数有关系，也就是说触发条件是：编译时候链接了其中某一个；链接错误的回调被执行；在线人数满足一定条件。</p>
+<p>切记：在不同编译单元里面若要写名字同样的类必须使用匿名名称空间，否则在链接的时候，链接到成员函数将会是排在前面的那个。</p>
+<p>问题复现：</p>
+<p>main.h:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> CallBack &#123;</div><div class="line">	<span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">exec</span><span class="params">()</span> </span>= <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>main.cpp:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"a.h"</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"b.h"</span></span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</div><div class="line">	func_a();</div><div class="line">	func_b();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>a.h:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">void</span> <span class="title">func_a</span><span class="params">()</span></span>;</div></pre></td></tr></table></figure>
+<p>a.cpp:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"main.h"</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"a.h"</span></span></div><div class="line"></div><div class="line"><span class="keyword">struct</span> CallBackXX : <span class="keyword">public</span> CallBack &#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">exec</span><span class="params">()</span> </span>&#123;</div><div class="line">	    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"callback: a.cpp"</span></div><div class="line">	&#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">func_a</span><span class="params">()</span> </span>&#123;</div><div class="line">	CallBackXX cb;</div><div class="line">	cb.exec();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>b.h:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">void</span> <span class="title">func_b</span><span class="params">()</span></span>;</div></pre></td></tr></table></figure>
+<p>b.cpp</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"main.h"</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"a.h"</span></span></div><div class="line"></div><div class="line"><span class="keyword">struct</span> CallBackXX : <span class="keyword">public</span> CallBack &#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">exec</span><span class="params">()</span> </span>&#123;</div><div class="line">	    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"callback: b.cpp"</span></div><div class="line">	&#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">func_a</span><span class="params">()</span> </span>&#123;</div><div class="line">	CallBackXX cb;</div><div class="line">	cb.exec();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>执行”g++ -o main main.cpp a.cpp b.cpp”，输出结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">callback: a.cpp</div><div class="line">callback: a.cpp</div></pre></td></tr></table></figure>
+<p>执行”g++ -o main main.cpp  b.cpp a.cpp”，输出结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">callback: b.cpp</div><div class="line">callback: b.cpp</div></pre></td></tr></table></figure>
+<p>按道理来说GCC应该报错的，我们使用的是gcc 4.4.5。</p>
+<p><strong>意外的收获Mongodb</strong></p>
+<p>最烦接手其它部门中途丢过来的东西，因为东西不是自己设计的，用到的技术和思维方式都会有差异，往往上手会比较麻烦。我们游戏平台有一个服务，产品觉得很好用，平台中心由于人手紧缺或其他原因不再进行技术支持了，基本上是废掉了，无奈我等苦逼啥都想做，啥都想接手，悲催的是接手了以后不光是我们自己项目用，其他项目也要用，那我干的事情算是为大家谋福利了啊。具体服务保密不能说，用到的技术有node.js和mongodb集群。node之前有用过，mongodb之前只听说过是一个nosql数据库，具体一无所知。</p>
+<p>既然接手了，就得硬着头皮去学习mongodb。mongodb是一个可以替代面向对象数据库的nosql，和redis还有点不一样，它是介于key-value和关系数据库的一种数据库。里面有文档(document)，集合(collection)，数据库(db)等概念。一个db有N个collection，一个collection有N个document，而一个document则是一个json文本，可以表达任何基本或复合的对象。可以和关系型数据库做对比：<code>docuemnt - row</code>、<code>collection - table</code>、<code>db - database</code>。</p>
+<p>值得一提的是它强大的replSet和shard机制，搭建一个带复制、负载均衡的集群非常简单。比起redis的集群功能是要方便许多，当然redis是一个基于内存的key-value数据库，Mongodb是自动回把数据保存到磁盘的，具体性能如何，还不太确定。需要进一步使用才能给出结论。</p>
+<p>PS. 做游戏开发的一旦染手产品或运营提的东西，那人基本上就离抓狂不远了！</p>
+<h3 id="学习篇"><a href="#学习篇" class="headerlink" title="学习篇"></a>学习篇</h3><p><strong>数理统计的几种分布和参数估计</strong></p>
+<p>继续复习数理统计相关知识，样本空间的一些概念，和关于抽样的几种分布：卡方分布、t分布和F分布。对于这几种分布的具体用法，还不是特别了解。了解了一下参数估计的几种方法：矩估计法；最大似然法；最小二乘法。学习一门学科，其实最能提起兴趣的方式就是了解它的发展历史，结合历史来学习数理统计将会是一件非常有意思的事情，找了两本相关的书：《女士品茶》和《数理统计学简史》。</p>
+<p><strong>机器学习的半监督学习</strong></p>
+<p>机器学习，按照是否有人工参与分为监督学习和非监督学习。监督学习，必须要手工标注的训练集，然后通过分类算法来进行学习；非监督学习，是指没有人工参与对数据进行聚类。往往标注数据工作量浩大，还不一定准确，标注的数据如果不具有代表性，还会产生有偏差的结果。所以，真实的机器学习往往采用半监督学习或者非监督学习，半监督学习主要是利用少量已标注的数据和大量的未标注的数据一起来进行模型的训练，往往能得到比监督学习要好的性能。非监督学习有LU学习、PU学习。大体的思路就是利用已标注的数据，来标注可能性比较高的未知类型的数据，然后持续迭代，直到算法收敛，收敛的条件是标注完所有数据或者给定一个可能性阈值。</p>
+<p>LU指的是Labled and Unlabled，只需要一部分标注数据，包含正例和反例和未标注的数据，PU学习主要的算法有：EM算法、Co-Traing、自学习、直推式SVM和基于图的方法等等。</p>
+<p>PU指的是Positive and Unlabled，仅需要标注出正例，然后利用这些正例和未标注数据进行学习。感觉PU学习的用处比较大，若需要识别一堆数据中的某一种类型，只需要标注你想要识别的类型，其他类型不用管。如果采用LU学习，则每种类型的数据都需要标注。</p>
+<h3 id="总结篇"><a href="#总结篇" class="headerlink" title="总结篇"></a>总结篇</h3><ul>
+<li><p>训练直觉。未知的知识通过学习获得，将记忆中的知识通过实践和不断的操练转换成为一种直觉，那么所有的问题都不是问题了。知识的广度和深度都很重要，选择你感兴趣的方向，深挖它，将它变为你的直觉，那么你就离Master不远了。</p>
+</li>
+<li><p>适可而止。与信息和知识打交道的人，最怕的就是被其所淹没，一头扎进去出不了。有个听起来很装逼的名字，叫“分析瘫痪”，特别是那些有完美主义倾向的人，最容易犯这样的毛病。我自己虽然有这个意识，也经常犯这样的问题。什么叫分析瘫痪，是指你在做一件事情的时候，可能会牵扯到很多其他事情，然后牵扯到的一个事情有可能又会牵扯到其他的事情，形成一个事情/知识/信息网络。如果没有一个明确的目标，只顾做/学习遇到的所有东西，你就会迷失。比如，上一周，我要完成的事情是搭建平台的服务，但是它牵扯到Mongodb，这时我的目标应该是快速地搭建起这个服务，而并非深入研究Mongodb，只需大概了解一下即可。相反，坚信遇到的东西都必须要彻底弄懂，先学习一下Mongodb的用法，嗯，还不够过瘾，最好再看看Mongodb的源码，或许在你深入Mongoddb的时候，又会遇到一堆新鲜玩意，嗯，这个relpSet设计的真是精妙，这个集群简直Perfect，我再看会儿分布式相关的东西，了解一下，这下爽了，但是平台这个服务要到猴年马月才能搭建起来啊！恭喜你，如果是这样，那你就陷入分析瘫痪了。所以太好学了也不一定是好事，凡事适可而止。</p>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;直觉（英语：Intuition），又称为直观，通常被描述为，一种不用经过太多思考过程，很快就能出现的直接想法、感觉、信念或者偏好。当我们有某种信仰，但是不确知它的原因时，通常会将它归于是一种直觉。认知科学认为这是因为生存的演化压力而产生的人类心智能力，让人类可以快速做出判断，采取行动，它通常与右脑连结在一起。心理学与超自然学对这个能力深感兴趣。(以上内容来自维基百科)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;有很多次，在我向新人演示或者帮助Ta解决宕机或BUG的时候，他们都会用诧异的眼神看着我，一脸疑惑地问道：“这么快地定位到问题，你是怎么做到的？”，然后我很装逼地对Ta说：“直觉”。当然，相视一笑之后，我还是会整理一下思路，然后解释一下推理过程。&lt;/p&gt;
+&lt;p&gt;可以快速解决问题的直觉，并非朝夕之间就能获得的。至今做了七年服务器端开发，遇到过各种各样的宕机和BUG，凌晨三四点被叫到公司家常便饭，也就仅仅获得了针对我们游戏服务器出的问题的一些直觉而已，多数时候还是挺准的。每次当我遇到一些疑难问题的时候，我心里都会默默在念：Every thing happened has a reason。事出必有因，现在没有找到原因，只是因为对问题的认识和分析还不够，考虑的还不够全面，应该分析所有可能的已知因素。就这样，你必须熟练并理解手头的各种工具和代码。正所谓熟能生巧，见得多了，理解的深了，在别人看来很难的问题也不是问题了，这是一个持久的过程，需要大量的时间和机会，当然征服问题的信念也是很有必要的。&lt;/p&gt;
+&lt;p&gt;当一个BUG/宕机出现的时候：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;首先要弄清楚问题，要了解正常的代码逻辑，若是中途接手别人的代码，那就得硬着头皮去理解别人的代码。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;然后，思考问题出现的环节，然后针对出问题的环节仔细分析代码的每个分支，往往一些很难复现的BUG很容易在分析代码的过程中发现。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;最后要想到的才是复现BUG并使用调试工具进行追踪调试。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PS. 记得之前在笔试阅卷的时候，看到一个关于调试器的回答，问题是：“请写下你的调试工具及其简单用法？”，有一个同学的回答：“脑子”。开始拿来当笑话，笑过之余，想一下还是挺有道理的，脑子才是最牛逼的调试器，可以进行情景模拟，还原问题发生的各种可能性，请问GDB可以吗？哈哈。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>每周回顾：少一点，再少一点</title>
+    <link href="http://yoursite.com/2015/08/28/review201508-4/"/>
+    <id>http://yoursite.com/2015/08/28/review201508-4/</id>
+    <published>2015-08-28T10:00:00.000Z</published>
+    <updated>2016-11-02T09:51:27.513Z</updated>
+    
+    <content type="html"><![CDATA[<p>信息爆炸，知识爆炸，知识量在以指数级上升，据说近几十年的知识量比过去人类整个历史积累的知识量都要多。而我们的大脑的进化速度，完全赶不上知识的增长，互联网时代给予我们太多便利去获得知识了，各种免费资源取之不尽，只要有求知欲，想学习什么可以轻而易举的获取各种资料，包括书籍、课件、视频等等。有时我就在想，人类的某一个领域，甚至某一领域的某一分支的知识会不会复杂到一个人穷尽一生也学习不完的地步？或许知识的分类会更多，会更精细，届时对于那些求知欲强大的人，企图一窥全貌，知道所有细枝末节几乎是不可能的事情了。貌似现在已经是这样了。</p>
+<p>以上是在学习数据挖掘和机器学习时候，碰到很多新知识，随便google一下，又会扯出一堆信息，有感而发。自叹记忆力大不如前，看过就忘，还有悔不该在学校没有深入学几门数学。</p>
+<a id="more"></a>
+<h3 id="工作篇"><a href="#工作篇" class="headerlink" title="工作篇"></a>工作篇</h3><p>游戏资料片上线一周，一次刷钱，一次大规模宕机，还有一些BUG。好在发现及时，及时解决。做游戏服务器，最怕的就是刷道具，刷经验，和大规模宕机，这次资料片都遇到了。没有了代码复审，再加上资料片当周，一口气外放的内容太多，也没有长时间小范围测试，出BUG是难免的。</p>
+<p>最近一个月内，服务器端开发离职四位，送走了一个又一个战友，心里还是有点感慨的。不过，对于离职的同学来说也是好事，多经历一些就可以多学一点，往往在一个岗位上工作两年基本上就会达到瓶颈，发现没什么提高，所做的事情基本上都可以不需要太多的思考，顺手拈来了，久而久之，学习的热情也就没了，加之加班时间过长，离职难免。希望那些身边离职的战友们，有一个好的前程。爱学习，爱代码，也不要忘记我这个曾经的战友。有空，咱聚啊，哈哈。</p>
+<h3 id="学习篇"><a href="#学习篇" class="headerlink" title="学习篇"></a>学习篇</h3><p>没营养的新闻，和口水文章看惯了，看数学和算法的速度也快了，结果是怎样的呢？现在周五，回想一下，基本上就剩下概念名词了，有些数学推导和算法过程完全一点印象都没了。下面只能根据记忆随意写了。本周大概学习了一下：</p>
+<p><strong>基于实例的机器学习</strong></p>
+<p>基于实例的机器学习，主要讨论了kNN(k-Nearest Neighbor)算法及其一个kd-tree实现。实例学习是相对于模型学习的，又称为懒惰学习(Lay Learning)，因为预测的过程需要用到学习用到的训练实例，而模型学习，如决策树学习，规则学习和SVM学习，都是靠训练集训练一个模型，然后使用模型去做预测，又称为迫切学习（Eager Learning）。</p>
+<p>kNN中的关键是：距离定义，k值选择，和决策规则。kNN的思想是，利用实例之间的距离（可以是欧式距离，切比雪夫距离，也可以是其他，比如文本的相似度）来进行匹配。使用未知类型的实例，和所有训练样本实例计算距离，把最近的k个找出来，然后检查这个k个训练样本的类型（训练样本类型是已知的），占大多数的类型就是我们要预测的实例的类型。</p>
+<p>可以看到当训练样本数量巨大的时候，每次遇到一个未知类型的实例都要遍历一遍，效率比较低下。所以可以预先使用训练集，构造一个kd-tree，kd意思是k dimension，kd-tree是一个对k维超平面的递归划分形成的一个树，每一个节点代表着某一个维度上的划分，预测的时候，从根节点开始检查，找到落在其中的超矩形，然后在回溯检查有没有更近的。</p>
+<p><strong>集成学习</strong>：</p>
+<p>集成学习主要有三种类型：袋装（bagging）、提升（boosting）、堆栈（stacking）。主要学习了提升里面著名的AdaBoost算法（开始还以为前缀Ada和那位发现一个BUG的女程序员有关，结果Ada意思是Adaptive的意思，切勿望文生义）。</p>
+<p>集成学习的目的是把基础分类器（如：决策树，SVM，Naive Bayes分类器等）集成后提高分类性能（提高查准率和查全率）。Bagging主要直接对基础分类器的预测结果加权求和，Boosting是把基础分类器串连起来，前一个预测错误的在下一里面的权值变大，预测正确的相应减少，从而提高整体的准确性。Stacking据说很少用到，多数机器学习书里面都没有提到它，其中Boosting方法用的比较多，AdaBoost据说效果不错。</p>
+<p><strong>复习概率论</strong>`</p>
+<p>机器学习中朴素贝叶斯和贝叶斯网络在不懂概率统计的情况下，基本上就是看天书，满篇的概率公式推导，让人摸不着头脑。</p>
+<p>找到大学时候的教材《概率论与数理统计教材》，恶补了一下概率论相关的知识，概率定义，加法定理，乘法定理，全概率公式，贝叶斯概率公式，随机变量，概率分布，概率密度，概率的数字特征，数学期望，方差，协方差，相关系数，大数定理，几何分布，超几何分布，二项式分布，泊松分布，正态分布。脑子里面的概念一股脑全写出来了。</p>
+<p>也不能叫恶补，因为只是随便看了看，只知道个大概，若要用到还需要有针对地去研究。已经毕业多年的同学们，上面的概念还记得几个？</p>
+<p>有人说概率统计时最实用的数学，是直觉的抽象描述。嗯，以我们国内的教材来看，完全尼玛就是先上公式，都不知道用于啥情况，然后解释一番，最后还一头雾水。总觉得，国内的数学书，适合用于复习，并不适合初学，因为它都是干货，不告诉你为什么，在什么情况下用，初学的话往往看一遍忘一遍，最后遇到实际问题，大眼瞪小眼就是不知从何下手。</p>
+<p><strong>看了几篇关于游戏角色行为分析的论文</strong></p>
+<ul>
+<li><p><em>Detection of MMORPG Bots Based on Behavior Analysis</em></p>
+<p> MMORPG中机器人外挂的识别，基于两点假设：1&gt; 外挂的特定类型的操作类型频率要远高于普通玩家；2&gt; 外挂的操作主要集中在特定几种类型。分两阶段完成，第一阶段，根据假设判定外挂机，第二阶段，使用SVM训练已知的外挂数据，来预测未知的用户类型。</p>
+</li>
+<li><p><em>Detecting Real Money Traders in MMORPG by Using Trading Network</em></p>
+<p> 使用交易网络来识别MMORPG中打钱工作室的行为，本论文把游戏中的打钱工作室的角色分为三类：Earners, Collectors, Sellers。然后根据它们形成的交易网络来在整个交易网络中来识别此类角色。用到网络理论里面寻找社区的知识，不是特别了解，后续有需要，需要研究一下。</p>
+</li>
+<li><p><em>Visualization of Online-Game Players Based on Their Action Behaviors</em></p>
+<p> 提出两种在线游戏行为的可视化方法：CMDS和keyGrap。CMDS全称是Classical Multi Dimension Scale，是一种数据降维方式，在游戏中，把角色行为特征映射到二维坐标系中，然后直观地发现行为类似的聚类（说的这么容易，还是没看懂怎么个降维法，据说CMDS也不是你想降到2就能降到2的）；keyGrap是一个用于关键字网络分析的工具，在游戏中主要针对某些指定行为，来发现其他相关行为。</p>
+</li>
+</ul>
+<p>PS. 以上内容，都是自己的理解，可能有不对的地方。写下来是为了强化一下记忆和理解，否则周末一过，啥都想不起来了，现在经常这样，莫非真TM老了啊。</p>
+<h3 id="总结篇"><a href="#总结篇" class="headerlink" title="总结篇"></a>总结篇</h3><p>上面林林总总列出的东西还是挺多的。但问题是，理解了多少？哪些可以不假思索地实际应用？想了想，除了kNN变遍历版的算法可以写出来，其它仅限于了解。</p>
+<p>看得多了，思考的就少了，思考的少了，深度就不够，深度不够，知道有那么个东西顶个屁用，还是干不了事情。就像公司大Boss说的话一样“人一过三十就没创造力了”，那是因为见的多了，真正的创造力是利用手头有限的知识和资源去创造性地去做事情，关键还是要多思考，多实践。</p>
+<p>一口气吃不成胖子会噎死人的，洋气点就是：Less is More！Less is More！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;信息爆炸，知识爆炸，知识量在以指数级上升，据说近几十年的知识量比过去人类整个历史积累的知识量都要多。而我们的大脑的进化速度，完全赶不上知识的增长，互联网时代给予我们太多便利去获得知识了，各种免费资源取之不尽，只要有求知欲，想学习什么可以轻而易举的获取各种资料，包括书籍、课件、视频等等。有时我就在想，人类的某一个领域，甚至某一领域的某一分支的知识会不会复杂到一个人穷尽一生也学习不完的地步？或许知识的分类会更多，会更精细，届时对于那些求知欲强大的人，企图一窥全貌，知道所有细枝末节几乎是不可能的事情了。貌似现在已经是这样了。&lt;/p&gt;
+&lt;p&gt;以上是在学习数据挖掘和机器学习时候，碰到很多新知识，随便google一下，又会扯出一堆信息，有感而发。自叹记忆力大不如前，看过就忘，还有悔不该在学校没有深入学几门数学。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="每周回顾" scheme="http://yoursite.com/categories/%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>将Python脚本打包成可执行文件</title>
+    <link href="http://yoursite.com/2015/08/21/pyinstaller/"/>
+    <id>http://yoursite.com/2015/08/21/pyinstaller/</id>
+    <published>2015-08-21T10:00:00.000Z</published>
+    <updated>2016-11-02T09:51:27.512Z</updated>
+    
+    <content type="html"><![CDATA[<p>Python是一个脚本语言，被解释器解释执行。它的发布方式：</p>
+<ul>
+<li><p>.py文件：对于开源项目或者源码没那么重要的，直接提供源码，需要使用者自行安装Python并且安装依赖的各种库。（Python官方的各种安装包就是这样做的）</p>
+</li>
+<li><p>.pyc文件：有些公司或个人因为机密或者各种原因，不愿意源码被运行者看到，可以使用pyc文件发布，pyc文件是Python解释器可以识别的二进制码，故发布后也是跨平台的，需要使用者安装相应版本的Python和依赖库。</p>
+</li>
+<li><p>可执行文件：对于非码农用户或者一些小白用户，你让他装个Python同时还要折腾一堆依赖库，那简直是个灾难。对于此类用户，最简单的方式就是提供一个可执行文件，只需要把用法告诉Ta即可。比较麻烦的是需要针对不同平台需要打包不同的可执行文件（Windows,Linux,Mac,…）。</p>
+</li>
+</ul>
+<p>本文主要就是介绍最后一种方式，.py和.pyc都比较简单，Python本身就可以搞定。将Python脚本打包成可执行文件有多种方式，本文重点介绍PyInstaller，其它仅作比较和参考。</p>
+<a id="more"></a>
+<h3 id="Freezing-Your-Code"><a href="#Freezing-Your-Code" class="headerlink" title="Freezing Your Code"></a>Freezing Your Code</h3><p>各种打包工具的对比如下(来自文章<a href="http://docs.python-guide.org/en/latest/shipping/freezing/" target="_blank" rel="external">Freezing Your Code</a>)：</p>
+<table>
+<thead>
+<tr>
+<th>Solution</th>
+<th>Windows</th>
+<th>Linux</th>
+<th>OS X</th>
+<th>Python 3</th>
+<th>License</th>
+<th>One-file mode</th>
+<th>Zipfile import</th>
+<th>Eggs</th>
+<th>pkg_resources support</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bbFreeze</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>MIT</td>
+<td>no</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>py2exe</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+<td>yes</td>
+<td>MIT</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>pyInstaller</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>GPL</td>
+<td>yes</td>
+<td>no</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>cx_Freeze</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>PSF</td>
+<td>no</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>py2app</td>
+<td>no</td>
+<td>no</td>
+<td>yes</td>
+<td>yes</td>
+<td>MIT</td>
+<td>no</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>PS.其中pyInstaller和cx_Freeze都是不错的，stackoverflow上也有人建议用cx_Freeze，说是更便捷些。pkg_resources新版的pyInstaller貌似是支持的。</p>
+</blockquote>
+<h3 id="安装PyInstaller"><a href="#安装PyInstaller" class="headerlink" title="安装PyInstaller"></a>安装PyInstaller</h3><p>对于那些网络比较稳定，能够流畅使用pip源地址的用户，直接下面的命令就可以搞定：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install pyinstaller</div></pre></td></tr></table></figure>
+<p>通常我们会下载源码包，然后进入包目录，执行下面的命令（需要安装setuptools）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python setup.py install</div></pre></td></tr></table></figure>
+<p>安装完后，检查安装成功与否：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyinstaller --version</div></pre></td></tr></table></figure>
+<p>安装成功后，就可以使用下面的命令了：</p>
+<ul>
+<li><code>pyinstaller</code> : 打包可执行文件的主要命令，详细用法下面会介绍。</li>
+<li><code>pyi-archive_viewer</code> :   查看可执行包里面的文件列表。</li>
+<li><code>pyi-bindepend</code>  : 查看可执行文件依赖的动态库（.so或.dll文件）</li>
+<li><code>pyi-...</code> : 等等。 </li>
+</ul>
+<h3 id="使用PyInstaller"><a href="#使用PyInstaller" class="headerlink" title="使用PyInstaller"></a>使用PyInstaller</h3><p><code>pyinstaller</code>的语法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyinstaller [options] script [script ...] | specfile</div></pre></td></tr></table></figure>
+<p>最简单的用法，在和myscript.py同目录下执行命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyinstaller mycript.py</div></pre></td></tr></table></figure>
+<p>然后会看到新增加了两个目录build和dist，dist下面的文件就是可以发布的可执行文件，对于上面的命令你会发现dist目录下面有一堆文件，各种都动态库文件和myscrip可执行文件。有时这样感觉比较麻烦，需要打包dist下面的所有东西才能发布，万一丢掉一个动态库就无法运行了，好在pyInstaller支持单文件模式，只需要执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyinstaller -F mycript.py</div></pre></td></tr></table></figure>
+<p>你会发现dist下面只有一个可执行文件，这个单文件就可以发布了，可以运行在你正在使用的操作系统类似的系统的下面。</p>
+<p>当然，<code>pyinstaller</code>还有各种选项，有通用选项，如-d选项用于debug，了解pyInstaller执行的过程；还有一些针对不同平台的选项，具体用法可以访问<a href="http://pythonhosted.org/PyInstaller" target="_blank" rel="external">PyInstaller官方WIKI</a>。</p>
+<p>在执行<code>pyInstaller</code>命令的时候，会在和脚本相同目录下，生成一个<code>.spec</code>文件，该文件会告诉pyinstaller如何处理你的所有脚本，同时包含了命令选项。一般我们不用去理会这个文件，若需要打包数据文件，或者给打包的二进制增加一些Python的运行时选项时…一些高级打包选项时，需要手动编辑<code>.spec</code>文件。可以使用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyi-makespec options script [script ...]</div></pre></td></tr></table></figure>
+<p>创建一个.spec文件，对于手动编辑的.spec文件，我们可以使用下面任意一条命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">pyinstaller specfile</div><div class="line">pyi-build specfile</div></pre></td></tr></table></figure>
+<h3 id="PyInstaller的原理简介"><a href="#PyInstaller的原理简介" class="headerlink" title="PyInstaller的原理简介"></a>PyInstaller的原理简介</h3><p>PyInstaller其实就是把python解析器和你自己的脚本打包成一个可执行的文件，和编译成真正的机器码完全是两回事，所以千万不要指望成打包成一个可执行文件会提高运行效率，相反可能会降低运行效率，好处就是在运行者的机器上不用安装python和你的脚本依赖的库。在Linux操作系统下，它主要用的<code>binutil</code>工具包里面的<code>ldd</code>和<code>objdump</code>命令。</p>
+<p>PyInstaller输入你指定的的脚本，首先分析脚本所依赖的其他脚本，然后去查找，复制，把所有相关的脚本收集起来，包括Python解析器，然后把这些文件放在一个目录下，或者打包进一个可执行文件里面。</p>
+<p>可以直接发布输出的整个文件夹里面的文件，或者生成的可执行文件。你只需要告诉用户，你的应用App是自我包含的，不需要安装其他包，或某个版本的Python，就可以直接运行了。</p>
+<p>需要注意的是，PyInstaller打包的执行文件，只能在和打包机器系统同样的环境下。也就是说，不具备可移植性，若需要在不同系统上运行，就必须针对该平台进行打包。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ol>
+<li><a href="http://docs.python-guide.org/en/latest/shipping/freezing/" target="_blank" rel="external">Freezing Your Code</a></li>
+<li><a href="http://pythonhosted.org/PyInstaller" target="_blank" rel="external">PyInstaller官方WIKI</a></li>
+<li><a href="https://github.com/pyinstaller/pyinstaller" target="_blank" rel="external">PyInstaller源码</a></li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Python是一个脚本语言，被解释器解释执行。它的发布方式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;.py文件：对于开源项目或者源码没那么重要的，直接提供源码，需要使用者自行安装Python并且安装依赖的各种库。（Python官方的各种安装包就是这样做的）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;.pyc文件：有些公司或个人因为机密或者各种原因，不愿意源码被运行者看到，可以使用pyc文件发布，pyc文件是Python解释器可以识别的二进制码，故发布后也是跨平台的，需要使用者安装相应版本的Python和依赖库。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;可执行文件：对于非码农用户或者一些小白用户，你让他装个Python同时还要折腾一堆依赖库，那简直是个灾难。对于此类用户，最简单的方式就是提供一个可执行文件，只需要把用法告诉Ta即可。比较麻烦的是需要针对不同平台需要打包不同的可执行文件（Windows,Linux,Mac,…）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;本文主要就是介绍最后一种方式，.py和.pyc都比较简单，Python本身就可以搞定。将Python脚本打包成可执行文件有多种方式，本文重点介绍PyInstaller，其它仅作比较和参考。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="工具" scheme="http://yoursite.com/categories/%E5%B7%A5%E5%85%B7/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>编码之道：面向对象的五大原则</title>
+    <link href="http://yoursite.com/2015/03/31/zoc-cleancode-5/"/>
+    <id>http://yoursite.com/2015/03/31/zoc-cleancode-5/</id>
+    <published>2015-03-31T00:37:00.000Z</published>
+    <updated>2016-11-02T09:51:27.511Z</updated>
+    
+    <content type="html"><![CDATA[<p>面向对象编程是一种模拟现实的编程范式。问题领域的一些概念，我们会抽象成类；概念的实体，我们会抽象为对象。面向对象的思想已经比较成熟了，前人在使用面向对象编程的过程中已经总结了许多经验，然后记录下来，如：设计模式、OOD、OOP等。下面整理一下，比较大的几个指导原则，深刻理解这些原则一定能做出好的设计，写出漂亮、可维护的代码。或许你已经这么做了，只是还没有意识到而已。</p>
+<a id="more"></a>
+<h3 id="SRP：单一职责原则"><a href="#SRP：单一职责原则" class="headerlink" title="SRP：单一职责原则"></a>SRP：单一职责原则</h3><p>SRP（Single Responsibility Principle）：一个类应该仅有一个引起它变化的原因。</p>
+<p>漂亮的程序一般都是：高内聚、低耦合。系统应该由许多短小的类组成，每一个类应该只有一个职责。过多的职责会导致臃肿的设计和比较弱的重用性。</p>
+<p>遵循单一职责原的优点有：</p>
+<ol>
+<li>可以降低类的复杂度，一个类只负责一项职责，其逻辑肯定要比负责多项职责简单的多；</li>
+<li>提高类的可读性，提高系统的可维护性；</li>
+<li>变更引起的风险降低，变更是必然的，如果单一职责原则遵守的好，当修改一个功能时，可以显著降低对其他功能的影响。</li>
+</ol>
+<p>需要说明的一点是单一职责原则不只是面向对象编程思想所特有的，只要是模块化的程序设计，都适用单一职责原则。</p>
+<h3 id="OCP：开放封闭原则"><a href="#OCP：开放封闭原则" class="headerlink" title="OCP：开放封闭原则"></a>OCP：开放封闭原则</h3><p>OCP（Open Close Principle）：为扩展开放、为修改关闭。</p>
+<p>开闭原则（OCP）是面向对象设计中“可复用设计”的基石，是面向对象设计中最重要的原则之一，其它很多的设计原则都是实现开闭原则的一种手段。</p>
+<p>1988年，勃兰特·梅耶（Bertrand Meyer）在他的著作《面向对象软件构造（Object Oriented Software Construction）》中提出了开闭原则，它的原文是这样：“Software entities should be open for extension,but closed for modification”。翻译过来就是：“软件实体应当对扩展开放，对修改关闭”。这句话说得略微有点专业，我们把它讲得更通俗一点，也就是：软件系统中包含的各种组件，例如模块（Modules）、类（Classes）以及功能（Functions）等等，应该在不修改现有代码的基础上，引入新功能。开闭原则中“开”，是指对于组件功能的扩展是开放的，是允许对其进行功能扩展的；开闭原则中“闭”，是指对于原有代码的修改是封闭的，即不应该修改原有的代码。</p>
+<p><img src="/images/ocp.jpg" alt="OCP"></p>
+<p>当你在设计一个库的时候，必须考虑这个原则，因为库或一些底层代码，一旦成行几乎不允许做修改。所以必须给使用者留下足够的扩展机制，否则就会被放弃或者被上层使用者随意修改，就有可能破坏设计者的初衷。</p>
+<h3 id="DIP：依赖倒置原则"><a href="#DIP：依赖倒置原则" class="headerlink" title="DIP：依赖倒置原则"></a>DIP：依赖倒置原则</h3><p>DIP（Dependency Inverse Principle）：逆转高层依赖底层。</p>
+<p>所谓依赖倒置原则（Dependence Inversion Principle）就是要依赖于抽象，不要依赖于具体。简单的说就是要求对抽象进行编程，不要对实现进行编程，这样就降低了客户与实现模块间的耦合。</p>
+<p><img src="/images/dip-1.png" alt="DIP"><br><img src="/images/dip-2.png" alt="DIP"></p>
+<h3 id="LSP：Liskov替换原则"><a href="#LSP：Liskov替换原则" class="headerlink" title="LSP：Liskov替换原则"></a>LSP：Liskov替换原则</h3><p>LSP（Liskov Substitution Principle）：子类可以替换父类并且出现在父类能够出现的地方（面向接口编程）。</p>
+<p>里氏代换原则(Liskov Substitution Principle LSP)面向对象设计的基本原则之一。 里氏代换原则中说，任何基类可以出现的地方，子类一定可以出现。 LSP是继承复用的基石，只有当衍生类可以替换掉基类，软件单位的功能不受到影响时，基类才能真正被复用，而衍生类也能够在基类的基础上增加新的行为。里氏代换原则是对“开-闭”原则的补充。实现“开-闭”原则的关键步骤就是抽象化。而基类与子类的继承关系就是抽象化的具体实现，所以里氏代换原则是对实现抽象化的具体步骤的规范。</p>
+<p><img src="/images/lsp.png" alt="LSP"></p>
+<h3 id="ISP：接口隔离原则"><a href="#ISP：接口隔离原则" class="headerlink" title="ISP：接口隔离原则"></a>ISP：接口隔离原则</h3><p>ISP（Interface Isolation Principle）： 使用多个专门的接口比使用单个接口要好的多。</p>
+<p><img src="/images/isp-1.jpg" alt="ISP"><br><img src="/images/isp-2.jpg" alt="ISP"></p>
+<p>使用多个专门的接口比使用单一的总接口要好。</p>
+<p>一个类对另外一个类的依赖性应当是建立在最小的接口上的。</p>
+<p>一个接口代表一个角色，不应当将不同的角色都交给一个接口。没有关系的接口合并在一起，形成一个臃肿的大接口，这是对角色和接口的污染。</p>
+<p>“不应该强迫客户依赖于它们不用的方法。接口属于客户，不属于它所在的类层次结构。”这个说得很明白了，再通俗点说，不要强迫客户使用它们不用的方法，如果强迫用户使用它们不使用的方法，那么这些客户就会面临由于这些不使用的方法的改变所带来的改变。</p>
+<p>PS. 以上内容，大多都来自网络，编辑整理而来，不标明出处。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;面向对象编程是一种模拟现实的编程范式。问题领域的一些概念，我们会抽象成类；概念的实体，我们会抽象为对象。面向对象的思想已经比较成熟了，前人在使用面向对象编程的过程中已经总结了许多经验，然后记录下来，如：设计模式、OOD、OOP等。下面整理一下，比较大的几个指导原则，深刻理解这些原则一定能做出好的设计，写出漂亮、可维护的代码。或许你已经这么做了，只是还没有意识到而已。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="编码之道" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A0%81%E4%B9%8B%E9%81%93/"/>
+    
+    
+      <category term="重构" scheme="http://yoursite.com/tags/%E9%87%8D%E6%9E%84/"/>
+    
+      <category term="编码规范" scheme="http://yoursite.com/tags/%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>编码之道：结构体 vs. 对象</title>
+    <link href="http://yoursite.com/2015/03/15/zoc-cleancode-4/"/>
+    <id>http://yoursite.com/2015/03/15/zoc-cleancode-4/</id>
+    <published>2015-03-14T22:37:00.000Z</published>
+    <updated>2016-11-02T09:51:27.509Z</updated>
+    
+    <content type="html"><![CDATA[<p>在编程中，现实中的事物及其组织，需要用数据抽象来表示。在C++语言中，既可以使用使用过程式的struct来做数据抽象，同时也可以使用面向对象的class来做抽象。在语言层面上，struct和class除了默认访问权限不一样，其它都是一样，但本文中区别对待之，一般使用struct时代表的是数据，Plain Of Data，即就是所谓的POD类型，可以直接存档和在网络上传输。而class代表的是对象的类，支持面向对象中的各种用法。</p>
+<a id="more"></a>
+<h3 id="1-数据的抽象"><a href="#1-数据的抽象" class="headerlink" title="1. 数据的抽象"></a>1. 数据的抽象</h3><p><strong>结构体(struct实例)</strong>：面向过程式的做法，C语言对数据的抽象都是采用这种方式，定义好结构体，同时有一堆操作相应结构体的函数。随便翻开用C写的代码，比比皆是。但要注意，C语言中的struct没有访问限制，把结构体的构造（成员函数）全部暴露给了使用者，这是有好处的，但在面向对象中违反了信息隐藏。</p>
+<p>特点：</p>
+<ul>
+<li>暴露数据实现</li>
+<li>行为可以使用外置函数提供</li>
+</ul>
+<p>如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> Point &#123;</div><div class="line">   <span class="keyword">int</span> x;</div><div class="line">   <span class="keyword">int</span> y;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p><strong>对象(class实例)</strong>：面向对象式的做法，面向对象讲究信息隐藏，面向接口编程，隐藏实现细节。比如下面的Point类，使用者只需要知道它是一个“点”，支持两种坐标系形式：直角坐标和极坐标，且有相应的成员函数可以使用，根本不用关心成员变量是什么，或怎么样来组织。</p>
+<p>特点：</p>
+<ul>
+<li>隐藏数据实现</li>
+<li>暴露行为接口</li>
+</ul>
+<p>如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> Point &#123;</div><div class="line"></div><div class="line"><span class="keyword">public</span>:</div><div class="line">     <span class="function"><span class="keyword">int</span> <span class="title">getX</span><span class="params">()</span></span>;</div><div class="line">     <span class="function"><span class="keyword">int</span> <span class="title">getY</span><span class="params">()</span></span>;</div><div class="line">     <span class="function"><span class="keyword">void</span> <span class="title">setByCartesion</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span>;</div><div class="line"></div><div class="line">     <span class="function"><span class="keyword">int</span> <span class="title">getR</span><span class="params">()</span></span>;</div><div class="line">     <span class="function"><span class="keyword">int</span> <span class="title">getTheta</span><span class="params">()</span></span>;     </div><div class="line">     <span class="function"><span class="keyword">void</span> <span class="title">setByPolor</span><span class="params">(<span class="keyword">int</span> r, <span class="keyword">int</span> theta)</span></span>;</div><div class="line"></div><div class="line"><span class="comment">// God knows the following.. who cares?    </span></div><div class="line"><span class="keyword">private</span>:</div><div class="line">     <span class="keyword">int</span> x_; </div><div class="line">     <span class="keyword">int</span> y_;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="2-反对称性"><a href="#2-反对称性" class="headerlink" title="2. 反对称性"></a>2. 反对称性</h3><p>上面的两种数据抽象方式，其实有个有意思的特性，可以称之为反对称性：</p>
+<blockquote>
+<p>过程式的struct容易添加新的函数，缺难于修改成员变量；而对象式的class容易修改成员变量，却难于添加新函数。</p>
+</blockquote>
+<h4 id="2-1-过程式"><a href="#2-1-过程式" class="headerlink" title="2.1 过程式"></a>2.1 过程式</h4><p>针对下面的代码思考下面的问题：</p>
+<ul>
+<li>Shape增加一个计算周长的函数?</li>
+<li>Shape增加一种新类型?</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> Shape</div><div class="line">&#123;</div><div class="line">   <span class="keyword">int</span> type;</div><div class="line">   <span class="keyword">union</span> &#123;</div><div class="line">      Point  rect;</div><div class="line">      <span class="keyword">double</span> radius;</div><div class="line">   &#125;;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">double</span> <span class="title">caclArea</span><span class="params">(Shape* shape)</span></span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">switch</span> (shape-&gt;type)</div><div class="line">  &#123;</div><div class="line">      <span class="keyword">case</span> RECT:   </div><div class="line">        <span class="keyword">return</span> shape-&gt;rect.width*shape-&gt;rect.height;</div><div class="line">      <span class="keyword">case</span> CIRCLE: </div><div class="line">        <span class="keyword">return</span> shape-&gt;radius*shape-&gt;radius*<span class="number">3.14</span>;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>你会发现，Shape把所有细节了类型全部暴露给你，你需要添加一个计算周长的函数，只需要添加一个函数即可。如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">double</span> <span class="title">caclLength</span><span class="params">(Shape* shape)</span></span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">switch</span> (shape-&gt;type)</div><div class="line">  &#123;</div><div class="line">      <span class="keyword">case</span> RECT:   </div><div class="line">        <span class="keyword">return</span> <span class="number">2</span>*(shape-&gt;rect.width+shape-&gt;rect.height);</div><div class="line">      <span class="keyword">case</span> CIRCLE: </div><div class="line">        <span class="keyword">return</span> <span class="number">2</span>*shape-&gt;radius*<span class="number">3.14</span>;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再思考第二个问题，假设要添加一种新类型椭圆（ELLIPSE），或者修改Shape中某个变量的名字，这个时候你会发现问题来了，加一种新类型，几乎所有相关函数都要修改，如果使用了此结构体相关的函数非常多的时候，那问题就更大了。</p>
+<h4 id="2-2-对象式"><a href="#2-2-对象式" class="headerlink" title="2.2 对象式"></a>2.2 对象式</h4><p>针对下面的代码，同样思考上面的问题：</p>
+<ul>
+<li>Shape增加一个计算周长的函数?</li>
+<li>Shape增加一种新类型?</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> Shape &#123;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">   <span class="function"><span class="keyword">virtual</span> <span class="keyword">double</span> <span class="title">caclArea</span><span class="params">()</span></span>;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">class</span> Squre : <span class="keyword">public</span> Shape &#123;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">   <span class="function"><span class="keyword">double</span> <span class="title">caclArea</span><span class="params">()</span></span>&#123; <span class="keyword">return</span> width_ * height_;&#125;</div><div class="line"><span class="keyword">private</span>:</div><div class="line">   <span class="keyword">double</span> width_;</div><div class="line">   <span class="keyword">double</span> height_:</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">class</span> Circle : <span class="keyword">public</span> Shape &#123;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">   <span class="function"><span class="keyword">double</span> <span class="title">caclArea</span><span class="params">()</span></span>&#123; <span class="keyword">return</span> <span class="number">3.14</span>*radius_* radius_;&#125;</div><div class="line"><span class="keyword">private</span>:</div><div class="line">   <span class="keyword">double</span> radius_;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>先考虑第一个问题，增加一个计算周长的函数，或者修改calcArea的名字，当有很多Shape的子类的时候，你会发现也是很麻烦的一件事情，几乎相关的类都需要改动。</p>
+<p>但是对于第二个问题，修改Shape的实现或者增加一种新类型椭圆（ELLIPSE），仅需要添加一个子类，或者修改部分代码就OKAY了。</p>
+<h3 id="3-做出选择"><a href="#3-做出选择" class="headerlink" title="3. 做出选择"></a>3. 做出选择</h3><p>通过上面的分析，根据实际情况，合理使用过程式抽象或者对象式抽象。</p>
+<p>过程式适合：</p>
+<ul>
+<li>结构相对固定</li>
+<li>行为变化较大</li>
+<li>如:Point, Time, …等结构相对固定的数据，或者存档，网络传输中使用。</li>
+</ul>
+<p>对象式适合：</p>
+<ul>
+<li>行为相对固定</li>
+<li>经常会添加新类型</li>
+</ul>
+<p>最后记住：避免混合使用，弄出来个四不像，使用者苦不堪言！！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在编程中，现实中的事物及其组织，需要用数据抽象来表示。在C++语言中，既可以使用使用过程式的struct来做数据抽象，同时也可以使用面向对象的class来做抽象。在语言层面上，struct和class除了默认访问权限不一样，其它都是一样，但本文中区别对待之，一般使用struct时代表的是数据，Plain Of Data，即就是所谓的POD类型，可以直接存档和在网络上传输。而class代表的是对象的类，支持面向对象中的各种用法。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="编码之道" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A0%81%E4%B9%8B%E9%81%93/"/>
+    
+    
+      <category term="重构" scheme="http://yoursite.com/tags/%E9%87%8D%E6%9E%84/"/>
+    
+      <category term="编码规范" scheme="http://yoursite.com/tags/%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>自我超越之路</title>
+    <link href="http://yoursite.com/2015/03/02/self-mastery/"/>
+    <id>http://yoursite.com/2015/03/02/self-mastery/</id>
+    <published>2015-03-02T13:05:00.000Z</published>
+    <updated>2016-11-02T09:51:27.510Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>成为自己，成为我们能成为的人，这是生活的唯一目标 ———— 斯宾诺莎</p>
+</blockquote>
+<p>工作七年了，一直忙着实现别人提得需求，整天面对着的就只有代码，期间迷茫过、烦躁过、甚至都想键盘一甩，该干嘛干嘛去了。偶尔，停下来想一下有些可怕，当你的生活被指派给自己的工作填满，被那些海量信息包围着。有趣没趣的，有意义的没意义的，紧急的的事情，将我们包围着，根本理不出个头绪，只能像无头苍蝇一样，肆意乱撞。不知道自己想要的是什么，是多么的可怕。</p>
+<p>编程本该是一件有趣好玩的事情！生活本该是让人感到幸福的！我们与生俱来的激情、好奇心和求知欲都慢慢地被一点一点磨灭掉了。</p>
+<p>就在2011年的时候，应该算是最忙的时候，项目上线，需求多如牛毛，再加上各种不如意之事，苦闷和迷茫几乎让人崩溃。也就是那个时候的一个周末，一个人呆在空荡荡的房子里面，就在想：未来的几年该如何的度过，像现在一样忙碌却到头了还不知道忙了些什么？还是要去认识真正的自己，去做对于自己来说有意义的事情？然后就抽空去阅读一些关于哲学、心理学和个人管理相关的书籍。知道了时间管理、知识管理、价值观、如何去设定目标、制定计划、发现自己的优势、高效率的工作和慢下脚步来感受生活中值得我们为之付出更多的时光。</p>
+<p>今天写下这篇“自我超越之路”，算是对自己之前个人管理方面的总结，同时也整理一下上周部门分享中的思路，以文记之，以备他人所需。</p>
+<a id="more"></a>
+<h3 id="1-自我超越的意义"><a href="#1-自我超越的意义" class="headerlink" title="1. 自我超越的意义"></a>1. 自我超越的意义</h3><p>自我超越（Self Mastery），这个概念取自管理学大师彼得·圣吉的《第五项修炼：学习型组织的艺术》五大修炼之一（一本基于系统动力学的管理学理论）。</p>
+<p>自我超越有两层含义：认识自己；超越自己。</p>
+<p>说起来很简单，人最难认清的就是自己，最大敌人就是自己，最好的朋友也是自己。认识自己，何其困难。知道自己的性格，情绪，价值观，和心中真实想法，管理好自己心中的魔鬼和天使，是需要不断修炼才能达到的。超越自己，是对自己的Mastery（熟练掌握之意），轻而易举就感知到自己，无需费多大的功夫，就像刚开始学习乘法表一样，需要一遍一遍的背诵，直到脱口而出，完全是交给潜意识去完成，而并不需要费力去思考，这样的境界才能算得上超越。</p>
+<p>为什么要用自我超越这个概念呢？是因为我之前所不断去尝试各种个人管理的工具和方法提高自己的效率，研读情绪心理学去寻找愤怒、苦闷和无助的根源，学习积极心理学去探寻自己对于幸福的定义，看一些哲学书籍想要得到一些启发，目的就是为了更好的认识自己。</p>
+<blockquote>
+<p>自我超越，何其简单，又何其之难，是值得我们一生去做的事情！！大道至简！！</p>
+</blockquote>
+<h3 id="2-三部曲"><a href="#2-三部曲" class="headerlink" title="2. 三部曲"></a>2. 三部曲</h3><p>自己超越的精义之所在，自我超越三部曲：</p>
+<ul>
+<li>探寻愿景（View）</li>
+<li>认清现实（Reality）</li>
+<li>做出选择（Choose）</li>
+</ul>
+<p><strong>探寻愿景</strong>，就是去寻找心中所想要的到底是什么，然后不断在脑子里面去勾画那副图画，越多细节越好。可以抽空找个没人的地方坐下来，好好想想一下自己未来生活的样子，找到自己认为最珍贵的画面，铭记在心底。一定要知道自己想要什么，要像过什么样的生活，然后为之奋斗，就算不断遇到各种困难，至少你为了心中所想在一步一步的迈进，万一一不小心哪天实现了呢。知道去那里了，我们不一定能到达，但是如果都不知道要去那里，那那里也去不了。</p>
+<p><strong>认清现实</strong>，人常说理想是丰满的，现实是骨干的。我们心中描绘出来的那一幅美丽的画面，往往和现实有一定的差距，否则你也不会觉得它是多美美好，因为轻而易举就可以得到。愿景和现实之间的差距，就像是一双手撑着的橡皮筋。它有两种张力，一种是激发我们为了美好愿景不断前行的强大精神动力，一种是看到距离如此之大而感到苦闷和迷茫（或许这就是多数人一直说自己迷茫的根本原因）。有时也很容易在这两种张力之间徘徊，时而感觉信心百倍，时而感觉理想中的愿景太过遥远，为之付出的努力自己无法接受。这也算一种正常的心理，但最重要的是一定要认清现状，否则基于不真实的现状，就会产生一些错误的选择。</p>
+<p>最后一点，知道心中所想，认清了现状，你能做的就是<strong>做出选择</strong>。可以选择放弃，也可以选择为之坚持，甚至为此奋斗终生。举个例子，你想拥有一辆价值千万的跑车，但现实是连房贷都换不起，你若选择了放弃，对你的生活不会有任何影响，你若选择了坚持，变卖自己的家产，为此不得不干几十年，最后拿到了跑车，你能想象到这种画面吗？我觉得有些凄惨的感觉！当然你自己若觉得那就是毕生所追求的东西，就另当别论了。再举个例子，你想看完一本对于工作非常有帮助但想砖头一样厚的书，以后解决工作中的疑难问题就信手拈来，想想这个画面还是很High的，但现实是每天迫于工作压力，根本没有时间和精力去看，你若选择了放弃，或许下次工作中遇到的问题对于你来说同样无解，但是若你选择了坚持，上厕所的时候，中午休息的时候，或许用了一年时间才看完这本书，但是下一年你就可以很High地去工作了。</p>
+<blockquote>
+<p>找到自己心中所想，认清现状，做出你的选择！为之付诸行动！！</p>
+</blockquote>
+<h3 id="3-时间管理"><a href="#3-时间管理" class="headerlink" title="3. 时间管理"></a>3. 时间管理</h3><p>知道自己想要的是什么了，做出了选择，剩下的就是行动了。我们往往都在年初的时候许下宏大愿望，但往往被日常琐碎所困扰，整天忙着完成分配给自己的任务，忙着看一些无聊的扯淡新闻，忽略了那些对于自己意义非凡的事情。其实多数事情都是别人的，自己心中所想要去做的事情却被挤到一边去了。渐渐地，自己对自己的承诺被轻易地打破，干脆就不做承诺，随波逐流地的一句：“计划赶不上变化，计划了也没用”。</p>
+<p>当你面对一堆杂七杂八的事情，整天忙于奔命，却脑子里还感觉空荡荡的。这个时候，你需要的是做好“时间管理”。时间管理本该是个错误的提法，一天24小时，时间永远朝着一个方向流动，是无法管理的。我们能管理的是高效地使用时间。把对自己意义非凡的事情，提上你的日程，一步一步向自己的目标迈进。</p>
+<p>时间管理最重要的就是：目标和计划。愿景只是脑子里面一副美丽的画面，我们为将它变成现实，就必须制定年度目标、月度目标、周目标甚至每日目标，将每个目标分解为可执行的任务，根据重要度和紧急程度调整好优先级，并用笔或软件记录下来，以便随时查阅。时刻知道自己下一步该干什么，这才是最重要的。</p>
+<blockquote>
+<p>时间过去了，不要留下任何遗憾，我觉得就算是对得起自己了。</p>
+</blockquote>
+<h4 id="时间都去哪儿了？"><a href="#时间都去哪儿了？" class="headerlink" title="时间都去哪儿了？"></a>时间都去哪儿了？</h4><p>仔细想一想，你的时间都到哪里去了？</p>
+<ul>
+<li>工作</li>
+<li>学习</li>
+<li>家庭</li>
+<li>娱乐</li>
+<li>…</li>
+</ul>
+<p>然后再问问自己：</p>
+<ul>
+<li>最近是否一直在忙一些让自己感觉无聊的工作？（或许你需要转换下视角，将它转变为有趣和富有挑战的）</li>
+<li>最近你看书了吗？都是关于那些方面的？（或许你花了太多的时间去钻研你的专业，却忽视了自己的心灵）</li>
+<li>周末有陪家人去逛逛公园、看看电影、和他/她促膝交谈，还是在低着头看着手机，玩着网络游戏？</li>
+<li>远方的亲人好友，有没有时而打电话问候几句？</li>
+<li>…</li>
+</ul>
+<p>知道自己的时间去那里了，优化自己对时间的利用，最好的方式就是做时间日志，在每一天结束的时候，回顾一下自己当天都完成了那些事情，为之花费了多少时间。《奇特的一生》这本书中讲述了一位名叫柳比歇夫的人，数十年如一日，每天在做时间笔记，统计自己每天、周、月、年对时间的使用情况。当然这样的人生未免太过机械化了，不过对于刚开始实践时间管理的同学还是有一定必要的，当你有了一套自己的时间管理方法的时候，也就没必要做时间日志了，大概回顾下即可。</p>
+<h4 id="平衡、专注、高效"><a href="#平衡、专注、高效" class="headerlink" title="平衡、专注、高效"></a>平衡、专注、高效</h4><p>时间管理的核心：</p>
+<ul>
+<li>平衡</li>
+</ul>
+<p>作为游戏程序员，我们疲于应对策划无尽的需求和永远也改不完的BUG，熬了不知道多少个夜晚，却忽略了自己的健康和家庭的和睦。整天面对是同一套系统，久而久之你会发现所干的事情无非就是机械的重复，自我提升逐渐变慢。这个时候，你需要花点心思考虑一下“平衡”了，工作、学习、家庭、娱乐，各个方面保持平衡了，你会发现一切都变得那么顺畅，一旦平衡被打破，心里就会感觉到不自在，总有些牵绊。就像健康的身体一样，各个器官运行良好，不会出任何问题，一旦有点小病痛：口腔溃疡、感冒就会苦不堪言。</p>
+<ul>
+<li>专注</li>
+</ul>
+<p>把任务整理并做记录，目的就是清空大脑，让大脑仅关注当下正在进行的事情。据说人的大脑很难记住3件以上的事情，如果我们没有一份经过思考和整理的任务清单，当你进行一件事情的时候，你的潜意识会一直提醒你还有另外N件事情在等着你。当你脑子里面积累的事情越来越多的时候，压力就来了，随着就是糟糕的情绪，最后导致精神崩溃。</p>
+<p>专注的最高竟然就是：“心如止水”。大脑时刻处于待命状态，随时应对外界的任何事情。</p>
+<ul>
+<li>高效</li>
+</ul>
+<p>时间管理的最根本原因就是提高工作、学习的效率，为心灵找出给多的时间，去感悟生活，去休息身心，去认识自己，去成为自己想成为的人。</p>
+<h4 id="GTD和番茄工作法"><a href="#GTD和番茄工作法" class="headerlink" title="GTD和番茄工作法"></a>GTD和番茄工作法</h4><p>时间管理，并非一个新概念，因为每个人都会或多或少感觉时间不够用或者遇到忙得找不到头绪的时候，人最厉害的一点就是会思考，会反思，已有许多前人总结出一些时间管理的工具和方法。从时间日志、GTD到番茄工作法有很多套方法和工具。找到适合自己的，不断实践和修改以适应自己，最终成为自己的时间管理方法才是上策。</p>
+<p>这里给大家推荐GTD和番茄工作法，特别适合我们程序员这个人群。这里只是大概介绍下，具体如何进行可以翻阅推荐的书籍。</p>
+<h4 id="GTD-Get-Things-Done"><a href="#GTD-Get-Things-Done" class="headerlink" title="GTD: Get Things Done"></a>GTD: Get Things Done</h4><p>GTD的核心理念概括就是必须记录下来要做的事，然后整理安排并自己一一去执行。GTD的五个核心原则是：收集、整理、组织、回顾、执行。</p>
+<p>GTD的核心理念在于清空大脑，然后一步步按照设定的路线去努力执行。</p>
+<p><img src="/images/selfmastery-gtd.jpg" alt="GTD"></p>
+<p>推荐阅读：</p>
+<ul>
+<li>《Getting Things Done》（中文版：《尽管去做：无压工作的艺术》）</li>
+<li>《高效能人士的七个习惯》</li>
+<li>《要事第一》</li>
+</ul>
+<h4 id="番茄工作法"><a href="#番茄工作法" class="headerlink" title="番茄工作法"></a>番茄工作法</h4><p>番茄工作法是简单易行的时间管理方法，是由弗朗西斯科·西里洛于1992年创立的一种相对于GTD更微观的时间管理方法。</p>
+<p><img src="/images/selfmastery-tomato.jpg" alt="GTD"></p>
+<p>使用番茄工作法，选择一个待完成的任务，将番茄时间设为25分钟，专注工作，中途不允许做任何与该任务无关的事，直到番茄时钟响起，然后在纸上画一个X短暂休息一下（5分钟就行），每4个番茄时段多休息一会儿。</p>
+<p>番茄工作法极大地提高了工作的效率，还会有意想不到的成就感。</p>
+<p>推荐阅读：</p>
+<ul>
+<li>《番茄工作法图解 : 简单易行的时间管理方法》</li>
+</ul>
+<h3 id="4-知识管理"><a href="#4-知识管理" class="headerlink" title="4. 知识管理"></a>4. 知识管理</h3><p>学习是人的天性，我们不断地在积累各方面的知识和经验去应对这个繁杂的世界，去认识事物，利用自己的知识去创造事物。我们在学校接受的知识，多数都是被动被灌输的，很多时候是无法选择应试教育，而放弃自己不感兴趣的课程。但如今，自己已经有了主动选择的权利，不能再浑浑噩噩地乱学一气。我们的知识也需要管理，知识是我们立足之本。</p>
+<p>关于知识学习的学习主要涉及五个方面：</p>
+<ul>
+<li>学习知识</li>
+</ul>
+<p>针对自己的愿景，做好学习规划，知道自己要学习什么。经常反思和整理学习方法和工具。</p>
+<ul>
+<li>保存知识</li>
+</ul>
+<p>多少人应该都有这样的经历，解决某个问题的时候想起某篇文章或某本书中有涉及到，可怎么也是找不到，百度基本上废的，Google了半天终于找到了，问题最终是解决了。问题在于，我们花费了太多的时间去查找我们学过的知识。应该把看到的想到的记下来，记在本子上，或者一些网络笔记上（推荐：Evernote或有道笔记），在制定一套属于自己的分类体系，以便快速检索和浏览。</p>
+<ul>
+<li>共享知识</li>
+</ul>
+<p>英国作家肖伯纳有一句名言：“两个人各自拿着一个苹果，互相交换，每人仍然只有一个苹果；两个人各自拥有一个思想，互相交换，每个人就拥有两个思想。”。</p>
+<p>把自己知道的分享给身边的人，或者通过博客、微博之类的分享给更多的人。一方面对于自己也是一个知识总结和回顾，另一方面，也帮助了他人。两全其美，何乐不为。</p>
+<ul>
+<li>使用知识</li>
+</ul>
+<p>学习有两层意思，“学”和“习”，不但要学知识，也要不断地实践，否则学的再多也无大用。最好的方式就是，在自己的工作、生活中不断地尝试自己学到的东西，然后发现问题，将知识转变为属于自己的。</p>
+<ul>
+<li>知识创新</li>
+</ul>
+<p>创新现在是个被用滥的词，我认为真正的创新是有一定深度的，在某个行业里没有足够的资历和深入的研究，大谈创新纯属扯淡。我们大多时候都是在使用前人总结的知识，去解决面对的问题。当然现在又一种提法，叫做“微创新”，就是在原来的基础上做出一点小改变。</p>
+<p>关于学习和知识管理，前年貌似写过几篇，可以参考下：</p>
+<ul>
+<li><a href="/posts/about-study-1/">关于学习的一点想法（1）</a></li>
+<li><a href="/posts/about-study-2/">关于学习的一点想法（2）</a></li>
+<li><a href="/posts/about-study-3/">关于学习的一点想法（3）</a></li>
+</ul>
+<p>最后关于知识管理再推荐几本书：</p>
+<ul>
+<li>《你的知识需要管理》</li>
+<li>《How to Read A Book》</li>
+<li>《Study Less, Learn More》</li>
+</ul>
+<h3 id="5-自我超越之路"><a href="#5-自我超越之路" class="headerlink" title="5. 自我超越之路"></a>5. 自我超越之路</h3><p>上面大概讲了一下个人管理里面相对比较重要的两方面：时间管理和知识管理。这才刚上路，自我超越之路需要我们不断去发现未知的自己，改善我们的思维方式和做事方式，最终成为我们想成为的人。自我超越是值得我们要用一生去做的事情，自我超越之路没有终点。去认识自己：认识自己的身体、价值观、情绪、思维方式和灵魂；去超越自己：不断地在自己感兴趣的领域内修炼，成为领域内的Master。</p>
+<p>在自我超越的路上，最重的事情就是要不断的省察，不断地反思和探寻。</p>
+<blockquote>
+<p>未经省察的人生是不值得过的 ——— 苏格拉底</p>
+<p>吾日三省吾身 ——— 孔子</p>
+</blockquote>
+<h3 id="7-推荐阅读整理："><a href="#7-推荐阅读整理：" class="headerlink" title="7. 推荐阅读整理："></a>7. 推荐阅读整理：</h3><p><strong>时间管理相关：</strong></p>
+<ul>
+<li>《Getting Things Done》（中文版：《尽管去做：无压工作的艺术》）：GTD方法介绍，极力推荐。</li>
+<li>《高效能人士的七个习惯》：积极主动、以终为始、要事第一、双赢思维、知彼解己、综合统效。</li>
+<li>《要事第一》 ： 时间管理的一些方法：重要紧急四象限法等。</li>
+<li>《小强升职记》： 通过故事的形式告诉GTD的使用。</li>
+</ul>
+<p><strong>知识管理和学习：</strong></p>
+<ul>
+<li>《你的知识需要管理》 ： 知识管理系统介绍。</li>
+<li>《How to Read A Book》： 教你怎么样去阅读一本书，快速高效地。</li>
+<li>《Study Less, Learn More》： 一位和我们同岁的国外神人的学习方法，用了一年时间学习了MIT计算机四年的课程。</li>
+</ul>
+<p><strong>心理学：</strong></p>
+<ul>
+<li>《幸福的方法：哈弗大学最受欢迎的的幸福课》—— 积极心理学入门，配合视频最佳，极力推荐。</li>
+<li>《积极心理学》</li>
+<li>《情绪管理》</li>
+</ul>
+<p>PS. 上周的分享准备了1个小时，和大家分享用了两个小时，当再次回顾并写下来的时候，却用了断断续续近5个多小时<br>。这就是自己知道、分享给别人、写下来的区别啊。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;成为自己，成为我们能成为的人，这是生活的唯一目标 ———— 斯宾诺莎&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;工作七年了，一直忙着实现别人提得需求，整天面对着的就只有代码，期间迷茫过、烦躁过、甚至都想键盘一甩，该干嘛干嘛去了。偶尔，停下来想一下有些可怕，当你的生活被指派给自己的工作填满，被那些海量信息包围着。有趣没趣的，有意义的没意义的，紧急的的事情，将我们包围着，根本理不出个头绪，只能像无头苍蝇一样，肆意乱撞。不知道自己想要的是什么，是多么的可怕。&lt;/p&gt;
+&lt;p&gt;编程本该是一件有趣好玩的事情！生活本该是让人感到幸福的！我们与生俱来的激情、好奇心和求知欲都慢慢地被一点一点磨灭掉了。&lt;/p&gt;
+&lt;p&gt;就在2011年的时候，应该算是最忙的时候，项目上线，需求多如牛毛，再加上各种不如意之事，苦闷和迷茫几乎让人崩溃。也就是那个时候的一个周末，一个人呆在空荡荡的房子里面，就在想：未来的几年该如何的度过，像现在一样忙碌却到头了还不知道忙了些什么？还是要去认识真正的自己，去做对于自己来说有意义的事情？然后就抽空去阅读一些关于哲学、心理学和个人管理相关的书籍。知道了时间管理、知识管理、价值观、如何去设定目标、制定计划、发现自己的优势、高效率的工作和慢下脚步来感受生活中值得我们为之付出更多的时光。&lt;/p&gt;
+&lt;p&gt;今天写下这篇“自我超越之路”，算是对自己之前个人管理方面的总结，同时也整理一下上周部门分享中的思路，以文记之，以备他人所需。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="个人管理" scheme="http://yoursite.com/categories/%E4%B8%AA%E4%BA%BA%E7%AE%A1%E7%90%86/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>编码之道：小函数的大威力</title>
+    <link href="http://yoursite.com/2015/02/12/zoc-cleancode-3/"/>
+    <id>http://yoursite.com/2015/02/12/zoc-cleancode-3/</id>
+    <published>2015-02-12T13:05:00.000Z</published>
+    <updated>2016-11-02T09:51:27.508Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>一屏之地，一览无余！对的！要的就是短小精悍！</p>
+</blockquote>
+<p>翻开项目的代码，处处可见成百上千行的函数，函数体里面switch-case、if、for等交错在一起，一眼望不到头的感觉。有些变态的函数，长度可能得按公里计算了。神啊，请赐予我看下去的勇气吧！先不论逻辑如何，首先这长度直接就把人给吓到了。这些超大号函数是怎么来得呢？</p>
+<a id="more"></a>
+<ul>
+<li>直接从别处COPY一段代码，随便改改即可，造成大量重复代码。</li>
+<li>缺少封装，甚至说就没有封装，完全就是随意乱加一气，造成各个抽象层次的代码混合在一起，混乱不堪。</li>
+<li>成篇的异常处理和特殊处理，核心逻辑或许就是函数体开头、中间或结束那么几行而已。</li>
+</ul>
+<p>这些超长的函数，给我们造成了很大的麻烦：阅读代码找BUG几乎是不可能的事情，没有调试器估计撞墙的心都有了；重复代码造成修改困难，漏掉任何一处迟早是要出问题的；各个层次的代码混在一起，阅读代码相当吃力，人的临时记忆是有限的，不断在各个层次之间切换，一会儿就给绕晕了。</p>
+<p>解决这些问题最重要的就是要保持函数的短小，短小的函数阅读起来要好得多，同时短小的函数意味着较好的封装。下面谈谈关于函数，应该遵循的一些原则：</p>
+<h3 id="1-原则-取个描述性的名字"><a href="#1-原则-取个描述性的名字" class="headerlink" title="1. 原则:取个描述性的名字"></a>1. 原则:取个描述性的名字</h3><ul>
+<li>取个一眼就看出函数意图的名字很重要</li>
+<li>长而具有描述性的名称，要比短而让人费解的好（长度适中，也不能过分长）</li>
+<li>使用动词或动词+名词短语</li>
+</ul>
+<p>在<a href="/posts/zoc-cleancode-2/">编码之道：取个好名字</a>中已经介绍过，好名字的重要性，不再赘述。</p>
+<h3 id="2-原则-保持参数列表的简洁"><a href="#2-原则-保持参数列表的简洁" class="headerlink" title="2. 原则:保持参数列表的简洁"></a>2. 原则:保持参数列表的简洁</h3><ul>
+<li>无参数最好，其次一元，再次二元，三元尽量避免</li>
+<li>尽量避免标识参数</li>
+<li>使用参数对象</li>
+<li>参数列表</li>
+<li>避免输出和输入混用，无法避免则输出在左，输入在右</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">isBossNpc</span><span class="params">()</span></span>;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">summonNpc</span><span class="params">(<span class="keyword">int</span> id)</span></span>;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">summonNpc</span><span class="params">(<span class="keyword">int</span> id, <span class="keyword">int</span> type)</span></span>;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">summonNpc</span><span class="params">(<span class="keyword">int</span> id, <span class="keyword">int</span> state, <span class="keyword">int</span> type)</span></span>; <span class="comment">// 还能记得参数顺序吗？</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">showCurrentEffect</span><span class="params">(<span class="keyword">int</span> state, <span class="keyword">bool</span> show)</span></span>; <span class="comment">// Bad!!!</span></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">showCurrentEffect</span><span class="params">(<span class="keyword">int</span> state)</span></span>; <span class="comment">// Good!!</span></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">hideCurrentEffect</span><span class="params">(<span class="keyword">int</span> state)</span></span>; <span class="comment">// 新加个函数也没多难吧？</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">needWeapon</span><span class="params">(DWORD skillid, BYTE&amp; failtype)</span></span>; <span class="comment">// Bad!!!</span></div></pre></td></tr></table></figure>
+<h3 id="3-原则-保持函数短小"><a href="#3-原则-保持函数短小" class="headerlink" title="3. 原则:保持函数短小"></a>3. 原则:保持函数短小</h3><ul>
+<li>第一规则：要短小</li>
+<li>第二规则：还要更短小</li>
+<li>要做到“一屏之地，一览无余”更好</li>
+</ul>
+<h3 id="4-原则-只做一件事"><a href="#4-原则-只做一件事" class="headerlink" title="4. 原则:只做一件事"></a>4. 原则:只做一件事</h3><ul>
+<li>函数应该只做一件事，做好这件事</li>
+<li>且只做这一件事</li>
+</ul>
+<h3 id="5-原则-每个函数位于同一抽象层级"><a href="#5-原则-每个函数位于同一抽象层级" class="headerlink" title="5. 原则:每个函数位于同一抽象层级"></a>5. 原则:每个函数位于同一抽象层级</h3><ul>
+<li>要确保函数只做一件事，函数中的语句都要在同一个抽象层级上</li>
+<li>自顶下下读代码</li>
+</ul>
+<h3 id="6-原则-无副作用"><a href="#6-原则-无副作用" class="headerlink" title="6. 原则:无副作用"></a>6. 原则:无副作用</h3><ul>
+<li>谎言，往往名不副实</li>
+</ul>
+<h3 id="7-原则-操作和检查要分离"><a href="#7-原则-操作和检查要分离" class="headerlink" title="7. 原则:操作和检查要分离"></a>7. 原则:操作和检查要分离</h3><ul>
+<li>要么是做点什么，要么回答点什么，但二者不可兼得”)</li>
+<li>混合使用—副作用的肇事者</li>
+</ul>
+<h3 id="8-原则-使用异常来代替返回错误码"><a href="#8-原则-使用异常来代替返回错误码" class="headerlink" title="8. 原则:使用异常来代替返回错误码"></a>8. 原则:使用异常来代替返回错误码</h3><ul>
+<li>操作函数返回错误码轻微违法了操作与检查的隔离原则</li>
+<li>用异常在某些情况下会更好点</li>
+<li>抽离try-cacth</li>
+<li>错误处理也是一件事情，也应该封装为函数</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> RedisClient::connect(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; host, <span class="keyword">uint16_t</span> port)</div><div class="line">&#123;</div><div class="line">	<span class="keyword">this</span>-&gt;host = host;</div><div class="line">	<span class="keyword">this</span>-&gt;port = port;</div><div class="line">	<span class="keyword">this</span>-&gt;close();</div><div class="line">	</div><div class="line">	<span class="keyword">try</span> </div><div class="line">	&#123;</div><div class="line">		redis_cli = <span class="keyword">new</span> redis::client(host, port);</div><div class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">catch</span> (redis::redis_error&amp; e) </div><div class="line">	&#123;</div><div class="line">		redis_cli = <span class="literal">NULL</span>;</div><div class="line">		<span class="built_in">std</span>::<span class="built_in">cerr</span> &lt;&lt; <span class="string">"error:"</span> &lt;&lt; e.what() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</div><div class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="9-原则-减少重复代码”"><a href="#9-原则-减少重复代码”" class="headerlink" title="9. 原则:减少重复代码”"></a>9. 原则:减少重复代码”</h3><blockquote>
+<p>重复是一些邪恶的根源！！！</p>
+</blockquote>
+<h3 id="10-原则-避免丑陋不堪的switch-case"><a href="#10-原则-避免丑陋不堪的switch-case" class="headerlink" title="10. 原则:避免丑陋不堪的switch-case"></a>10. 原则:避免丑陋不堪的switch-case</h3><ul>
+<li>天生要做N件事情的货色</li>
+<li>多次出现就要考虑用多态进行重构</li>
+</ul>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">saveBinary</span><span class="params">(type, data)</span> </span>&#123;</div><div class="line">   <span class="keyword">switch</span> (type) &#123;</div><div class="line">     <span class="keyword">case</span> TYPE_OBJECT:</div><div class="line">           ....</div><div class="line">          <span class="keyword">break</span>;</div><div class="line">     <span class="keyword">case</span> TYPE_SKILL:</div><div class="line">           ...</div><div class="line">          <span class="keyword">break</span>;</div><div class="line">     ....</div><div class="line">   &#125;</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">needSaveBinary</span><span class="params">(type)</span> </span>&#123;</div><div class="line">   <span class="keyword">switch</span> (type) &#123;</div><div class="line">     <span class="keyword">case</span> TYPE_OBJECT:</div><div class="line">          <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">     <span class="keyword">case</span> TYPE_SKILL:</div><div class="line">           ...</div><div class="line">          <span class="keyword">break</span>;</div><div class="line">     ....</div><div class="line">   &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">class</span> BinaryMember</div><div class="line">&#123;</div><div class="line">  <span class="function">BinaryMember* <span class="title">createByType</span><span class="params">(type)</span></span>&#123;</div><div class="line">   <span class="keyword">switch</span> (type) &#123;</div><div class="line">     <span class="keyword">case</span> TYPE_OBJECT:</div><div class="line">          <span class="keyword">return</span> <span class="keyword">new</span> ObjectBinaryMember;</div><div class="line">     <span class="keyword">case</span> TYPE_SKILL:</div><div class="line">          <span class="keyword">return</span> <span class="keyword">new</span> SkillBinaryMember;</div><div class="line">     ....</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">bool</span> <span class="title">save</span><span class="params">(data)</span></span>;</div><div class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">bool</span> <span class="title">needSave</span><span class="params">(data)</span></span>;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">class</span> ObjectBinaryMember : <span class="keyword">public</span> BinaryMember</div><div class="line">&#123;</div><div class="line">   <span class="function"><span class="keyword">bool</span> <span class="title">save</span><span class="params">(data)</span></span>&#123;</div><div class="line">       ....</div><div class="line">   &#125;</div><div class="line">   <span class="function"><span class="keyword">bool</span> <span class="title">needSave</span><span class="params">(data)</span></span>&#123;</div><div class="line">       ....</div><div class="line">   &#125;</div><div class="line">&#125;;<span class="string">")))</span></div></pre></td></tr></table></figure>
+<h3 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h3><p>上面提到的原则，若要理解的更加深刻，建议去阅读《代码整洁之道》，里面有许多详尽的例子，对于写过几年代码的人来说，总会发现一些自己所在项目经常犯的毛病。</p>
+<p>知道了这些原则，我们应该这样做:</p>
+<p><strong>当在添加新函数的时候：</strong></p>
+<ul>
+<li>刚下手时违反规范和原则没关系</li>
+<li>开发过程中逐步打磨</li>
+<li>保证提交后的代码是整洁的即可</li>
+</ul>
+<p><strong>重构现有的函数，有下面情况的，见一个消灭一个：</strong></p>
+<ul>
+<li>冗长而复杂</li>
+<li>有太多缩进和嵌套循环</li>
+<li>参数列表过长</li>
+<li>名字随意取</li>
+<li>重复了三次以上</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;一屏之地，一览无余！对的！要的就是短小精悍！&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;翻开项目的代码，处处可见成百上千行的函数，函数体里面switch-case、if、for等交错在一起，一眼望不到头的感觉。有些变态的函数，长度可能得按公里计算了。神啊，请赐予我看下去的勇气吧！先不论逻辑如何，首先这长度直接就把人给吓到了。这些超大号函数是怎么来得呢？&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="编码之道" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A0%81%E4%B9%8B%E9%81%93/"/>
+    
+    
+      <category term="重构" scheme="http://yoursite.com/tags/%E9%87%8D%E6%9E%84/"/>
+    
+      <category term="编码规范" scheme="http://yoursite.com/tags/%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>编码之道：取个好名字很重要</title>
+    <link href="http://yoursite.com/2015/02/11/zoc-cleancode-2/"/>
+    <id>http://yoursite.com/2015/02/11/zoc-cleancode-2/</id>
+    <published>2015-02-11T12:48:00.000Z</published>
+    <updated>2016-11-02T09:51:27.508Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>代码就是程序员的孩子，给“孩子”取个好听的名字很重要！</p>
+</blockquote>
+<p>我们在项目开发中，接触到的变量、函数、类多数都是项目自己定义的，往往都是为了解决一些特定的领域的问题，引入了各种各样的概念，代码里面的名字就对应着问题领域或方案领域的这些概念，所以，对于一个命名良好，代码规范，设计简洁的系统，要想非常快的理解一个系统，最直接的方式就是RTFC(Read The Fucking Code)。对于一个不断演进的系统，代码的可读性至关重要，首要要解决的问题就是名字，变量名、函数名、类名等都需要仔细斟酌，认真对待，一个能够简洁，能够清晰表达概念和意图的名字就显得尤为重要。</p>
+<a id="more"></a>
+<p>阅读《代码整洁之道》这本书后发现其中说的内容在我们自己项目中比比皆是，随便拿出一块代码都可以当做反面教材给大家讲半天。长时间积累，导致代码发霉变质，取名也是毫无章法，信手拈来。阅读这样的代码，撞南墙的心都有了。下面结合自己项目中的问题和《代码整洁之道》谈谈关于命名相关的原则。</p>
+<h3 id="1-原则：名副其实"><a href="#1-原则：名副其实" class="headerlink" title="1. 原则：名副其实"></a>1. 原则：名副其实</h3><ul>
+<li>选名字是件严肃的事情，选个好名字很重要。</li>
+<li>如果名字需要注释来补充，那就不是个好名字。</li>
+<li>最重要的是要名副其实，名字能表达出概念和意图。</li>
+</ul>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">int</span> t = currentTime.elapse(e); <span class="comment">// 消逝的时间,以毫秒计</span></div><div class="line">...</div><div class="line"><span class="keyword">if</span> (t &gt; timeout_value)</div><div class="line">&#123;</div><div class="line">   Zebra::logger-&gt;debug(<span class="string">"---一次循环用时 %u 毫秒-----"</span>, t);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>GOOD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> elapsed_ms = currentTime.elapse(e);</div><div class="line">...</div><div class="line"><span class="keyword">if</span> (elapsed_ms &gt; timeout_value)</div><div class="line">&#123;</div><div class="line">   Zebra::logger-&gt;debug(<span class="string">"-----一次循环用时 %u 毫秒---"</span>, elapsed_ms);</div><div class="line">&#125;</div><div class="line">``` </div><div class="line"></div><div class="line">### <span class="number">2.</span> 原则：避免误导</div><div class="line"></div><div class="line">* 必须避免留下掩藏代码本意的错误线索</div><div class="line">* 避免使用与本意相悖的词</div><div class="line">* 提防使用不同之处较小的名称</div><div class="line">* 拼写前后不一致就是误导</div><div class="line"></div><div class="line">**BAD:**</div><div class="line"></div><div class="line">``` c</div><div class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; account_list; <span class="comment">// _list就是一个误导, accounts会更好</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">sendToZoneServer</span><span class="params">()</span></span>; <span class="comment">// 和下面的函数差别很小</span></div><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">sendToZoneServers</span><span class="params">()</span></span>; <span class="comment">// sendToAllZoneServers会好点</span></div></pre></td></tr></table></figure>
+<h3 id="3-原则-做有意义的区分"><a href="#3-原则-做有意义的区分" class="headerlink" title="3. 原则:做有意义的区分"></a>3. 原则:做有意义的区分</h3><ul>
+<li>代码是写给人看的,仅仅是满足编译器的要求,就会引起混乱</li>
+<li>以数字系列命名(a1,a2,…),纯属误导</li>
+<li>无意义的废话: a, an, the, Info, Data</li>
+</ul>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">copy</span><span class="params">(<span class="keyword">char</span> a1[], <span class="keyword">char</span> a2[])</span> </span>&#123;</div><div class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; a1[i] != <span class="string">'\0'</span>; i++)</div><div class="line">     a2[i] = a1[i];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>GOOD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">copy</span><span class="params">(<span class="keyword">char</span> source[], <span class="keyword">char</span> dest[])</span> </span>&#123;</div><div class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; source[i] != <span class="string">'\0'</span>; i++)</div><div class="line">     dest[i] = source[i];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="4-原则-使用可读的名字"><a href="#4-原则-使用可读的名字" class="headerlink" title="4. 原则:使用可读的名字"></a>4. 原则:使用可读的名字</h3><ul>
+<li>避免过度使用缩写</li>
+<li>可读的名字交流方便</li>
+</ul>
+<p>猜一猜下面的类是干什么的？和别人怎么说这几个类？</p>
+<p>根据这些简直变态的缩写，如果没有注释基本上很难知道是干什么的，当你和别人交流的时候，你就不得不一个一个字母来念“X-L-Q-Y”、“L-T-Q Manager”，鬼知道你说的是什么？PS. XLQY-XianLvQiYuan（仙履奇缘）, LTQ-LiaoTianQun（聊天群），有这样的名字也是醉了。</p>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> XLQY;</div><div class="line"><span class="keyword">class</span> FCNV;</div><div class="line"><span class="keyword">class</span> LTQManager;</div></pre></td></tr></table></figure>
+<h3 id="5-原则-使用可搜索的名字"><a href="#5-原则-使用可搜索的名字" class="headerlink" title="5. 原则:使用可搜索的名字"></a>5. 原则:使用可搜索的名字</h3><ul>
+<li>避免使用Magic Number</li>
+<li>避免使用单字母,或出现频率极高的短字母组合(注意度的把握)</li>
+</ul>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (obj-&gt;base-&gt;id == <span class="number">4661</span>) <span class="comment">// 4661是啥玩意?</span></div><div class="line">&#123;</div><div class="line">   usetype = Cmd::XXXXXXX;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">int</span> e; <span class="comment">// 怎么查找?</span></div><div class="line">XXXX:iterator it; <span class="comment">// 变量作用的范围比较大的时候,也不见得是个好名字</span></div></pre></td></tr></table></figure>
+<p><strong>GOOD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">define</span> OJBECT_FEEDBACK_CARD 4661</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> (OJBECT_FEEDBACK_CARD == obj-&gt;base-&gt;id)</div><div class="line">&#123;</div><div class="line">   usetype = Cmd::XXXXXXX;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="6-原则-避免使用编码”"><a href="#6-原则-避免使用编码”" class="headerlink" title="6. 原则:避免使用编码”"></a>6. 原则:避免使用编码”</h3><ul>
+<li>匈牙利标记法：<ul>
+<li>Windows API时代留下的玩意</li>
+<li>形如：<code>wdXX, dwXXX, strXXX</code></li>
+<li>类型变换导致名不副实，就有可能出现明明是个<code>DWORD</code>，变量名却是<code>qwNum</code>。</li>
+</ul>
+</li>
+</ul>
+<p>PS.匈牙利命名对于我们这些在Linux下摸爬滚打的好多年的来说，看着真心别扭。</p>
+<ul>
+<li>成员前缀：<ul>
+<li>形如：<code>m_name, m_xxx</code></li>
+<li>基本上都无视,为何要多次一举</li>
+</ul>
+</li>
+</ul>
+<p>PS.说到这一点，可能有些同学有不同意见了，“我这样写是为了区分成员变量和临时变量啊！”，好像这样写也没什么大不了，遵循代码规范即可。如Google的C++代码规范，私有变量形如：<code>xxx_</code>，加后缀<code>_</code>，其目的除了让你知道这货是个私有变量，还有一点就是防止有些人图省事把带私有变量直接public掉，因为谁也不喜欢在代码里面看到大量这些带把的玩意。</p>
+<ul>
+<li>接口和实现：<ul>
+<li>接口名形如：IXXX, I-接口修饰前缀</li>
+<li>类名形如：CXXX, C-类修饰前缀</li>
+<li>这些修饰多数时候都是废话</li>
+</ul>
+</li>
+</ul>
+<h3 id="7-原则-名字尽量来自解决方案领域或问题领域"><a href="#7-原则-名字尽量来自解决方案领域或问题领域" class="headerlink" title="7. 原则:名字尽量来自解决方案领域或问题领域"></a>7. 原则:名字尽量来自解决方案领域或问题领域</h3><ul>
+<li>使用解决方案领域名称：</li>
+</ul>
+<p>写代码的同学多数都是都出自CS,术语、算法名、模式名、数学术语尽管用。如AccountVisitor：Visitor模式实现的Account类。</p>
+<ul>
+<li>使用问题领域的名称</li>
+</ul>
+<p>我们代码里面多数都是这些名称，不明白找策划问问，基本上都是功能相关的名称。</p>
+<h3 id="8-原则-适当使用有意义的语境"><a href="#8-原则-适当使用有意义的语境" class="headerlink" title="8. 原则:适当使用有意义的语境"></a>8. 原则:适当使用有意义的语境</h3><ul>
+<li>良好命名的类、函数、名称空间来放置名称，给读者提供语境</li>
+<li>只有两三个变量,给名称前加前缀</li>
+<li>事不过三,变量超过三个考虑封装成概念,添加struct或class</li>
+</ul>
+<p><strong>BAD:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 看着整齐?使用方便?</span></div><div class="line">DWORD love_ensure_type_;  <span class="comment">//当前的爱情保险类型</span></div><div class="line">DWORD love_ensure_ret_; <span class="comment">//购买爱情保险回应标示</span></div><div class="line">DWORD love_ensure_total_; <span class="comment">//现在已经盖章数目</span></div><div class="line">DWORD love_ensure_..._;  <span class="comment">//...</span></div><div class="line">DWORD love_ensure_..._;  <span class="comment">//...</span></div></pre></td></tr></table></figure>
+<h3 id="最后：我们的C-命名规范"><a href="#最后：我们的C-命名规范" class="headerlink" title="最后：我们的C++命名规范"></a>最后：我们的C++命名规范</h3><ul>
+<li><p>文件名：</p>
+<ul>
+<li>首字母大写,多个词组合起来</li>
+<li>如: <code>SceneUser.h Sept.h</code></li>
+</ul>
+</li>
+<li><p>类名/名称空间名：</p>
+<ul>
+<li>首字母大写，多个词组合起来</li>
+<li>使用名词或名词词组</li>
+<li>避免使用C前缀，如:<code>CSept</code></li>
+<li>如: <code>SceneUser SeptWar</code></li>
+</ul>
+</li>
+<li><p>函数名：</p>
+<ul>
+<li>首字母小写</li>
+<li>使用动词或动词词组</li>
+<li>避免使用孤立的全局函数,可以封装在类或名称空间里面</li>
+<li>get, set, is前缀的使用</li>
+<li>如: <code>fuckYou(), levelup()</code></li>
+</ul>
+</li>
+<li><p>变量名：</p>
+<ul>
+<li>全部字母小写,多个词以下划线分隔</li>
+<li>私有成员变量加后缀<code>_</code>,公有变量不用</li>
+<li>避免使用孤立的全局变量,可以封装在类或名称空间里面</li>
+<li>如: <code>quest_id, questid_</code></li>
+</ul>
+</li>
+</ul>
+<p>取名是一件严肃的事情，我们需要认真对待，名字代表着一个个概念，名字代表着你想表达的意图，好名字是可读代码的首要条件：</p>
+<ul>
+<li>写下任何一行代码的时候，心里都要想着自己的代码是给别人看的。</li>
+<li>为函数、变量、类取个好名字，遵循规范和原则。</li>
+<li>见到不符合规范和原则的名字，确毫不留情的干掉它，特别是功能性的代码。</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;代码就是程序员的孩子，给“孩子”取个好听的名字很重要！&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;我们在项目开发中，接触到的变量、函数、类多数都是项目自己定义的，往往都是为了解决一些特定的领域的问题，引入了各种各样的概念，代码里面的名字就对应着问题领域或方案领域的这些概念，所以，对于一个命名良好，代码规范，设计简洁的系统，要想非常快的理解一个系统，最直接的方式就是RTFC(Read The Fucking Code)。对于一个不断演进的系统，代码的可读性至关重要，首要要解决的问题就是名字，变量名、函数名、类名等都需要仔细斟酌，认真对待，一个能够简洁，能够清晰表达概念和意图的名字就显得尤为重要。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="编码之道" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A0%81%E4%B9%8B%E9%81%93/"/>
+    
+    
+      <category term="重构" scheme="http://yoursite.com/tags/%E9%87%8D%E6%9E%84/"/>
+    
+      <category term="编码规范" scheme="http://yoursite.com/tags/%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>编码之道：是谁制造了混乱</title>
+    <link href="http://yoursite.com/2015/01/21/zoc-cleancode-1/"/>
+    <id>http://yoursite.com/2015/01/21/zoc-cleancode-1/</id>
+    <published>2015-01-21T00:09:00.000Z</published>
+    <updated>2016-11-02T09:51:27.507Z</updated>
+    
+    <content type="html"><![CDATA[<p>项目随着时间的推移，开发人员换过了一波又一波，项目的代码被一些代码风格“狂野”的新同学们“强奸”了一遍又一遍。我们游戏服务器代码从09年时的50W行激增到现在的200W行，不得不赞叹：“还真是能写啊！”。代码混乱的程度，简直不忍直视：风格迥异的命名方式、得以米计算长度的函数、各种MagicNumber，让人摸不着头脑、缺少封装导致的大量重复代码、各种奇葩的缩进方式、拥挤在一堆，就不知道敲个空格或空行会浪费多少时间啊…。</p>
+<a id="more"></a>
+<p><img src="/images/cleancode.png" alt="代码质量评判的标准"></p>
+<h3 id="是谁制造了混乱？"><a href="#是谁制造了混乱？" class="headerlink" title="是谁制造了混乱？"></a>是谁制造了混乱？</h3><p><strong>是程序员的作茧自缚，和项目对于规范的不重视。</strong></p>
+<p>游戏开发对于策划或产品他们来说，他们是不会看到代码的，更不会关心代码质量和整洁的。他们只会要求你实现了某个功能，这份代码帮他们赚了多少钱，快速、保质保量地实现他们提出的各种需求。需求永远不会停止，并且还都有严格的时间节点。最终导致的开发团队，都疲于奔命，功能都写不完，还有谁会在乎规范这件事情。<strong>“能把功能实现就行了！”</strong>，这是多数人的想法。</p>
+<p>这样的情况，存在一个恶性循环：无止境的需求-&gt;赶时间些的缺乏规范代码-&gt;制造混乱-&gt;仿照混乱的代码制造更多的混乱。<br>最终就是：更多的需求-&gt;更乱的代码。</p>
+<p>归根结底，代码是我们自己写的，经验不足，缺乏规范和前辈的指导，往往会养成不好的习惯。由于：</p>
+<ul>
+<li><p>规范的缺失，在写代码的时候，没有规则可依，只能按照自己的喜好来，或者仿照前辈们的代码风格，导致了各种风格迥异的代码，第一眼看过去就不想再读下去了。</p>
+</li>
+<li><p>没有经常进行重构，导致了混乱的设计，和持续积累的恶臭代码。</p>
+</li>
+</ul>
+<h3 id="混乱引起了不少麻烦"><a href="#混乱引起了不少麻烦" class="headerlink" title="混乱引起了不少麻烦"></a>混乱引起了不少麻烦</h3><p>面对遗留系统，先辈的各种“神作”和自己做的孽，导致：</p>
+<ul>
+<li><p>修改已有功能的时候，很容易摸不着头脑，一头雾水。要想在原有系统上修改点东西，迈出任何一步，都如履薄冰，不得不小心翼翼，一不留神就掉“坑”里面了。往往很容易听到，接受这样任务的同学们的叹息和咒骂！</p>
+</li>
+<li><p>查BUG得时候，那叫一个大海捞针啊！没有GDB，估计早都撞墙了，有些时候就算是有GBD也得折腾个半天才能有点眉目。不过大家战斗力都可以，经过几番折腾，都还是找得到。</p>
+</li>
+<li><p>添加新功能的时候，特别是新同学，看着前辈的神都看不懂的代码，一知半解，只能摸着石头过河了，或者就照猫画虎，再加点自己独特的风格。恭喜，您又把代码给“强奸”了一遍。</p>
+</li>
+</ul>
+<h3 id="该是“救赎”的时刻了！"><a href="#该是“救赎”的时刻了！" class="headerlink" title="该是“救赎”的时刻了！"></a>该是“救赎”的时刻了！</h3><p>面对如此规模代码，想做点重构，往往望洋兴叹，不知从何下手。曾经不知有多少次有此想法，又多少次放弃。</p>
+<p>需求不止，混乱不息！打破这个恶性循环的杠杆就在：制定规范，和养成重构的习惯</p>
+<ul>
+<li>添加新需求的时候，尽量遵循规范和代码整洁的编码原则；在写完代码准备入库的时候，能简单的整理一遍是最好的了。</li>
+<li>在修改BUG、优化功能的时候或抽空，找出混乱的代码，来一次重构，养成回头看的习惯。</li>
+</ul>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>代码就是程序员的孩子，也是程序员的一张脸，代码是些给人看的，不是写给自己孤芳自赏的，更不是写给编译器，让编译器认识就行的！</p>
+<p>代码的“救赎”是整个开发团队的事情。<em>制定规范，并遵守之；养成重构的习惯</em>。只要形成这个良性循环，再混乱的代码，也会向着一个整洁的方向在演化，</p>
+<p>整洁代码，指日可待！！(PS. 3周时间，我们团队已干掉10W多行废弃的代码，这个数字对于手游和一些APP，基本上算是全部代码了)</p>
+<p>到底是谁在作恶？是我们自己！！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;项目随着时间的推移，开发人员换过了一波又一波，项目的代码被一些代码风格“狂野”的新同学们“强奸”了一遍又一遍。我们游戏服务器代码从09年时的50W行激增到现在的200W行，不得不赞叹：“还真是能写啊！”。代码混乱的程度，简直不忍直视：风格迥异的命名方式、得以米计算长度的函数、各种MagicNumber，让人摸不着头脑、缺少封装导致的大量重复代码、各种奇葩的缩进方式、拥挤在一堆，就不知道敲个空格或空行会浪费多少时间啊…。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="编码之道" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A0%81%E4%B9%8B%E9%81%93/"/>
+    
+    
+      <category term="重构" scheme="http://yoursite.com/tags/%E9%87%8D%E6%9E%84/"/>
+    
+      <category term="编码规范" scheme="http://yoursite.com/tags/%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>关于线程化库</title>
+    <link href="http://yoursite.com/2013/09/03/about-threading-lib/"/>
+    <id>http://yoursite.com/2013/09/03/about-threading-lib/</id>
+    <published>2013-09-02T23:35:00.000Z</published>
+    <updated>2016-11-02T09:51:27.505Z</updated>
+    
+    <content type="html"><![CDATA[<p>对于我们做游戏服务器开发的来说，多数都在Linux平台下作开发，经常用到pthreads（Posix Threads）库。Windows下的线程化库没有用过，据说和pthreads多数API都比较类似。提供线程创建、销毁、Join、mutex/临界区、条件变量等。这些api把数据同步和对线程的控制权全部交给程序员，给程序员以极大自由，同时也带来一堆麻烦。除此之外，还有那些比较通用的线程化库呢？</p>
+<a id="more"></a>
+<p>《并发的艺术》里面把线程化库分为两大类：</p>
+<p>####1. 显式线程化库（Explicit Threading）</p>
+<p>所谓显示化线程库，就是上面提到的pthreads、windows threads，把线程的创建、多线程的同步全权交由程序员自己来处理。一堆API，任你随意堆砌成自己想要的结构。最大的优点就是灵活性比较高，可以随意定制成各种健壮的系统。多数应用开发、游戏开发用到的线程化库一般都用这类API。显示线程化库，给了你自由的同时，也带来了灾难。一把双刃剑，看你会玩不会玩，玩的好可以所向披靡，玩的不好就是引火自焚。数据同步、并发算法的设计全部自己来。</p>
+<p>####2. 隐式线程化库（Implicit Threading）</p>
+<p>隐式线程化库，是一种抽象层次比较高的线程化库，把线程的创建、数据的同步全部交给库/编译器来实现，程序员只需要专心设计自己的算法，等算法设计完毕，把算法改写为多线程的即可，这种改写一般都是比较简单（当然设计并发算法的时候，要考虑后续改写，不然改造起来也是比较费时的）。比较著名的隐式线程化库有：</p>
+<ul>
+<li>OpenMP : 需要编译器支持，代码里面用到各种#pragma宏。详情：<a href="http://openmp.org/wp/" target="_blank" rel="external">http://openmp.org/wp/</a></li>
+<li>Intel TBB（Threading Building Block）：Intel用C++模板实现的一个线程化库。详情：<a href="https://www.threadingbuildingblocks.org/" target="_blank" rel="external">https://www.threadingbuildingblocks.org/</a></li>
+</ul>
+<p>除了我们经常用到的显式线程化库，隐式线程化库给我们提供了另外一种选择。当然它们各有千秋，第一种给你绝对的自由，第二种你就必须学会戴着脚镣跳舞，要想并发要么安装数据划分、要么按任务划分。</p>
+<p>对于线程化库，我们有很多选择，但记住一条原则：</p>
+<pre><code>尽可能使用线程安全的库，不要去重复发明同样的轮子。
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;对于我们做游戏服务器开发的来说，多数都在Linux平台下作开发，经常用到pthreads（Posix Threads）库。Windows下的线程化库没有用过，据说和pthreads多数API都比较类似。提供线程创建、销毁、Join、mutex/临界区、条件变量等。这些api把数据同步和对线程的控制权全部交给程序员，给程序员以极大自由，同时也带来一堆麻烦。除此之外，还有那些比较通用的线程化库呢？&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="架构" scheme="http://yoursite.com/categories/%E6%9E%B6%E6%9E%84/"/>
+    
+    
+      <category term="开源架构" scheme="http://yoursite.com/tags/%E5%BC%80%E6%BA%90%E6%9E%B6%E6%9E%84/"/>
+    
+      <category term="并发" scheme="http://yoursite.com/tags/%E5%B9%B6%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Redis：简介</title>
+    <link href="http://yoursite.com/2013/07/18/Redis-Intro/"/>
+    <id>http://yoursite.com/2013/07/18/Redis-Intro/</id>
+    <published>2013-07-18T13:13:00.000Z</published>
+    <updated>2016-11-02T09:51:27.504Z</updated>
+    
+    <content type="html"><![CDATA[<p>Redis是一个开源的，先进的key-value持久化产品。它通常被称为数据结构服务器，它的值可以是字符串（String）、哈希（Map）、列表（List）、集合（Sets）和有序集合（Sorted sets）等类型。</p>
+<p>可以在这些类型上面做一些原子操作，如：字符串追加、增加Hash里面的值、添加元素到列表、计算集合的交集，并集和差集；或者区有序集合中排名最高的成员。为了取得好的性能，Redis是一个内存型数据库。不限于此，看你怎么用了，也可以吧数据dump到磁盘中，或者把数据操作指令追加了一个日志文件，把它用于持久化。也可以用Redis容易的搭建master-slave架构用于数据复制。</p>
+<a id="more"></a>
+<p>其它让它像缓存的特性包括，简单的check-and-set机制，pub/sub和配置设置。</p>
+<p>Redis可以用大部分程序语言来操作：C、C++、C#、Java、Node.js、php、ruby等等。</p>
+<p>Redis是用ANSI C写的，可以运行在多数POSIX系统，如：Linux，*BSD，OS X和Soloris等。官方版本不支持Windows下构建，可以选择一些修改过的版本，照样可以使用Redis。</p>
+<h3 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h3><h4 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h4><p>Strings是Redis最基本的值类型，Redis的字符串是二进制安全的，意味着一个Redis字符串可以包含任何种类的数据，如：一个JPEG图片，一个序列化的Ruby对象。</p>
+<p>一个字符串值最多可以有512MB的长度。</p>
+<p>Redis的字符串有很多有趣的用法，你可以：</p>
+<ul>
+<li>String作为一个原子操作的计数器，使用INCR、DECR、INCRBY命令即可</li>
+<li>用APPEND命令去追加字符串</li>
+<li>使用String去随机访问vectors，使用GETRANGE和SETRANGE命令</li>
+<li>大量数据编码成占据少量空间，或者创建一个用Redis作为后端的Bloom Filter，使用GETBIT和SETBIT命令</li>
+</ul>
+<p>查更多字符串相关的命令：<a href="http://redis.io/commands#string" target="_blank" rel="external">http://redis.io/commands#string</a></p>
+<h4 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h4><p>Redis Lists是简单的字符串列表，依照插入顺序。可以把元素添加到Redis列表的头部和尾部，LPUSH命令在List的头部插入一个元素，RPUSH在尾部插入一个元素，使用上面两个元素插入到一个空的List就会创建一个List。示例：</p>
+<pre><code>LPUSH mylist a   # now the list is &quot;a&quot;
+LPUSH mylist b   # now the list is &quot;b&quot;,&quot;a&quot;
+RPUSH mylist c   # now the list is &quot;b&quot;,&quot;a&quot;,&quot;c&quot; (RPUSH was used this time)
+</code></pre><p>List的最大长度是2^32-1。</p>
+<p>Redis List主要特点就是在列表的首部和尾部O(1)时间复杂度的插入和删除。访问靠近首尾的元素速度比较快，访问中间的元素效率有所下降，访问的时间复杂度为O(N).</p>
+<p>List可以用于：</p>
+<ul>
+<li>为社交网络的timeline提供数据模型，使用LPUSH在用户的timeline上添加一条记录，使用LRANGE取到最近发布的一些记录。</li>
+<li>可以用LPUSH和LTRIM创建一个固定大小的队列，只记着最近N个元素。</li>
+<li>List可以用作消息传递原语，参见Ruby的广为人知的Resque，它是一个创建后台任务的Ruby库。</li>
+</ul>
+<p>查看更多命令：<a href="http://redis.io/commands#list" target="_blank" rel="external">http://redis.io/commands#list</a> </p>
+<h4 id="集合"><a href="#集合" class="headerlink" title="集合"></a>集合</h4><p>Redis Sets是一个无序的字符串集合，可以在O(1)时间复杂度添加、删除、检查元素的存在性。Sets不能有重复的元素，当添加多个同样的元素时候，只保持一份COPY，意味着添加元素的时候，不用做元素存在的检查后添加这个操作。</p>
+<p>Sets有趣的事情是，它支持服务器端完成快速完成一些诸如交集、并集、差集等操作。</p>
+<p>Sets可用于：</p>
+<ul>
+<li>用Sets记录不同值得元素集合。想要知道访问当前博客的IP数量？在每次访问页面时，简单地用SADD命令把IP添加到Sets即可。</li>
+<li>Sets比较擅长表达关系。可以用Sets创建一个标签系统，用于标签展示。</li>
+<li>使用SPOP和SRANDMEMBER随机弹出元素。</li>
+</ul>
+<p>查看更多命令：<a href="http://redis.io/commands#set" target="_blank" rel="external">http://redis.io/commands#set</a></p>
+<h4 id="哈希（字典）"><a href="#哈希（字典）" class="headerlink" title="哈希（字典）"></a>哈希（字典）</h4><p>Redis Hash是属性字段到值得映射，能够比较完美地表示对象（如：User有name，surname，age等字段）</p>
+<pre><code>redis&gt; HMSET user:1000 username antirez password P1pp0 age 34
+OK
+redis&gt; HGETALL user:1000
+1) &quot;username&quot;
+2) &quot;antirez&quot;
+3) &quot;password&quot;
+4) &quot;P1pp0&quot;
+5) &quot;age&quot;
+6) &quot;34&quot;
+redis&gt; HSET user:1000 password 12345
+(integer) 0
+redis&gt; HGETALL user:1000
+1) &quot;username&quot;
+2) &quot;antirez&quot;
+3) &quot;password&quot;
+4) &quot;12345&quot;
+5) &quot;age&quot;
+6) &quot;34&quot;
+redis&gt; 
+</code></pre><p>字段比较少的Hash（最多100个左右）能够以占据数量空间的方式存储，所以可以用一个小Redis实例存储百万级对象。    </p>
+<p>Hash主要用于表示对象，可以存储多个元素，也可以用于其它任务。</p>
+<p>查看更多操作Hash的命令：<a href="http://redis.io/commands#hash" target="_blank" rel="external">http://redis.io/commands#hash</a></p>
+<h4 id="有序集合"><a href="#有序集合" class="headerlink" title="有序集合"></a>有序集合</h4><p>Redis Sorted Sets类似于Sets，是一个存储非重复的元素的集合。两者的区别是，Sorted Set的每个元素会有一个score属性，Sorted Set根据score从小到达进行排序。</p>
+<p>可以以快速的方式添加，删除和更新元素（大约Log(N)时间复杂度）。因为元素师插入时候进行排序的，可以快速地根据score或者排名来取一个区间的元素，取有序集合的中间元素速度也是很快的。因此可以把Sorted Set当做一个智能的非重复元素的集合：元素顺序存储，快速存在性检查，快速访问中间元素。</p>
+<p>使用Sorted Set可以高效地做很多其他类型数据库很难完成的任务。</p>
+<p>Sorted Set可以用于：</p>
+<ul>
+<li>一个大型在线游戏的领袖排行榜，每有新的score提交的时候使用ZADD，可以轻而易举地用ZRANGE取得前几名，也可以根据指定用户名，用ZRANK得到用户的排名。使用ZRANK和ZRANGE一起可以把分值接近的用户显示出来。所有这些操作都能快速地完成。</li>
+<li><p>Sorted Sets经常用于存储在Redis中的数据的索引。例如：有很多表示用户的hashes，你可以把年龄作为score创建一个sorted set，value是用户的ID，这时，你可以使用ZRANGEBYSCORE快速获取某个年龄范围的所有用户。</p>
+</li>
+<li><p>Sorted Sets可能是最先进的数据类型，抽空了解更多相关命令吧！<a href="http://redis.io/commands#sorted_set" target="_blank" rel="external">http://redis.io/commands#sorted_set</a></p>
+</li>
+</ul>
+<h3 id="自言自语"><a href="#自言自语" class="headerlink" title="自言自语"></a>自言自语</h3><p>很早就听说过key-value NoSQL，一直没有机会去使用，直到最近项目有台全局服务器（单点）用MySQL存储了大量的数据，每次维护和游戏玩家上线时数据库超时非常严重，对MySQL进行分表情况还是不得好转，只好分库，好一番折腾后还是不妙，单点问题让人头疼。最后狠心花一个多月时间把其改造成逻辑和数据分离的架构，数据用Redis做缓存和持久化。下周做一些压力测试，不出问题的话可以投放生产环境跑一下。</p>
+<p>PS. 上面的简介是翻译自Redis官网，有所不当或错误之处还望指出，不胜感激！</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Redis是一个开源的，先进的key-value持久化产品。它通常被称为数据结构服务器，它的值可以是字符串（String）、哈希（Map）、列表（List）、集合（Sets）和有序集合（Sorted sets）等类型。&lt;/p&gt;
+&lt;p&gt;可以在这些类型上面做一些原子操作，如：字符串追加、增加Hash里面的值、添加元素到列表、计算集合的交集，并集和差集；或者区有序集合中排名最高的成员。为了取得好的性能，Redis是一个内存型数据库。不限于此，看你怎么用了，也可以吧数据dump到磁盘中，或者把数据操作指令追加了一个日志文件，把它用于持久化。也可以用Redis容易的搭建master-slave架构用于数据复制。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="架构" scheme="http://yoursite.com/categories/%E6%9E%B6%E6%9E%84/"/>
+    
+    
+      <category term="开源架构" scheme="http://yoursite.com/tags/%E5%BC%80%E6%BA%90%E6%9E%B6%E6%9E%84/"/>
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>开源架构：ZeroMQ</title>
+    <link href="http://yoursite.com/2013/07/17/OA-ZeroMQ/"/>
+    <id>http://yoursite.com/2013/07/17/OA-ZeroMQ/</id>
+    <published>2013-07-17T13:13:00.000Z</published>
+    <updated>2016-11-02T09:51:27.503Z</updated>
+    
+    <content type="html"><![CDATA[<p>ØMQ你可以认为是一个消息系统，也可以认为是一个“面向消息的中间件”。它被广泛地应用在多个方面：财务系统、游戏开发、嵌入式系统、学术研究和航空航天。</p>
+<p>消息系统最基本的功能就是为应用程序提供及时消息的发送。应用程序决定与其他一个（多个）应用程序进行通信，汇编数据然后进行发送。点击“发送”按钮一切搞定——消息系统把剩下的事情全部搞定。</p>
+<a id="more"></a>
+<p>和及时通信有所不同，消息系统没有GUI，出错的时候通讯终端没有人工干预和调停，所有消息系统必须具备容错性并且要比通常的及时消息要更快。</p>
+<p>ØMQ原本是为股票交易所构思的一个超快消息系统，并进行了深度优化。项目开始第一年，工作的主要焦点是发明一些基准测试方法，并努力去定义一个尽可能高效的架构。</p>
+<p>后来，大约在第二年的开发中，工作焦点转移为：提供一个构建分步式应用、支持任意消息通信模式、各种传输机制，任意语言绑定的通用系统。</p>
+<p>在第三年中，专注于提高可用性和降低学习曲线，采用了BSD sockets的API，尝试去清除各个消息的模式的语义差异，等等。</p>
+<p>希望本篇，能够对上面三点转化为ØMQ的内部架构有所深入认识，为那些还为同样问题挣扎的人们提供一些提示信息。</p>
+<p>从第三年开始，ØMQ不断扩大代码库。试图建立一个通信标准，并把实验性的类似ØMQ的消息系统加入Linux内核。这些主题，本篇不做讨论，想了解更多，点击:</p>
+<ul>
+<li><a href="http://www.250bpm.com/concepts" target="_blank" rel="external">http://www.250bpm.com/concepts</a></li>
+<li><a href="http://groups.google.com/group/sp-discuss-group" target="_blank" rel="external">http://groups.google.com/group/sp-discuss-group</a></li>
+<li><a href="http://www.250bpm.com/hits" target="_blank" rel="external">http://www.250bpm.com/hits</a></li>
+</ul>
+<h3 id="1-应用程序-vs-库"><a href="#1-应用程序-vs-库" class="headerlink" title="1. 应用程序 vs. 库"></a>1. 应用程序 vs. 库</h3><h3 id="2-全局状态"><a href="#2-全局状态" class="headerlink" title="2. 全局状态"></a>2. 全局状态</h3><h3 id="3-性能"><a href="#3-性能" class="headerlink" title="3. 性能"></a>3. 性能</h3><h3 id="4-关键路径"><a href="#4-关键路径" class="headerlink" title="4. 关键路径"></a>4. 关键路径</h3><h3 id="5-内存分配"><a href="#5-内存分配" class="headerlink" title="5. 内存分配"></a>5. 内存分配</h3><h3 id="6-批处理"><a href="#6-批处理" class="headerlink" title="6. 批处理"></a>6. 批处理</h3><h3 id="7-架构概览"><a href="#7-架构概览" class="headerlink" title="7. 架构概览"></a>7. 架构概览</h3><h3 id="8-并发模型"><a href="#8-并发模型" class="headerlink" title="8. 并发模型"></a>8. 并发模型</h3><h3 id="9-无锁算法"><a href="#9-无锁算法" class="headerlink" title="9. 无锁算法"></a>9. 无锁算法</h3><h3 id="10-API"><a href="#10-API" class="headerlink" title="10. API"></a>10. API</h3><h3 id="11-消息模式"><a href="#11-消息模式" class="headerlink" title="11. 消息模式"></a>11. 消息模式</h3><h3 id="12-结论"><a href="#12-结论" class="headerlink" title="12. 结论"></a>12. 结论</h3>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;ØMQ你可以认为是一个消息系统，也可以认为是一个“面向消息的中间件”。它被广泛地应用在多个方面：财务系统、游戏开发、嵌入式系统、学术研究和航空航天。&lt;/p&gt;
+&lt;p&gt;消息系统最基本的功能就是为应用程序提供及时消息的发送。应用程序决定与其他一个（多个）应用程序进行通信，汇编数据然后进行发送。点击“发送”按钮一切搞定——消息系统把剩下的事情全部搞定。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="架构" scheme="http://yoursite.com/categories/%E6%9E%B6%E6%9E%84/"/>
+    
+    
+      <category term="zeromq" scheme="http://yoursite.com/tags/zeromq/"/>
+    
+      <category term="开源架构" scheme="http://yoursite.com/tags/%E5%BC%80%E6%BA%90%E6%9E%B6%E6%9E%84/"/>
+    
+  </entry>
+  
+</feed>

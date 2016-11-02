@@ -1,0 +1,716 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="大学时代," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
+<meta property="og:type" content="article">
+<meta property="og:title" content="51汇编做的电子时钟">
+<meta property="og:url" content="http://yoursite.com/2007/07/15/electronic-clock-asm/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.442Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="51汇编做的电子时钟">
+<meta name="twitter:description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2007/07/15/electronic-clock-asm/"/>
+
+
+  <title> 51汇编做的电子时钟 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                51汇编做的电子时钟
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2007-07-15T00:00:00+09:00" content="2007-07-15">
+              2007-07-15
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/课程设计/" itemprop="url" rel="index">
+                    <span itemprop="name">课程设计</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2007/07/15/electronic-clock-asm/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2007/07/15/electronic-clock-asm/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div><div class="line">191</div><div class="line">192</div><div class="line">193</div><div class="line">194</div><div class="line">195</div><div class="line">196</div><div class="line">197</div><div class="line">198</div><div class="line">199</div><div class="line">200</div><div class="line">201</div><div class="line">202</div><div class="line">203</div><div class="line">204</div><div class="line">205</div><div class="line">206</div><div class="line">207</div><div class="line">208</div><div class="line">209</div><div class="line">210</div><div class="line">211</div><div class="line">212</div><div class="line">213</div><div class="line">214</div><div class="line">215</div><div class="line">216</div><div class="line">217</div><div class="line">218</div><div class="line">219</div><div class="line">220</div><div class="line">221</div><div class="line">222</div><div class="line">223</div><div class="line">224</div><div class="line">225</div><div class="line">226</div><div class="line">227</div><div class="line">228</div><div class="line">229</div><div class="line">230</div><div class="line">231</div><div class="line">232</div><div class="line">233</div><div class="line">234</div><div class="line">235</div><div class="line">236</div><div class="line">237</div><div class="line">238</div><div class="line">239</div><div class="line">240</div><div class="line">241</div><div class="line">242</div><div class="line">243</div><div class="line">244</div><div class="line">245</div><div class="line">246</div><div class="line">247</div><div class="line">248</div><div class="line">249</div><div class="line">250</div><div class="line">251</div><div class="line">252</div><div class="line">253</div><div class="line">254</div><div class="line">255</div><div class="line">256</div><div class="line">257</div><div class="line">258</div><div class="line">259</div><div class="line">260</div><div class="line">261</div><div class="line">262</div><div class="line">263</div><div class="line">264</div><div class="line">265</div><div class="line">266</div><div class="line">267</div><div class="line">268</div><div class="line">269</div><div class="line">270</div><div class="line">271</div><div class="line">272</div><div class="line">273</div><div class="line">274</div><div class="line">275</div><div class="line">276</div><div class="line">277</div><div class="line">278</div><div class="line">279</div><div class="line">280</div><div class="line">281</div><div class="line">282</div><div class="line">283</div><div class="line">284</div><div class="line">285</div><div class="line">286</div><div class="line">287</div><div class="line">288</div><div class="line">289</div><div class="line">290</div><div class="line">291</div><div class="line">292</div><div class="line">293</div><div class="line">294</div><div class="line">295</div><div class="line">296</div><div class="line">297</div><div class="line">298</div><div class="line">299</div><div class="line">300</div><div class="line">301</div><div class="line">302</div><div class="line">303</div><div class="line">304</div><div class="line">305</div><div class="line">306</div><div class="line">307</div><div class="line">308</div><div class="line">309</div><div class="line">310</div><div class="line">311</div><div class="line">312</div><div class="line">313</div><div class="line">314</div><div class="line">315</div><div class="line">316</div><div class="line">317</div><div class="line">318</div><div class="line">319</div><div class="line">320</div><div class="line">321</div><div class="line">322</div><div class="line">323</div><div class="line">324</div><div class="line">325</div><div class="line">326</div><div class="line">327</div><div class="line">328</div><div class="line">329</div><div class="line">330</div><div class="line">331</div><div class="line">332</div><div class="line">333</div><div class="line">334</div><div class="line">335</div><div class="line">336</div><div class="line">337</div><div class="line">338</div><div class="line">339</div><div class="line">340</div><div class="line">341</div><div class="line">342</div><div class="line">343</div><div class="line">344</div><div class="line">345</div><div class="line">346</div><div class="line">347</div><div class="line">348</div><div class="line">349</div><div class="line">350</div><div class="line">351</div><div class="line">352</div><div class="line">353</div><div class="line">354</div><div class="line">355</div><div class="line">356</div><div class="line">357</div><div class="line">358</div><div class="line">359</div><div class="line">360</div><div class="line">361</div><div class="line">362</div><div class="line">363</div><div class="line">364</div><div class="line">365</div><div class="line">366</div><div class="line">367</div><div class="line">368</div><div class="line">369</div><div class="line">370</div><div class="line">371</div><div class="line">372</div><div class="line">373</div><div class="line">374</div><div class="line">375</div><div class="line">376</div><div class="line">377</div><div class="line">378</div><div class="line">379</div><div class="line">380</div><div class="line">381</div><div class="line">382</div><div class="line">383</div><div class="line">384</div><div class="line">385</div><div class="line">386</div><div class="line">387</div><div class="line">388</div><div class="line">389</div><div class="line">390</div><div class="line">391</div><div class="line">392</div><div class="line">393</div><div class="line">394</div><div class="line">395</div><div class="line">396</div><div class="line">397</div><div class="line">398</div><div class="line">399</div><div class="line">400</div><div class="line">401</div><div class="line">402</div><div class="line">403</div><div class="line">404</div><div class="line">405</div><div class="line">406</div><div class="line">407</div><div class="line">408</div><div class="line">409</div><div class="line">410</div><div class="line">411</div><div class="line">412</div><div class="line">413</div><div class="line">414</div><div class="line">415</div><div class="line">416</div><div class="line">417</div><div class="line">418</div><div class="line">419</div><div class="line">420</div><div class="line">421</div><div class="line">422</div><div class="line">423</div><div class="line">424</div><div class="line">425</div><div class="line">426</div><div class="line">427</div><div class="line">428</div><div class="line">429</div><div class="line">430</div><div class="line">431</div><div class="line">432</div><div class="line">433</div><div class="line">434</div><div class="line">435</div><div class="line">436</div><div class="line">437</div><div class="line">438</div><div class="line">439</div><div class="line">440</div><div class="line">441</div><div class="line">442</div><div class="line">443</div><div class="line">444</div><div class="line">445</div><div class="line">446</div><div class="line">447</div><div class="line">448</div><div class="line">449</div><div class="line">450</div><div class="line">451</div><div class="line">452</div><div class="line">453</div><div class="line">454</div><div class="line">455</div><div class="line">456</div><div class="line">457</div><div class="line">458</div><div class="line">459</div><div class="line">460</div><div class="line">461</div><div class="line">462</div><div class="line">463</div><div class="line">464</div><div class="line">465</div><div class="line">466</div><div class="line">467</div><div class="line">468</div><div class="line">469</div><div class="line">470</div><div class="line">471</div><div class="line">472</div><div class="line">473</div><div class="line">474</div><div class="line">475</div><div class="line">476</div><div class="line">477</div><div class="line">478</div><div class="line">479</div><div class="line">480</div><div class="line">481</div><div class="line">482</div><div class="line">483</div><div class="line">484</div><div class="line">485</div><div class="line">486</div><div class="line">487</div><div class="line">488</div><div class="line">489</div><div class="line">490</div><div class="line">491</div><div class="line">492</div><div class="line">493</div><div class="line">494</div><div class="line">495</div><div class="line">496</div><div class="line">497</div><div class="line">498</div><div class="line">499</div><div class="line">500</div><div class="line">501</div><div class="line">502</div><div class="line">503</div><div class="line">504</div><div class="line">505</div><div class="line">506</div><div class="line">507</div><div class="line">508</div><div class="line">509</div><div class="line">510</div><div class="line">511</div><div class="line">512</div><div class="line">513</div><div class="line">514</div><div class="line">515</div><div class="line">516</div><div class="line">517</div><div class="line">518</div><div class="line">519</div><div class="line">520</div><div class="line">521</div><div class="line">522</div><div class="line">523</div><div class="line">524</div><div class="line">525</div><div class="line">526</div><div class="line">527</div><div class="line">528</div><div class="line">529</div><div class="line">530</div><div class="line">531</div><div class="line">532</div><div class="line">533</div><div class="line">534</div><div class="line">535</div><div class="line">536</div><div class="line">537</div><div class="line">538</div><div class="line">539</div><div class="line">540</div><div class="line">541</div><div class="line">542</div><div class="line">543</div><div class="line">544</div><div class="line">545</div><div class="line">546</div><div class="line">547</div><div class="line">548</div><div class="line">549</div><div class="line">550</div><div class="line">551</div><div class="line">552</div><div class="line">553</div><div class="line">554</div><div class="line">555</div><div class="line">556</div><div class="line">557</div><div class="line">558</div><div class="line">559</div><div class="line">560</div><div class="line">561</div><div class="line">562</div><div class="line">563</div><div class="line">564</div><div class="line">565</div><div class="line">566</div><div class="line">567</div><div class="line">568</div><div class="line">569</div><div class="line">570</div><div class="line">571</div><div class="line">572</div><div class="line">573</div><div class="line">574</div><div class="line">575</div><div class="line">576</div><div class="line">577</div><div class="line">578</div><div class="line">579</div><div class="line">580</div><div class="line">581</div><div class="line">582</div><div class="line">583</div><div class="line">584</div><div class="line">585</div><div class="line">586</div><div class="line">587</div><div class="line">588</div><div class="line">589</div><div class="line">590</div><div class="line">591</div><div class="line">592</div><div class="line">593</div><div class="line">594</div><div class="line">595</div><div class="line">596</div><div class="line">597</div><div class="line">598</div><div class="line">599</div><div class="line">600</div><div class="line">601</div><div class="line">602</div><div class="line">603</div><div class="line">604</div><div class="line">605</div><div class="line">606</div><div class="line">607</div><div class="line">608</div><div class="line">609</div><div class="line">610</div><div class="line">611</div><div class="line">612</div><div class="line">613</div><div class="line">614</div><div class="line">615</div><div class="line">616</div><div class="line">617</div><div class="line">618</div><div class="line">619</div><div class="line">620</div><div class="line">621</div><div class="line">622</div><div class="line">623</div><div class="line">624</div><div class="line">625</div><div class="line">626</div><div class="line">627</div><div class="line">628</div><div class="line">629</div><div class="line">630</div><div class="line">631</div><div class="line">632</div><div class="line">633</div><div class="line">634</div><div class="line">635</div><div class="line">636</div><div class="line">637</div><div class="line">638</div><div class="line">639</div><div class="line">640</div><div class="line">641</div><div class="line">642</div><div class="line">643</div><div class="line">644</div><div class="line">645</div><div class="line">646</div><div class="line">647</div><div class="line">648</div><div class="line">649</div><div class="line">650</div><div class="line">651</div><div class="line">652</div><div class="line">653</div><div class="line">654</div><div class="line">655</div><div class="line">656</div><div class="line">657</div><div class="line">658</div><div class="line">659</div><div class="line">660</div><div class="line">661</div><div class="line">662</div><div class="line">663</div><div class="line">664</div><div class="line">665</div><div class="line">666</div><div class="line">667</div><div class="line">668</div><div class="line">669</div><div class="line">670</div><div class="line">671</div><div class="line">672</div><div class="line">673</div><div class="line">674</div><div class="line">675</div><div class="line">676</div><div class="line">677</div><div class="line">678</div><div class="line">679</div><div class="line">680</div><div class="line">681</div><div class="line">682</div><div class="line">683</div><div class="line">684</div><div class="line">685</div><div class="line">686</div><div class="line">687</div><div class="line">688</div><div class="line">689</div><div class="line">690</div><div class="line">691</div><div class="line">692</div><div class="line">693</div><div class="line">694</div><div class="line">695</div><div class="line">696</div><div class="line">697</div><div class="line">698</div><div class="line">699</div><div class="line">700</div><div class="line">701</div><div class="line">702</div><div class="line">703</div><div class="line">704</div><div class="line">705</div><div class="line">706</div><div class="line">707</div><div class="line">708</div><div class="line">709</div><div class="line">710</div><div class="line">711</div><div class="line">712</div><div class="line">713</div><div class="line">714</div><div class="line">715</div><div class="line">716</div><div class="line">717</div><div class="line">718</div><div class="line">719</div><div class="line">720</div><div class="line">721</div><div class="line">722</div><div class="line">723</div><div class="line">724</div><div class="line">725</div><div class="line">726</div><div class="line">727</div><div class="line">728</div><div class="line">729</div><div class="line">730</div><div class="line">731</div><div class="line">732</div><div class="line">733</div><div class="line">734</div><div class="line">735</div><div class="line">736</div><div class="line">737</div><div class="line">738</div><div class="line">739</div><div class="line">740</div><div class="line">741</div><div class="line">742</div><div class="line">743</div><div class="line">744</div><div class="line">745</div><div class="line">746</div><div class="line">747</div><div class="line">748</div><div class="line">749</div><div class="line">750</div><div class="line">751</div><div class="line">752</div><div class="line">753</div><div class="line">754</div><div class="line">755</div><div class="line">756</div><div class="line">757</div><div class="line">758</div><div class="line">759</div><div class="line">760</div><div class="line">761</div><div class="line">762</div><div class="line">763</div><div class="line">764</div><div class="line">765</div><div class="line">766</div><div class="line">767</div><div class="line">768</div><div class="line">769</div><div class="line">770</div><div class="line">771</div><div class="line">772</div><div class="line">773</div><div class="line">774</div><div class="line">775</div><div class="line">776</div><div class="line">777</div><div class="line">778</div><div class="line">779</div><div class="line">780</div><div class="line">781</div><div class="line">782</div><div class="line">783</div><div class="line">784</div><div class="line">785</div><div class="line">786</div><div class="line">787</div><div class="line">788</div><div class="line">789</div><div class="line">790</div><div class="line">791</div><div class="line">792</div><div class="line">793</div><div class="line">794</div><div class="line">795</div><div class="line">796</div><div class="line">797</div><div class="line">798</div><div class="line">799</div><div class="line">800</div><div class="line">801</div><div class="line">802</div><div class="line">803</div><div class="line">804</div><div class="line">805</div><div class="line">806</div><div class="line">807</div><div class="line">808</div><div class="line">809</div><div class="line">810</div><div class="line">811</div><div class="line">812</div><div class="line">813</div><div class="line">814</div><div class="line">815</div><div class="line">816</div><div class="line">817</div><div class="line">818</div><div class="line">819</div><div class="line">820</div><div class="line">821</div><div class="line">822</div><div class="line">823</div><div class="line">824</div><div class="line">825</div><div class="line">826</div><div class="line">827</div><div class="line">828</div><div class="line">829</div><div class="line">830</div><div class="line">831</div><div class="line">832</div><div class="line">833</div><div class="line">834</div><div class="line">835</div><div class="line">836</div><div class="line">837</div><div class="line">838</div><div class="line">839</div><div class="line">840</div><div class="line">841</div><div class="line">842</div><div class="line">843</div><div class="line">844</div><div class="line">845</div><div class="line">846</div><div class="line">847</div><div class="line">848</div><div class="line">849</div><div class="line">850</div><div class="line">851</div><div class="line">852</div><div class="line">853</div><div class="line">854</div><div class="line">855</div><div class="line">856</div><div class="line">857</div><div class="line">858</div><div class="line">859</div><div class="line">860</div><div class="line">861</div><div class="line">862</div><div class="line">863</div><div class="line">864</div><div class="line">865</div><div class="line">866</div><div class="line">867</div><div class="line">868</div><div class="line">869</div><div class="line">870</div><div class="line">871</div><div class="line">872</div><div class="line">873</div><div class="line">874</div><div class="line">875</div><div class="line">876</div><div class="line">877</div><div class="line">878</div><div class="line">879</div><div class="line">880</div><div class="line">881</div><div class="line">882</div><div class="line">883</div><div class="line">884</div><div class="line">885</div><div class="line">886</div><div class="line">887</div><div class="line">888</div><div class="line">889</div><div class="line">890</div><div class="line">891</div><div class="line">892</div><div class="line">893</div><div class="line">894</div><div class="line">895</div><div class="line">896</div><div class="line">897</div><div class="line">898</div><div class="line">899</div><div class="line">900</div><div class="line">901</div><div class="line">902</div><div class="line">903</div><div class="line">904</div><div class="line">905</div><div class="line">906</div><div class="line">907</div><div class="line">908</div><div class="line">909</div><div class="line">910</div><div class="line">911</div><div class="line">912</div><div class="line">913</div><div class="line">914</div><div class="line">915</div><div class="line">916</div><div class="line">917</div><div class="line">918</div><div class="line">919</div><div class="line">920</div><div class="line">921</div><div class="line">922</div><div class="line">923</div><div class="line">924</div><div class="line">925</div><div class="line">926</div><div class="line">927</div><div class="line">928</div><div class="line">929</div><div class="line">930</div><div class="line">931</div><div class="line">932</div><div class="line">933</div><div class="line">934</div><div class="line">935</div><div class="line">936</div><div class="line">937</div><div class="line">938</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">SECOND EQU 20H      ;当前秒</div><div class="line">MINUTE EQU 21H      ;当前分</div><div class="line">HOUR   EQU 22H      ;当前时</div><div class="line">ALAMINU EQU 23H     ;闹钟分钟</div><div class="line">ALAHOUR EQU 24H     ;闹钟小时</div><div class="line">DAY    EQU 25H      ;当前日</div><div class="line">MONTH  EQU 26H      ;当前月</div><div class="line">YEAR  EQU 27H      ;当前年   </div><div class="line">WEEK   EQU 29H      ;星期</div><div class="line">STATE  EQU 30H      ;状态</div><div class="line">INTNUM EQU 31H      ;中断次数</div><div class="line">MONTHDAYS EQU 32H   ;月所对应的天数</div><div class="line">ALAON     EQU 33H   ;闹钟开关状态</div><div class="line">TEMP       EQU 34H  ;临时变量</div><div class="line">ALARM     EQU 35H   ;实事报时,该处存放的变量为1时报时</div><div class="line">;液晶模块的寄存器地址</div><div class="line">LCD_CMD_WR EQU  0</div><div class="line">LCD_DATA_WR EQU 1</div><div class="line">LCD_BUSY_RD EQU 2</div><div class="line">LCD_DATA_RD EQU 3</div><div class="line">;显示命令</div><div class="line">LCD_CLS  EQU 1            ;清楚屏幕并且置AC为0</div><div class="line">LCD_HOME EQU 2            ;显示返回到原始位置</div><div class="line">LCD_SETMODE EQU 4            ;设置模式</div><div class="line">LCD_SETVISIBLE EQU 8            ;开关控制</div><div class="line">LCD_SHIFT EQU 16           ;光标移位</div><div class="line">LCD_SETFUNCTION EQU 32           ;功能设置</div><div class="line">LCD_SETCGADDR EQU 64           ;设置CGRAM</div><div class="line">LCD_SETDDADDR EQU 128          ;设置DDRAM</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line"> ORG 0000H</div><div class="line"> LJMP MAIN                     ;跳往主程序</div><div class="line"> ORG 0003H</div><div class="line"> LJMP KEYDOWN                  ;键盘中断</div><div class="line"> ORG 000BH</div><div class="line"> LJMP TIMER                    ;定时中断</div><div class="line">MAIN: </div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;月份所对应的天数表  </div><div class="line">DAYNUM: DB    1FH,1CH,1FH,1EH,1FH,1EH,1FH,1FH,1EH,1FH,1EH,1FH</div><div class="line">;显示星期字符串</div><div class="line">MON:    DB  &apos;MON&apos;,0</div><div class="line">TUE:    DB  &apos;TUE&apos;,0</div><div class="line">WED:    DB  &apos;WED&apos;,0</div><div class="line">THU:    DB  &apos;THU&apos;,0</div><div class="line">FRI:    DB  &apos;FRI&apos;,0</div><div class="line">SAT:    DB  &apos;SAT&apos;,0</div><div class="line">SUN:    DB  &apos;SUN&apos;,0 </div><div class="line">ON :    DB  &apos;ON&apos; ,0</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line"> MOV   SP ,#40H</div><div class="line"> MOV   TMOD,#01H               ;设置为T0</div><div class="line"> LCALL INITIAL                 ;初始化内存数据</div><div class="line">        LCALL DIS_INI                 ;液晶显示初始化</div><div class="line">        MOV   A,#38H</div><div class="line"> LCALL WRCMD</div><div class="line"> SETB  ET0                     ;允许TO中断</div><div class="line"> SETB  EX0                     ;允许INTRO中断</div><div class="line"> MOV   IP,#02H                 ;设置定时器的中断优先于键盘中断</div><div class="line"> SETB  EA                      ;CPU 开中断</div><div class="line"> MOV   TH0,#3CH                ;装初始值</div><div class="line"> MOV   TL0,#0B0H</div><div class="line"> SETB  TCON.4                  ;启动T0</div><div class="line">HERE:</div><div class="line">        LCALL DISPLAY                 ;根据模式不同在LCD上显示</div><div class="line">        LJMP HERE</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;初始化子程序</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INITIAL:</div><div class="line">        PUSH ACC</div><div class="line"> MOV   INTNUM,#0AH              ;装入中断次数</div><div class="line"> CLR A                         ;初始化时间:00:00:00</div><div class="line"> MOV SECOND,A</div><div class="line"> MOV MINUTE,A</div><div class="line"> MOV HOUR  ,A                 </div><div class="line"> MOV ALAMINU ,A</div><div class="line"> MOV ALAHOUR ,A</div><div class="line"> MOV DAY ,#4                 ;初始化日期为:2007-7-4 星期3</div><div class="line"> MOV MONTH,#7</div><div class="line"> MOV YEAR,#7H               </div><div class="line"> MOV WEEK ,#3H</div><div class="line">        MOV STATE ,#0H               ;初始化状态为0</div><div class="line"> MOV ALAON,#00H               ;初始化闹钟关闭</div><div class="line"> MOV ALARM,#00H               ;初始化不报时</div><div class="line"> POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;键盘中断程序</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">KEYDOWN:</div><div class="line">       PUSH ACC</div><div class="line">       MOV A,P1                      ;读键盘的状态</div><div class="line">       ANL A,#1FH                    ;屏蔽高三位</div><div class="line">       MOV TEMP,A</div><div class="line">       LCALL D_10MS                  ;延时10ms</div><div class="line">       MOV A,P1                      ;再次读入按键状态</div><div class="line">       ANL A,#1FH</div><div class="line">       CJNE A,TEMP,RET_KEY           ;两次不等,则是抖动引起的</div><div class="line">       CJNE A,#1EH,KEYDOWN1</div><div class="line">       LCALL KEY_0</div><div class="line">       AJMP RET_KEY</div><div class="line">KEYDOWN1:</div><div class="line">       CJNE A,#1DH,KEYDOWN2</div><div class="line">       LCALL KEY_1</div><div class="line">       AJMP RET_KEY</div><div class="line">KEYDOWN2:</div><div class="line">       CJNE A,#1BH,KEYDOWN3</div><div class="line">       LCALL KEY_2</div><div class="line">       AJMP RET_KEY</div><div class="line">KEYDOWN3:</div><div class="line">       CJNE A,#17H,KEYDOWN4</div><div class="line">       LCALL KEY_3</div><div class="line">       AJMP RET_KEY</div><div class="line">KEYDOWN4:</div><div class="line">       CJNE A,#0FH,RET_KEY</div><div class="line">       LCALL KEY_4</div><div class="line">       AJMP RET_KEY</div><div class="line">RET_KEY:</div><div class="line">       POP  ACC</div><div class="line">RETI</div><div class="line">;;;;;延时程序10MS</div><div class="line">D_10MS:</div><div class="line">      MOV R5,#0FFH</div><div class="line">D_10MS1:</div><div class="line">      MOV R6,#0EEH</div><div class="line">D_10MS2:</div><div class="line">      NOP</div><div class="line">      DJNZ R6,D_10MS2</div><div class="line">      DJNZ R5,D_10MS1</div><div class="line">RET</div><div class="line">;;;;;;功能键按下,设置状态</div><div class="line">KEY_0:</div><div class="line">       PUSH ACC</div><div class="line">MOV P0,#00H</div><div class="line">       MOV A,STATE</div><div class="line">       INC A</div><div class="line">       CJNE A,#05H,KEY_0_RET</div><div class="line">       MOV A,#00H</div><div class="line">KEY_0_RET:</div><div class="line">       MOV STATE,A</div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;</div><div class="line">KEY_1:</div><div class="line">;MOV P0,#01H</div><div class="line">       MOV R7,#01H             ;设置为增加(子程序的入口参数)</div><div class="line">       MOV A,STATE</div><div class="line">       CJNE A,#00H,KEY_1_1     </div><div class="line">       AJMP KEY_1_RET          ;状态0下无作用</div><div class="line">KEY_1_1: </div><div class="line">       CJNE A,#01H,KEY_1_2</div><div class="line">       LCALL INC_DEC_HOUR      ;状态1下小时加一</div><div class="line">       AJMP KEY_1_RET</div><div class="line">KEY_1_2:</div><div class="line">       CJNE A,#02H,KEY_1_3</div><div class="line">       LCALL INC_DEC_ALAHOUR   ;状态2下闹钟小时加一</div><div class="line">       AJMP KEY_1_RET</div><div class="line">KEY_1_3:</div><div class="line">       CJNE A,#03H,KEY_1_4</div><div class="line">       LCALL INC_DEC_MONTH     ;状态3下月加一</div><div class="line">       AJMP KEY_1_RET</div><div class="line">KEY_1_4:</div><div class="line">       CJNE A,#04H,KEY_1_RET</div><div class="line">       LCALL INC_DEC_YEAR      ;状态4下年加一</div><div class="line">KEY_1_RET:</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;</div><div class="line">KEY_2:</div><div class="line">;MOV P0,#02H</div><div class="line">       MOV R7,#01H             ;设置为增加(子程序的入口参数)</div><div class="line">       MOV A,STATE</div><div class="line">       CJNE A,#00H,KEY_2_1     </div><div class="line">       AJMP KEY_2_RET          ;状态0下无作用</div><div class="line">KEY_2_1: </div><div class="line">       CJNE A,#01H,KEY_2_2</div><div class="line">       LCALL INC_DEC_MINUTE    ;状态1下分钟加一</div><div class="line">       AJMP KEY_2_RET</div><div class="line">KEY_2_2:</div><div class="line">       CJNE A,#02H,KEY_2_3</div><div class="line">       LCALL INC_DEC_ALAMINU   ;状态2下闹钟分钟加一</div><div class="line">       AJMP KEY_2_RET</div><div class="line">KEY_2_3:</div><div class="line">       CJNE A,#03H,KEY_2_4</div><div class="line">       LCALL INC_DEC_DAY       ;状态3下日加一</div><div class="line">       AJMP KEY_2_RET</div><div class="line">KEY_2_4:</div><div class="line">       CJNE A,#04H,KEY_2_RET</div><div class="line">       LCALL INC_DEC_WEEK     ;状态4下星期加一</div><div class="line">KEY_2_RET:</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;</div><div class="line">KEY_3:</div><div class="line">;MOV P0,#03H</div><div class="line">       MOV R7,#00H             ;设置为减少(子程序的入口参数)</div><div class="line">       MOV A,STATE</div><div class="line">       CJNE A,#00H,KEY_3_1    </div><div class="line">       MOV ALARM,#01H          ;状态0下报时:设定报时开关</div><div class="line">       AJMP KEY_3_RET          </div><div class="line">KEY_3_1: </div><div class="line">       CJNE A,#01H,KEY_3_2</div><div class="line">       LCALL INC_DEC_HOUR      ;状态1下小时减一</div><div class="line">       AJMP KEY_3_RET</div><div class="line">KEY_3_2:</div><div class="line">       CJNE A,#02H,KEY_3_3</div><div class="line">       LCALL INC_DEC_ALAHOUR   ;状态2下闹钟小时减一</div><div class="line">       AJMP KEY_3_RET</div><div class="line">KEY_3_3:</div><div class="line">       CJNE A,#03H,KEY_3_4</div><div class="line">       LCALL INC_DEC_MONTH     ;状态3下月减一</div><div class="line">       AJMP KEY_3_RET</div><div class="line">KEY_3_4:</div><div class="line">       CJNE A,#04H,KEY_3_RET</div><div class="line">       LCALL INC_DEC_YEAR      ;状态4下年减一</div><div class="line">KEY_3_RET:</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;</div><div class="line">KEY_4:</div><div class="line">;MOV P0,#04H</div><div class="line">       MOV R7,#00H             ;设置为减(子程序的入口参数)</div><div class="line">       MOV A,STATE</div><div class="line">       CJNE A,#00H,KEY_4_1  </div><div class="line">       MOV R6,ALAON             ;状态0下,设定闹钟开关</div><div class="line">       CJNE R6,#01H,SET_ALAON_0</div><div class="line">       MOV  R6,#00H</div><div class="line">       AJMP SET_RET</div><div class="line">SET_ALAON_0:</div><div class="line">       MOV  R6,#01H</div><div class="line">SET_RET:</div><div class="line">       MOV  ALAON,R6</div><div class="line">       AJMP KEY_4_RET          </div><div class="line">KEY_4_1: </div><div class="line">       CJNE A,#01H,KEY_4_2</div><div class="line">       LCALL INC_DEC_MINUTE    ;状态1下分钟减一</div><div class="line">       AJMP KEY_4_RET</div><div class="line">KEY_4_2:</div><div class="line">       CJNE A,#02H,KEY_4_3</div><div class="line">       LCALL INC_DEC_ALAMINU   ;状态2下闹钟分钟减一</div><div class="line">       AJMP KEY_4_RET</div><div class="line">KEY_4_3:</div><div class="line">       CJNE A,#03H,KEY_4_4</div><div class="line">       LCALL INC_DEC_DAY       ;状态3下日减一</div><div class="line">       AJMP KEY_4_RET</div><div class="line">KEY_4_4:</div><div class="line">       CJNE A,#04H,KEY_4_RET</div><div class="line">       LCALL INC_DEC_WEEK     ;状态4下星期减一</div><div class="line">KEY_4_RET:</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;定时器中断服务程序</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">TIMER:</div><div class="line">        PUSH PSW</div><div class="line"> PUSH ACC</div><div class="line"> MOV  A,SECOND</div><div class="line"> MOV  TH0,#3CH                ;T0装初始值</div><div class="line"> MOV  TL0,#0B0H</div><div class="line"> DJNZ INTNUM,RETURN           ;1秒未到,返回</div><div class="line"> MOV  INTNUM,#0AH             ;重置中断次数</div><div class="line"> INC  A</div><div class="line"> CJNE A,#60,RETURN            ;是否到60秒,未到返回</div><div class="line">        MOV  A,#00H          ;秒计满清零</div><div class="line"> MOV  R7,#01H                 ;分钟加一</div><div class="line"> LCALL INC_DEC_MINUTE</div><div class="line">RETURN:</div><div class="line">        MOV  SECOND,A</div><div class="line"> POP  ACC</div><div class="line"> POP  PSW</div><div class="line">RETI</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,增加年 </div><div class="line">;         R7=0时,减少年</div><div class="line">;         年的范围: 2000-2099</div><div class="line">;用途:</div><div class="line">;    1.作为INC_DEC_MONTH的子程序被调用</div><div class="line">;    2.用于调整年</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_YEAR:</div><div class="line">        PUSH ACC</div><div class="line"> CJNE R7,#01,DEC_YEAR</div><div class="line">INC_YEAR:</div><div class="line">        MOV A,YEAR</div><div class="line"> INC A</div><div class="line"> CJNE A,#100,RET_YEAR         ;到达100年时复位到00年</div><div class="line"> MOV A,0</div><div class="line"> AJMP RET_YEAR</div><div class="line">DEC_YEAR:</div><div class="line">        MOV A,YEAR</div><div class="line">        JZ DEC_YEAR1                 ;当前为0时,再减少则跳到99年</div><div class="line"> DEC A</div><div class="line"> AJMP RET_YEAR</div><div class="line">DEC_YEAR1:</div><div class="line">        MOV A,#99</div><div class="line">RET_YEAR:</div><div class="line">        MOV YEAR,A</div><div class="line"> POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,增加一月,若大于12月时相应的增加一年</div><div class="line">;         R7=0时,减少一月,若当前为1月时,再减少一月</div><div class="line">;                则是12月,同时年减一</div><div class="line">;用途:</div><div class="line">;    1.作为INC_DEC_DAY的子程序被调用</div><div class="line">;    2.用于调整月,同时可以改变年</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_MONTH:</div><div class="line">        PUSH ACC</div><div class="line"> CJNE R7,#01,DEC_MONTH</div><div class="line">INC_MONTH:</div><div class="line">        MOV A,MONTH</div><div class="line"> INC A</div><div class="line"> CJNE A,#13,RET_MONTH</div><div class="line"> MOV R7,#01H</div><div class="line"> LCALL INC_DEC_YEAR</div><div class="line"> MOV A,#01H</div><div class="line"> AJMP RET_MONTH</div><div class="line">DEC_MONTH:</div><div class="line">        MOV A,MONTH</div><div class="line"> DEC A</div><div class="line"> CJNE A,#0H,RET_MONTH</div><div class="line"> MOV R7,#00H</div><div class="line"> LCALL INC_DEC_YEAR</div><div class="line"> MOV A,#12</div><div class="line">RET_MONTH:</div><div class="line">        MOV MONTH,A</div><div class="line"> POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,星期加一</div><div class="line">;         R7=0时,星期减一</div><div class="line">;         不影响其他</div><div class="line">;用途:</div><div class="line">;    1.作为INC_DEC_DAY的子程序被调用</div><div class="line">;    2.用于调整星期</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_WEEK:</div><div class="line">       PUSH ACC</div><div class="line">       CJNE R7,#01,DEC_WEEK</div><div class="line">INC_WEEK:</div><div class="line">       MOV A,WEEK</div><div class="line">       INC A</div><div class="line">       CJNE A,#08H,RET_WEEK</div><div class="line">       MOV A,#01H</div><div class="line">       AJMP RET_WEEK</div><div class="line">DEC_WEEK:</div><div class="line">       MOV A,WEEK</div><div class="line">       DEC A</div><div class="line">       CJNE A,#0H,RET_WEEK</div><div class="line">       MOV A,#07H</div><div class="line">RET_WEEK:</div><div class="line">       MOV WEEK,A</div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,日加一,根据当前的年月来改变月份</div><div class="line">;                同时星期加一.</div><div class="line">;         R7=0时,日减一,同时改变月份,年.星期</div><div class="line">;用途:</div><div class="line">;    1.作为INC_DEC_HOUR的子程序被调用</div><div class="line">;    2.用于调整日</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_DAY:</div><div class="line">       PUSH ACC</div><div class="line">       CJNE R7,#01H,DEC_DAY</div><div class="line">INC_DAY:</div><div class="line">       MOV R7,#01H</div><div class="line">       LCALL INC_DEC_WEEK</div><div class="line">       MOV A,DAY</div><div class="line">       INC A</div><div class="line">       LCALL SETMONTHDAYS</div><div class="line">       MOV TEMP,MONTHDAYS</div><div class="line">       INC TEMP</div><div class="line">       CJNE A,TEMP,RET_DAY</div><div class="line">       MOV R7,#01H</div><div class="line">       LCALL INC_DEC_MONTH</div><div class="line">       MOV A,#01H</div><div class="line">       AJMP RET_DAY</div><div class="line">DEC_DAY:</div><div class="line">       MOV R7,#00H</div><div class="line">       LCALL INC_DEC_WEEK</div><div class="line">       MOV A,DAY</div><div class="line">       DEC A</div><div class="line">       CJNE A,#0H,RET_DAY</div><div class="line">       MOV A,#00H</div><div class="line">       LCALL INC_DEC_MONTH</div><div class="line">       LCALL SETMONTHDAYS</div><div class="line">       MOV A,MONTHDAYS</div><div class="line">RET_DAY:</div><div class="line">       MOV DAY,A</div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,增加一小时,同时有需要则改变日(星期),月,年</div><div class="line">;         R7=0时,减少一小时,同时有需要则改变日(星期),月,年  </div><div class="line">;用途:</div><div class="line">;    1.作为INC_DEC_MINUTE的子程序被调用</div><div class="line">;    2.用于调整当前小时        </div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_HOUR:</div><div class="line">       PUSH ACC</div><div class="line">       CJNE R7,#01H,DEC_HOUR</div><div class="line">INC_HOUR:</div><div class="line">       MOV A,HOUR</div><div class="line">       INC A</div><div class="line">       CJNE A,#24,RET_HOUR</div><div class="line">       MOV R7,#01H</div><div class="line">       LCALL INC_DEC_DAY</div><div class="line">       MOV A,#00H</div><div class="line">       AJMP RET_HOUR</div><div class="line">DEC_HOUR:</div><div class="line">       MOV A,HOUR</div><div class="line">       JZ DEC_HOUR1</div><div class="line">       DEC A</div><div class="line">       AJMP RET_HOUR</div><div class="line">DEC_HOUR1:</div><div class="line">       MOV R7,#00H</div><div class="line">       LCALL INC_DEC_DAY</div><div class="line">       MOV A,#23</div><div class="line">RET_HOUR:</div><div class="line">       MOV HOUR,A</div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,增加一分钟,同时按需要改变小时...</div><div class="line">;         R7=0时,减少一分钟................</div><div class="line">;用途:</div><div class="line">;    1.作为定时服务程序的子程序被调用</div><div class="line">;    2.用于调整当前的分钟</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_MINUTE:</div><div class="line">      PUSH ACC </div><div class="line">      CJNE R7,#01H,DEC_MINUTE</div><div class="line">INC_MINUTE:</div><div class="line">      MOV A,MINUTE</div><div class="line">      INC A</div><div class="line">      CJNE A,#60,RET_MINUTE</div><div class="line">      MOV R7,#01H</div><div class="line">      LCALL INC_DEC_HOUR</div><div class="line">      MOV A,#00H</div><div class="line">      AJMP RET_MINUTE</div><div class="line">DEC_MINUTE:</div><div class="line">      MOV A,MINUTE</div><div class="line">      JZ DEC_MINUTE1</div><div class="line">      DEC A</div><div class="line">      AJMP RET_MINUTE</div><div class="line">DEC_MINUTE1:</div><div class="line">      MOV R7,#00H</div><div class="line">      LCALL INC_DEC_HOUR</div><div class="line">      MOV A,#59</div><div class="line">RET_MINUTE:</div><div class="line">      MOV MINUTE,A</div><div class="line">      POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数: R7</div><div class="line">;         R7=1时,闹钟小时增加一,不影响其他</div><div class="line">;         R7=1时,闹钟小时减少一.......</div><div class="line">;用途:</div><div class="line">;    1.作为INC_DEC_ALAMINU的子程序被调用</div><div class="line">;    2.用于调整闹钟的小时</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_ALAHOUR:</div><div class="line">       PUSH ACC</div><div class="line">       CJNE R7,#01H,DEC_ALAHOUR</div><div class="line">INC_ALAHOUR:</div><div class="line">       MOV A,ALAHOUR</div><div class="line">       INC A</div><div class="line">       CJNE A,#24,RET_ALAHOUR</div><div class="line">       MOV A,#00H</div><div class="line">       AJMP RET_ALAHOUR</div><div class="line">DEC_ALAHOUR:</div><div class="line">       MOV A,ALAHOUR</div><div class="line">       JZ DEC_ALAHOUR1</div><div class="line">       DEC A</div><div class="line">       AJMP RET_ALAHOUR</div><div class="line">DEC_ALAHOUR1:</div><div class="line">       MOV A,#23</div><div class="line">RET_ALAHOUR:</div><div class="line">       MOV ALAHOUR,A</div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;入口参数:R7</div><div class="line">;         R7=1时,闹钟分钟加一,同时该改变闹钟小时</div><div class="line">;         R7=0时,闹钟分钟减一,..................</div><div class="line">;用途:</div><div class="line">;    1.用于调整闹钟的分钟</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">INC_DEC_ALAMINU:</div><div class="line">      PUSH ACC </div><div class="line">      CJNE R7,#01H,DEC_ALAMINU</div><div class="line">INC_ALAMINU:</div><div class="line">      MOV A,ALAMINU</div><div class="line">      INC A</div><div class="line">      CJNE A,#60,RET_ALAMINU</div><div class="line">      MOV R7,#01H</div><div class="line">      LCALL INC_DEC_ALAHOUR</div><div class="line">      MOV A,#00H</div><div class="line">      AJMP RET_ALAMINU</div><div class="line">DEC_ALAMINU:</div><div class="line">      MOV A,ALAMINU</div><div class="line">      JZ DEC_ALAMINU1</div><div class="line">      DEC A</div><div class="line">      AJMP RET_ALAMINU</div><div class="line">DEC_ALAMINU1:</div><div class="line">      MOV R7,#00H</div><div class="line">      LCALL INC_DEC_ALAHOUR</div><div class="line">      MOV A,#59</div><div class="line">RET_ALAMINU:</div><div class="line">      MOV ALAMINU,A</div><div class="line">      POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;求得当前月份所对应的天数</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">SETMONTHDAYS:</div><div class="line">        PUSH ACC</div><div class="line">        PUSH DPH</div><div class="line"> PUSH DPL</div><div class="line">        MOV  DPTR,#DAYNUM        ;获得月天数的表地址</div><div class="line"> MOV  A,MONTH             ;获得当前月份</div><div class="line"> MOV  R0,MONTH</div><div class="line"> DEC  A                   ;生成下标</div><div class="line"> MOVC A,@A+DPTR           ;取表中的值</div><div class="line"> MOV  MONTHDAYS,A         </div><div class="line"> CJNE R0,#2H,CONTINUE     ;不是二月份则取表中的值</div><div class="line"> MOV  A,YEAR              ;是二月份判断是否是闰年</div><div class="line">        MOV  B,#4H</div><div class="line"> DIV  AB</div><div class="line"> MOV  A,#00H</div><div class="line"> CJNE A,B,CONTINUE        ;是平年则跳转</div><div class="line">        INC  MONTHDAYS           ;是闰年二月份为29天</div><div class="line">CONTINUE:</div><div class="line"> POP  DPL</div><div class="line"> POP  DPH</div><div class="line"> POP  ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;显示子程序</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">DISPLAY:</div><div class="line">       PUSH ACC</div><div class="line">       MOV A,#LCD_SETVISIBLE+4 </div><div class="line">       LCALL WRCMD</div><div class="line">       MOV A,#LCD_HOME</div><div class="line">       LCALL WRCMD</div><div class="line">       MOV R5,STATE</div><div class="line">       CJNE R5,#00H,DIS_1</div><div class="line">       LCALL DISPLAY_0</div><div class="line">       AJMP DIS_RET</div><div class="line">DIS_1: </div><div class="line">       CJNE R5,#01H,DIS_2</div><div class="line">       LCALL DISPLAY_1</div><div class="line">       AJMP DIS_RET</div><div class="line">DIS_2:</div><div class="line">       CJNE R5,#02H,DIS_3</div><div class="line">       LCALL DISPLAY_2</div><div class="line">       AJMP DIS_RET</div><div class="line">DIS_3:</div><div class="line">       CJNE R5,#03H,DIS_4</div><div class="line">       LCALL DISPLAY_3</div><div class="line">       AJMP DIS_RET</div><div class="line">DIS_4: </div><div class="line">       CJNE R5,#04H,DIS_RET</div><div class="line">       LCALL DISPLAY_4</div><div class="line">DIS_RET:</div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;</div><div class="line">DISPLAY_0:</div><div class="line">       PUSH ACC</div><div class="line">       ;显示时间</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,HOUR</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">       MOV A,#3AH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,MINUTE</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#3AH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,SECOND</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       ;显示年</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#32H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#30H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,YEAR</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">       ;显示星期</div><div class="line">       MOV A,#LCD_SETDDADDR+64</div><div class="line">       LCALL WRCMD</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#20</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">           MOV A,WEEK</div><div class="line">       CJNE A,#01H,DIS_0_W1</div><div class="line">       MOV DPTR,#MON</div><div class="line">       AJMP DIS_0_RET</div><div class="line">DIS_0_W1:</div><div class="line">       CJNE A,#02H,DIS_0_W2</div><div class="line">       MOV DPTR,#TUE</div><div class="line">       AJMP DIS_0_RET</div><div class="line">DIS_0_W2:</div><div class="line">       CJNE A,#03H,DIS_0_W3</div><div class="line">       MOV DPTR,#WED</div><div class="line">       AJMP DIS_0_RET</div><div class="line">DIS_0_W3:</div><div class="line">       CJNE A,#04H,DIS_0_W4</div><div class="line">       MOV DPTR,#THU</div><div class="line">       AJMP DIS_0_RET</div><div class="line">DIS_0_W4:</div><div class="line">       CJNE A,#05H,DIS_0_W5</div><div class="line">       MOV DPTR,#FRI</div><div class="line">       AJMP DIS_0_RET</div><div class="line">DIS_0_W5:</div><div class="line">       CJNE A,#06H,DIS_0_W6</div><div class="line">       MOV DPTR,#SAT</div><div class="line">       AJMP DIS_0_RET</div><div class="line">DIS_0_W6:</div><div class="line">       CJNE A,#07H,DIS_0_RET</div><div class="line">       MOV DPTR,#SUN</div><div class="line">DIS_0_RET:</div><div class="line">       LCALL WRSTR</div><div class="line">       ;显示日期</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,MONTH</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">       MOV A,#2DH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,DAY</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       ;显示状态</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,ALAON</div><div class="line">       CJNE A,#01H,RET_DSP_0</div><div class="line">       MOV DPTR,#ON</div><div class="line">       LCALL WRSTR</div><div class="line">RET_DSP_0:</div><div class="line">       </div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;</div><div class="line">DISPLAY_1:</div><div class="line">       PUSH ACC</div><div class="line">       MOV A,#LCD_CLS</div><div class="line">       LCALL WRCMD</div><div class="line">       ;显示时间</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,HOUR</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">       MOV A,#3AH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,MINUTE</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#3AH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,SECOND</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line"></div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">DISPLAY_2:</div><div class="line">       PUSH ACC</div><div class="line">       MOV A,#LCD_CLS</div><div class="line">       LCALL WRCMD</div><div class="line">       ;显示时间</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,ALAHOUR</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#3AH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,ALAMINU</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">       POP  ACC</div><div class="line">   </div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;</div><div class="line">DISPLAY_3:</div><div class="line">       PUSH ACC</div><div class="line">       MOV A,#LCD_CLS</div><div class="line">       LCALL WRCMD</div><div class="line">       ;;;;;;;;;;;;;;;</div><div class="line">       ;显示日期</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#20H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,MONTH</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       </div><div class="line">       MOV A,#2DH</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,DAY</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line"> </div><div class="line">       POP ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">DISPLAY_4:</div><div class="line">       PUSH ACC</div><div class="line">       MOV A,#LCD_CLS</div><div class="line">       LCALL WRCMD</div><div class="line">       MOV A,#8BH</div><div class="line">       LCALL WRCMD</div><div class="line">       MOV A,#32H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#30H</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV R3,YEAR</div><div class="line">       LCALL GETCHAR</div><div class="line">       MOV A,R3</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,R4</div><div class="line">       LCALL WRCHAR</div><div class="line">       MOV A,#0C2H</div><div class="line">       LCALL WRCMD</div><div class="line">              MOV A,WEEK</div><div class="line">       CJNE A,#01H,DIS_4_W1</div><div class="line">       MOV DPTR,#MON</div><div class="line">       AJMP DIS_4_RET</div><div class="line">DIS_4_W1:</div><div class="line">       CJNE A,#02H,DIS_4_W2</div><div class="line">       MOV DPTR,#TUE</div><div class="line">       AJMP DIS_4_RET</div><div class="line">DIS_4_W2:</div><div class="line">       CJNE A,#03H,DIS_4_W3</div><div class="line">       MOV DPTR,#WED</div><div class="line">       AJMP DIS_4_RET</div><div class="line">DIS_4_W3:</div><div class="line">       CJNE A,#04H,DIS_4_W4</div><div class="line">       MOV DPTR,#THU</div><div class="line">       AJMP DIS_4_RET</div><div class="line">DIS_4_W4:</div><div class="line">       CJNE A,#05H,DIS_4_W5</div><div class="line">       MOV DPTR,#FRI</div><div class="line">       AJMP DIS_4_RET</div><div class="line">DIS_4_W5:</div><div class="line">       CJNE A,#06H,DIS_4_W6</div><div class="line">       MOV DPTR,#SAT</div><div class="line">       AJMP DIS_4_RET</div><div class="line">DIS_4_W6:</div><div class="line">       CJNE A,#07H,DIS_4_RET</div><div class="line">       MOV DPTR,#SUN</div><div class="line">DIS_4_RET:</div><div class="line">       LCALL WRSTR</div><div class="line">       POP ACC </div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;获得x的显示码:</div><div class="line">; 入口参数: R3:存放要被转换的数字</div><div class="line">; 出口参数: R3:高位对应的显示码</div><div class="line">;           R4:低微对应的显示码</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">GETCHAR:</div><div class="line">       PUSH ACC</div><div class="line">       MOV  A,R3</div><div class="line">       MOV  B,#10</div><div class="line">       DIV  AB</div><div class="line">       ADD  A,#30H</div><div class="line">       MOV  R3,A</div><div class="line">       MOV  A,B</div><div class="line">       ADD  A,#30H</div><div class="line">       MOV  R4,A</div><div class="line">       POP  ACC</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;写以零结尾的字符串</div><div class="line">;  首地址在DPTR中</div><div class="line">wrstr: mov R0,#LCD_DATA_WR</div><div class="line">wrstr1: clr A</div><div class="line"> movc A,@A+DPTR</div><div class="line"> jz wrstr2</div><div class="line"> movx @R0,A</div><div class="line"> call wtbusy</div><div class="line"> inc DPTR</div><div class="line"> push DPL</div><div class="line"> push DPH</div><div class="line"> pop DPH</div><div class="line"> pop DPL </div><div class="line"> jmp wrstr1</div><div class="line">wrstr2: ret</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">;写命令,命令控制字在A中</div><div class="line">wrcmd: mov R0,#LCD_CMD_WR</div><div class="line"> movx @R0,A</div><div class="line"> jmp wtbusy</div><div class="line"></div><div class="line">;写字字符,字符的代码放在A中</div><div class="line">wrchar: mov R0,#LCD_DATA_WR</div><div class="line"> movx @R0,A</div><div class="line">;忙则等待</div><div class="line">wtbusy: mov R1,#LCD_BUSY_RD</div><div class="line"> movx A,@r1</div><div class="line"> jb ACC.7,wtbusy</div><div class="line"> ret</div><div class="line">;;;;;;;;;;;;;;;</div><div class="line">;液晶显示初始化</div><div class="line">;;;;;;;;;;;;;;;</div><div class="line">DIS_INI:</div><div class="line">       ACALL D_15MS</div><div class="line">       MOV A,30H</div><div class="line">       MOV R0,#LCD_CMD_WR</div><div class="line">       MOVX @R0,A</div><div class="line">       ACALL D_5MS</div><div class="line">       MOV A,#30H</div><div class="line">       MOV R0,#LCD_CMD_WR</div><div class="line">       MOVX @R0,A</div><div class="line">       ACALL D_5MS</div><div class="line">       MOV A,#30H</div><div class="line">       MOV R0,#LCD_CMD_WR</div><div class="line">       MOVX @R0,A</div><div class="line">       MOV A,#38H       ;功能设置</div><div class="line">       ACALL WRCMD</div><div class="line">       MOV A,#08H       ;关显示</div><div class="line">       ACALL WRCMD</div><div class="line">       MOV A,#01H       ;清屏</div><div class="line">       ACALL WRCMD</div><div class="line">       MOV A,#06H       ;设定输入方式</div><div class="line">       ACALL WRCMD</div><div class="line">       ACALL D_40US    </div><div class="line">       </div><div class="line">       MOV A,#10H      ;光标移位</div><div class="line">       ACALL WRCMD</div><div class="line">       MOV A,#0C0H     ;开显示</div><div class="line">       ACALL WRCMD</div><div class="line">RET</div><div class="line">;;;;;;;;</div><div class="line">D_40US:</div><div class="line">      MOV R1,#10</div><div class="line">D_40US_1:</div><div class="line">      NOP</div><div class="line">      DJNZ R1,D_40US_1     </div><div class="line">RET</div><div class="line">;;;;;;;</div><div class="line">D_5MS:</div><div class="line">     MOV R1,#10</div><div class="line">D_5MS_1:</div><div class="line">     MOV R2,#125</div><div class="line">D_5MS_2:</div><div class="line">     NOP</div><div class="line">     DJNZ R2,D_5MS_2</div><div class="line">     DJNZ R1,D_5MS_1</div><div class="line">RET</div><div class="line">;;;;;;</div><div class="line">D_15MS:</div><div class="line">     MOV R0,#3</div><div class="line">D_15MS_1:</div><div class="line">     NOP</div><div class="line">     DJNZ R0,D_15MS_1</div><div class="line">RET</div><div class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</div><div class="line">END</div></pre></td></tr></table></figure>
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/大学时代/" rel="tag">#大学时代</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2007/04/04/hanio-game-cpp/" rel="next" title="汉诺塔游戏的C++实现">
+                <i class="fa fa-chevron-left"></i> 汉诺塔游戏的C++实现
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2008/02/27/simple-game-engine/" rel="prev" title="游戏引擎的简单实现">
+                游戏引擎的简单实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2007/07/15/electronic-clock-asm/"
+     data-title="51汇编做的电子时钟"
+     data-content=""
+     data-url="http://yoursite.com/2007/07/15/electronic-clock-asm/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2007/07/15/electronic-clock-asm/"
+           data-title="51汇编做的电子时钟" data-url="http://yoursite.com/2007/07/15/electronic-clock-asm/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">此文章未包含目录</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

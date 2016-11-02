@@ -1,0 +1,881 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="书籍：《面向模式的软件架构IV：分布式计算的模式语言》简介迄今为止，人们提出的软件开发模式有不少是关于分布式计算的，但人们始终无法以完整的视角了解分布式计算中各种模式是如何协同工作、取长补短的。构建复杂的分布式系统似乎成为了永远也无法精通的一门手艺。本书的出版改变了这一切。
+本书是经典的POSA系列的第4卷，介绍了一种模式设计语言，将分布式系统开发中的114个模式联系起来。书中首先介绍了一些分布式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="每周一荐：分布式计算的模式语言">
+<meta property="og:url" content="http://yoursite.com/2012/04/06/weekly-distributed-patttern/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="书籍：《面向模式的软件架构IV：分布式计算的模式语言》简介迄今为止，人们提出的软件开发模式有不少是关于分布式计算的，但人们始终无法以完整的视角了解分布式计算中各种模式是如何协同工作、取长补短的。构建复杂的分布式系统似乎成为了永远也无法精通的一门手艺。本书的出版改变了这一切。
+本书是经典的POSA系列的第4卷，介绍了一种模式设计语言，将分布式系统开发中的114个模式联系起来。书中首先介绍了一些分布式">
+<meta property="og:image" content="http://yoursite.com/images/2012-04-06-1.jpg">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.479Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="每周一荐：分布式计算的模式语言">
+<meta name="twitter:description" content="书籍：《面向模式的软件架构IV：分布式计算的模式语言》简介迄今为止，人们提出的软件开发模式有不少是关于分布式计算的，但人们始终无法以完整的视角了解分布式计算中各种模式是如何协同工作、取长补短的。构建复杂的分布式系统似乎成为了永远也无法精通的一门手艺。本书的出版改变了这一切。
+本书是经典的POSA系列的第4卷，介绍了一种模式设计语言，将分布式系统开发中的114个模式联系起来。书中首先介绍了一些分布式">
+<meta name="twitter:image" content="http://yoursite.com/images/2012-04-06-1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2012/04/06/weekly-distributed-patttern/"/>
+
+
+  <title> 每周一荐：分布式计算的模式语言 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                每周一荐：分布式计算的模式语言
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2012-04-06T02:08:00+09:00" content="2012-04-06">
+              2012-04-06
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/每周一荐/" itemprop="url" rel="index">
+                    <span itemprop="name">每周一荐</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2012/04/06/weekly-distributed-patttern/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2012/04/06/weekly-distributed-patttern/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="书籍：《面向模式的软件架构IV：分布式计算的模式语言》"><a href="#书籍：《面向模式的软件架构IV：分布式计算的模式语言》" class="headerlink" title="书籍：《面向模式的软件架构IV：分布式计算的模式语言》"></a>书籍：《面向模式的软件架构IV：分布式计算的模式语言》</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>迄今为止，人们提出的软件开发模式有不少是关于分布式计算的，但人们始终无法以完整的视角了解分布式计算中各种模式是如何协同工作、取长补短的。构建复杂的分布式系统似乎成为了永远也无法精通的一门手艺。本书的出版改变了这一切。</p>
+<p>本书是经典的POSA系列的第4卷，介绍了一种模式设计语言，将分布式系统开发中的114个模式联系起来。书中首先介绍了一些分布式系统和模式语言的概念，然后通过一个仓库管理流程控制系统的例子，介绍如何使用模式语言设计分布式系统，最后介绍模式语言本身。</p>
+<p><img src="/images/2012-04-06-1.jpg" alt="分布式计算的模式语言"></p>
+<p>使用这一模式语言，人们可以有效地解决许多与分布式系统开发相关的技术问题，如</p>
+<p>★ 对象交互</p>
+<p>★ 接口与组件划分</p>
+<p>★ 应用控制</p>
+<p>★ 资源管理</p>
+<p>★ 并发与同步</p>
+<p>本书从实用角度展示了如何从现有的主要模式中整合出一门全面的模式语言，用于开发分布式计算中间件及应用程序。作为该领域在市场上唯一统揽全局的书，它将给读者带来醍醐灌顶的感觉！</p>
+<h4 id="笔记"><a href="#笔记" class="headerlink" title="笔记"></a>笔记</h4><p>以前总是困惑自己正在开发的游戏网络通信框架是前人怎么想出来的，看着底层那些乱七八糟的代码，即膜拜又感到不解。看到本书讲的一个模式：Half-Sync/Half-Async 顿时感觉清楚了许多。这本书对于很多模式都讲的不是很细致，只是粗略总结一下，详细的用法和介绍还是要去参考一些《面向模式的软件架构I》、《面向模式的软件架构II》、《设计模式：可复用面向对象基础》。对于网络框架的架构这本书和《面向模式的软件架构II》必备。</p>
+<p>下面把书中提及到的分布式相关的模式列举出来：</p>
+<p><strong>从混沌到结构（From Mud To Structure ）</strong></p>
+<ol>
+<li>领域模型（Domain Model）  </li>
+<li>分层（Layers）  </li>
+<li>MVC模式（Model-View-Controller）  </li>
+<li>PAC模式（Presentation-Abastraction-Control）  </li>
+<li>微内核（Microkernel）  </li>
+<li>反射（Reflection）  </li>
+<li>管道和过滤器（Pipes and Filters）  </li>
+<li>共享仓库（Shared Repository）  </li>
+<li>黑板（Blackboard）  </li>
+<li>领域对象（Domain Object）  </li>
+</ol>
+<p><strong>分布式架构</strong></p>
+<ol>
+<li>消息机制（Messaging）  </li>
+<li>消息通道（Message Channel）  </li>
+<li>消息端点（Message Endpoint）  </li>
+<li>消息转换器（Message Translator）  </li>
+<li>消息路由（Message Router）  </li>
+<li>发布-订阅者（Publisher-Subscriber）  </li>
+<li>代理者（Broker）   </li>
+<li>客户端代理（Client Proxy）  </li>
+<li>请求者（Requestor）  </li>
+<li>调用者（Invoker）  </li>
+<li>客户端请求处理（Client Request Handler）  </li>
+<li>服务端请求处理（Server Request Handler）  </li>
+</ol>
+<p><strong>事件分派（Event Demultiplexing and Dispatching）</strong></p>
+<ol>
+<li>Reator  </li>
+<li>Proator  </li>
+<li>Acceptor-Connector  </li>
+<li>Asynchronous Completion Token  </li>
+</ol>
+<p><strong>接口划分（Interface Partitioning ）</strong></p>
+<ol>
+<li>Explicit Interface  </li>
+<li>Extension Interface  </li>
+<li>Introspective Interface  </li>
+<li>动态调用接口（Dynamic Invocation Interface）  </li>
+<li>代理（Proxy）  </li>
+<li>业务委托（Business Delegate）  </li>
+<li>外观模式（Facade）  </li>
+<li>复合方法（Combined Method）  </li>
+<li>迭代器（Iterator）  </li>
+<li>枚举方法（Enumeration Method）  </li>
+<li>批处理方法（Batch Method）  </li>
+</ol>
+<p><strong>组件划分（Component Partitioning）</strong></p>
+<ol>
+<li>封装实现（Encapsulated Implementation）  </li>
+<li>整体-部分（Whole-Part）  </li>
+<li>组合模式（Composite）  </li>
+<li>主从模式（Master-Slave）  </li>
+<li>Half-Object plus Protocol  </li>
+<li>Replicated Component Group  </li>
+</ol>
+<p><strong>应用控制（Application Control）</strong></p>
+<ol>
+<li>页控制器（Page Controller）  </li>
+<li>前端控制器（Front Controller）  </li>
+<li>应用控制器（Application Controller）  </li>
+<li>命令处理器（Command Processor）  </li>
+<li>模板视图（Template View）  </li>
+<li>转换视图（Transform View）  </li>
+<li>防火墙代理（Firewall Proxy）  </li>
+<li>授权（Authorition）  </li>
+</ol>
+<p><strong>并发（Concurrency）</strong></p>
+<ol>
+<li>Half-Sync/Half-Async  </li>
+<li>Leader/Followers  </li>
+<li>Active Object  </li>
+<li>Monitor Object  </li>
+</ol>
+<p><strong>同步（Synchronization）</strong></p>
+<ol>
+<li>守护挂起（Guarded Suspension）  </li>
+<li>Future  </li>
+<li>线程安全接口（Thread-Safe Interface）  </li>
+<li>双检查锁（Double-Checked Locking）  </li>
+<li>策略锁定（Strategized Locking）  </li>
+<li>范围锁定（Scoped Locking）  </li>
+<li>线程指定存储（Thread-Specific Storage）  </li>
+<li>复制值（Copied Value）  </li>
+<li>常量值（Immutable Value）  </li>
+</ol>
+<p><strong>对象交互（Object Interaction）</strong></p>
+<ol>
+<li>观察者（Observer）  </li>
+<li>双分配（Double Dispatch）  </li>
+<li>中间者（Mediator）  </li>
+<li>命令模式（Command）  </li>
+<li>备忘录模式（Memento）  </li>
+<li>环境对象（Context Object）  </li>
+<li>数据传输对象（Data Transfer Object）  </li>
+<li>消息（Message）  </li>
+</ol>
+<p><strong>适配和扩展（Adaptation and Extension）</strong></p>
+<ol>
+<li>桥接模式（Bridge）  </li>
+<li>对象适配器（Object Adapter）  </li>
+<li>责任链（Chain of Responsibility）  </li>
+<li>解释器（Interpreter）  </li>
+<li>插入器（Interceptor）  </li>
+<li>访问者（Visitor）  </li>
+<li>修饰模式（Decorator）  </li>
+<li>Execute-Around Object  </li>
+<li>模板方法（Template Method）  </li>
+<li>策略模式（Strategy）  </li>
+<li>空对象（NULL Object）  </li>
+<li>封装外观（Wrapper Facade）  </li>
+<li>Declarative Component Configuration  </li>
+</ol>
+<p><strong>模态行为（Modal Behavior）</strong></p>
+<ol>
+<li>状态对象（Objects for States）  </li>
+<li>状态方法（Methods for States）  </li>
+<li>状态集合（Collections for States）  </li>
+</ol>
+<p><strong>资源管理（Resource Management）</strong></p>
+<ol>
+<li>容器（Container）  </li>
+<li>组件配置（Component Configurator）  </li>
+<li>对象管理器（Object Manager）  </li>
+<li>查找（Lookup）  </li>
+<li>虚拟代理（Virtual Proxy）  </li>
+<li>生命周期回调（Lifecyce Callback）  </li>
+<li>任务协调器（Task Coordinator）  </li>
+<li>资源池（Resource Pool）  </li>
+<li>资源缓冲（Resource Cache）  </li>
+<li>Layzy Acquisition  </li>
+<li>Eager Acquisition  </li>
+<li>Partial Acquisition  </li>
+<li>Activator  </li>
+<li>Evictor  </li>
+<li>Leasing  </li>
+<li>自动垃圾回收（Automated Garbage Collection）  </li>
+<li>计数句柄（Counting Handle）  </li>
+<li>抽象工厂（Abstract Factory）  </li>
+<li>构建者（Builder）  </li>
+<li>工厂方法（Factory Method）  </li>
+<li>Disposal Method  </li>
+</ol>
+<p><strong>数据库访问（Database Access）</strong></p>
+<ol>
+<li>数据库访问层（Database Access Layer）  </li>
+<li>数据映射（Data Mapper）  </li>
+<li>行数据网关（Row Data Gateway）  </li>
+<li>表格数据网关闭（Table Data Gateway）  </li>
+<li>Active Record  </li>
+</ol>
+<p>以上模式详细内容还需要更加深入的应用才能很好的掌握。继续学习…</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2012/03/09/weekly-refactoring/" rel="next" title="每周一荐：重构">
+                <i class="fa fa-chevron-left"></i> 每周一荐：重构
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2012/04/07/mediawiki-vim/" rel="prev" title="MediaWiki编辑工具">
+                MediaWiki编辑工具 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2012/04/06/weekly-distributed-patttern/"
+     data-title="每周一荐：分布式计算的模式语言"
+     data-content=""
+     data-url="http://yoursite.com/2012/04/06/weekly-distributed-patttern/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2012/04/06/weekly-distributed-patttern/"
+           data-title="每周一荐：分布式计算的模式语言" data-url="http://yoursite.com/2012/04/06/weekly-distributed-patttern/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#书籍：《面向模式的软件架构IV：分布式计算的模式语言》"><span class="nav-number">1.</span> <span class="nav-text">书籍：《面向模式的软件架构IV：分布式计算的模式语言》</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#笔记"><span class="nav-number">1.2.</span> <span class="nav-text">笔记</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

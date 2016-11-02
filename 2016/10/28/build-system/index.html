@@ -1,0 +1,840 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="C++,make,cmake," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="C++少说也用了十年了，从简单的Hello World到200万行的游戏项目，编译和构建的工具也经历了各种升级。最终的开发环境，选择了Clang+GDB+CMake。当然不断改进和升级开发工具的脚步尚未停止，只要能提高开发效率，怎样折腾都是值得的。
+期间经历了：
+
+直接调用编译和链接命令
+使用Makefile
+使用CMake
+不断尝试其他构建系统，如：b2、WAF、SCons">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++构建系统的选择">
+<meta property="og:url" content="http://yoursite.com/2016/10/28/build-system/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="C++少说也用了十年了，从简单的Hello World到200万行的游戏项目，编译和构建的工具也经历了各种升级。最终的开发环境，选择了Clang+GDB+CMake。当然不断改进和升级开发工具的脚步尚未停止，只要能提高开发效率，怎样折腾都是值得的。
+期间经历了：
+
+直接调用编译和链接命令
+使用Makefile
+使用CMake
+不断尝试其他构建系统，如：b2、WAF、SCons">
+<meta property="og:image" content="http://yoursite.com/images/2016-10-28-build-system.jpg">
+<meta property="og:image" content="http://yoursite.com/images/gnu-build-system-1.jpg">
+<meta property="og:image" content="http://yoursite.com/images/gnu-build-system-2.jpg">
+<meta property="og:image" content="http://yoursite.com/images/cmake-logo.jpg">
+<meta property="og:image" content="http://yoursite.com/images/cmake-process.png">
+<meta property="og:image" content="http://yoursite.com/images/scons-arch.jpg">
+<meta property="og:updated_time" content="2016-11-02T09:52:35.319Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++构建系统的选择">
+<meta name="twitter:description" content="C++少说也用了十年了，从简单的Hello World到200万行的游戏项目，编译和构建的工具也经历了各种升级。最终的开发环境，选择了Clang+GDB+CMake。当然不断改进和升级开发工具的脚步尚未停止，只要能提高开发效率，怎样折腾都是值得的。
+期间经历了：
+
+直接调用编译和链接命令
+使用Makefile
+使用CMake
+不断尝试其他构建系统，如：b2、WAF、SCons">
+<meta name="twitter:image" content="http://yoursite.com/images/2016-10-28-build-system.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/10/28/build-system/"/>
+
+
+  <title> C++构建系统的选择 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                C++构建系统的选择
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-10-28T00:00:00+09:00" content="2016-10-28">
+              2016-10-28
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/开发环境/" itemprop="url" rel="index">
+                    <span itemprop="name">开发环境</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/10/28/build-system/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/28/build-system/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>C++少说也用了十年了，从简单的Hello World到200万行的游戏项目，编译和构建的工具也经历了各种升级。最终的开发环境，选择了Clang+GDB+CMake。当然不断改进和升级开发工具的脚步尚未停止，只要能提高开发效率，怎样折腾都是值得的。</p>
+<p>期间经历了：</p>
+<ol>
+<li>直接调用编译和链接命令</li>
+<li>使用Makefile</li>
+<li>使用CMake</li>
+<li>不断尝试其他构建系统，如：b2、WAF、SCons</li>
+</ol>
+<p><img src="/images/2016-10-28-build-system.jpg" alt=" C++构建系统的选择"></p>
+<a id="more"></a>
+<h3 id="对构建系统的要求"><a href="#对构建系统的要求" class="headerlink" title="对构建系统的要求"></a>对构建系统的要求</h3><p>由于C/C++本身的特性，如：跨平台、高性能等、编写复杂等，对构建系统也是提出了一定的要求：</p>
+<ul>
+<li><p><strong>支持并行编译</strong>：构建系统能否支持并行编译？对于编译速度的要求，我给自己定的目标是&lt;10min，超过10min要么换机器，要么想办法优化代码依赖。上百万行的代码，并行编译时必须的，否则一不小心改一行代码等个把小时，这样开发时间白白浪费在编译上太不值得了。</p>
+</li>
+<li><p><strong>自动生成依赖</strong>：构建系统是否仅仅编译刚修改过的及其依赖的文件？代码的依赖关系，要我们自己去手动写脚本（一般gcc/clang的话，使用<code>gcc -M xx.cpp</code>）？</p>
+</li>
+<li><p><strong>跨平台</strong>：构建系统能否仅写一份构建脚本，支持多种平台？有些项目需要进行交叉编译，测试环境和运行环境是在不同的平台环境下。</p>
+</li>
+<li><p><strong>支持自定义构建目标</strong>： 构建系统必须支持扩展，支持自定义Target等。如：protobuf文件可以根据依赖规则自动生成.h、.cpp；自定义一些用于打包或测试的命令（<code>make pack</code>、<code>make test</code>）。</p>
+</li>
+</ul>
+<p>本文下面大概介绍一下刚提到的构建系统，具体用法不赘述，官方网站是最好的开始地方。若有必要会另起文章详细讲解如何使用及其工作原理。</p>
+<h3 id="基于make的"><a href="#基于make的" class="headerlink" title="基于make的"></a>基于make的</h3><h4 id="GNU-Make"><a href="#GNU-Make" class="headerlink" title="GNU Make"></a>GNU Make</h4><p>对于玩Linux的人来说，这是太熟悉不过的东西了。小规模的项目或仅自己玩的项目，手写Makefile完全就足够了。</p>
+<p>GNU Make 是一个控制源码生成可执行文件或其他文件的工具。需要一个叫Makefile的文件来说明构建的目标和规则。</p>
+<p>最简单的规则大概是这样的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">target:   dependencies ...</div><div class="line">          commands</div><div class="line">          ...</div></pre></td></tr></table></figure>
+<p>意思是：生成<code>target</code>，依赖于<code>dependencies</code>，如果<code>dependencies</code>有修改或者<code>target</code>不存在，就逐个执行下面的<code>commands</code>去生成<code>target</code>。</p>
+<p>下面贴一个复杂的Makefile感受下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">CXX      = g++</div><div class="line">CXXFLAGS = -g -I../proto.client -I../common</div><div class="line">LDFLAGS  = -L../common  -L../proto.client/ -lproto.client -L/usr/local/lib -lzmq -lprotobuf -ltinyworld</div><div class="line"></div><div class="line">OBJS = main.o</div><div class="line"></div><div class="line">SRCS = $(OBJS:%.o=%.cpp)</div><div class="line">DEPS = $(OBJS:%.o=.%.d) </div><div class="line"></div><div class="line">TARGET=gateserver</div><div class="line"></div><div class="line">.PHONY: all clean</div><div class="line"></div><div class="line">all : $(TARGET)</div><div class="line"></div><div class="line">include $(DEPS)</div><div class="line">$(DEPS): $(SRCS)</div><div class="line">	@$(CXX) -M $(CXXFLAGS) $&lt; &gt; $@.$$$$; \</div><div class="line">		sed &apos;s,\($*\)\.o[ :]*,\1.o $@ : ,g&apos; &lt; $@.$$$$ &gt;$@; \</div><div class="line">		rm -f $@.$$$$</div><div class="line"></div><div class="line">$(OBJS): %.o: %.cpp</div><div class="line">	$(CXX) -c $(CXXFLAGS) $&lt; -o $@</div><div class="line"></div><div class="line">$(TARGET): $(OBJS) ../common/libtinyworld.a</div><div class="line">	$(CXX) $(OBJS) -o $@ $(CXXFLAGS) $(LDFLAGS)</div><div class="line"></div><div class="line">clean:</div><div class="line">	@rm -rf $(TARGET)</div></pre></td></tr></table></figure>
+<h4 id="Microsoft-NMake"><a href="#Microsoft-NMake" class="headerlink" title="Microsoft NMake"></a>Microsoft NMake</h4><p>在Windows下面做开发，Visual Studio基本上完全胜任。微软自己的IDE功能强大，对于项目构建的管理IDE帮着你搞定了。VS的构建的管理其实用的是微软自己的Make，叫NMAKE。脚本还是IDE，各有千秋：IDE好处就是它什么都帮你干了，简单方便；坏处就是对构建的方式和过程了解的比较浅，自由度没那么大，遇到大型项目的特殊需求时要各种查资料。</p>
+<p>MSDN上面的NMAKE脚本示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"># Sample makefile</div><div class="line"></div><div class="line">!include &lt;win32.mak&gt;</div><div class="line"></div><div class="line">all: simple.exe challeng.exe</div><div class="line"></div><div class="line">.c.obj:</div><div class="line">  $(cc) $(cdebug) $(cflags) $(cvars) $*.c</div><div class="line"></div><div class="line">simple.exe: simple.obj</div><div class="line">  $(link) $(ldebug) $(conflags) -out:simple.exe simple.obj $(conlibs) lsapi32.lib</div><div class="line"></div><div class="line">challeng.exe: challeng.obj md4c.obj</div><div class="line">  $(link) $(ldebug) $(conflags) -out:challeng.exe $** $(conlibs)</div></pre></td></tr></table></figure></p>
+<h3 id="自动生成make脚本的"><a href="#自动生成make脚本的" class="headerlink" title="自动生成make脚本的"></a>自动生成make脚本的</h3><p>手动写make脚本自由度大，为了自由度，它的设计比较简单，有许多上述对构建系统的要求它没法支持。如：GUN Make没法自己知道代码的依赖，需要借助编译器来自己写脚本；跨平台就更不可能了。</p>
+<p>还有一个重要的影响就是对于环境的自动检测。如果你的代码发布出去，任何一个人下载下来需要进行编译，他的编译器、操作系统环境、依赖的第三方库的位置和版本都会有差异，如何进行编译？难到要下载你代码的人去手动修改你的Makefile吗？当然不是，这个时候在编译之前还需要一步：检测当前编译环境、操作系统环境、第三方库的位置等，不满足要求就直接报错，检测到所有依赖后再根据这些信息生成适合你当前系统的Makefile，然后才能进行编译。</p>
+<h4 id="GNU-Build-System"><a href="#GNU-Build-System" class="headerlink" title="GNU Build System"></a>GNU Build System</h4><p>认识GNU Build System可以从两个角度入手：使用者和开发者。主要包含三大模块：</p>
+<ul>
+<li>Autoconf</li>
+<li>Automake</li>
+<li>Libtool</li>
+</ul>
+<p><strong>站在使用者的角度</strong>，GNU Build System为我们提供了源码包<strong>编译安装</strong>的方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">tar -xvzf package-name.version.tar.gz <span class="comment"># tar -xvjf package-name.version.tar.bz2 </span></div><div class="line"><span class="built_in">cd</span> package-name.version</div><div class="line">./configure --prefix=xxx</div><div class="line">make</div><div class="line">make install</div></pre></td></tr></table></figure>
+<p>其中的<code>configure</code>就是检测环境，生成Makefile的脚本。大概的过程如下：</p>
+<p><img src="/images/gnu-build-system-1.jpg" alt="构建和安装"></p>
+<p><strong>站在开发者的角度</strong>，GNU Build System 为我们广大程序员提供了<strong>编写构建规则和检查安装环境</strong>的功能。</p>
+<p><img src="/images/gnu-build-system-2.jpg" alt="GNU Build System"></p>
+<p>要发布自己的源码，首先需要一个Autoconf的<code>configure.ac</code>，最简单的长这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">AC_INIT([hello], [1.0]) </div><div class="line">AC_CONFIG_SRCDIR([hello.c]) </div><div class="line">AC_CONFIG_HEADERS(config.h) </div><div class="line">AC_PROG_CC </div><div class="line">AC_CONFIG_FILES(Makefile) </div><div class="line">AC_PROG_INSTALL </div><div class="line">AC_OUTPUT</div></pre></td></tr></table></figure>
+<p>其次还需要一个Automake的<code>Makefile.am</code>来描述构建规则，看起来这这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">AC_INIT([hello], [1.0]) </div><div class="line">AC_CONFIG_SRCDIR([hello.c]) </div><div class="line">AC_CONFIG_HEADERS(config.h) </div><div class="line">AM_INIT_AUTOMAKE </div><div class="line">AC_PROG_CC </div><div class="line">AC_CONFIG_FILES(Makefile) </div><div class="line">AC_PROG_INSTALL </div><div class="line">AC_OUTPUT</div></pre></td></tr></table></figure>
+<p>定义好检查环境和配置的<code>configure.ac</code>和描述构建规则的<code>Makefile.am</code>，生成一个可以发布的源码包大概过程如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">aclocal </div><div class="line">autoconf </div><div class="line">autoheader </div><div class="line">touch NEWS README AUTHORS ChangeLog </div><div class="line">automake <span class="_">-a</span> </div><div class="line">./configure </div><div class="line">make </div><div class="line">make dist</div></pre></td></tr></table></figure>
+<h4 id="CMake"><a href="#CMake" class="headerlink" title="CMake"></a>CMake</h4><p><img src="/images/cmake-logo.jpg" alt="CMake"></p>
+<p>CMake是一个跨平台的安装（编译）工具，可以用简单的语句来描述所有平台的安装（编译过程）。他能够输出各种各样的Makefile或者project文件，能检查编译器所支持的C++特性，类似UNIX下的automake。CMake 并不直接建构出最终的软件，而是产生标准的建构脚本（如Unix 的 Makefile 或 Windows Visual C++ 的 projects/workspaces），然后再使用相应的工具进行编译。</p>
+<p>CMak的特点主要有：</p>
+<ol>
+<li>开放源代码， 使用类 BSD 许可发布。 <a href="http://cmake.org/HTML/Copyright" target="_blank" rel="external">http://cmake.org/HTML/Copyright</a>. html</li>
+<li>跨平台， 并可生成 native 编译配置文件， 在 Linux/Unix 平台， 生成 makefile， 在苹果平台， 可以生成 xcode， 在 Windows 平台， 可以生成 MSVC 的工程文件。</li>
+<li>能够管理大型项目， KDE4 就是最好的证明。</li>
+<li>简化编译构建过程和编译过程。 CMake 的工具链非常简单： <code>cmake+make</code>。</li>
+<li>可扩展， 可以为 cmake 编写特定功能的模块， 扩充 cmake 功能。</li>
+</ol>
+<p>其实CMake工具包不仅仅提供了编译，还有：支持单元测试的CTest，支持不同平台打包的CPack，自动化测试及其展示的CDash。有兴趣的访问官方网站学习：<a href="https://cmake.org/" target="_blank" rel="external">https://cmake.org/</a></p>
+<p>一般，在每个源码目录下都有一个 CMakeLists.txt，看起来是这样的：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">cmake_minimum_required</span> (VERSION <span class="number">2.6</span>)</div><div class="line"><span class="keyword">project</span> (Tutorial)</div><div class="line"><span class="comment"># The version number.</span></div><div class="line"><span class="keyword">set</span> (Tutorial_VERSION_MAJOR <span class="number">1</span>)</div><div class="line"><span class="keyword">set</span> (Tutorial_VERSION_MINOR <span class="number">0</span>)</div><div class="line"> </div><div class="line"><span class="comment"># configure a header file to pass some of the CMake settings</span></div><div class="line"><span class="comment"># to the source code</span></div><div class="line"><span class="keyword">configure_file</span> (</div><div class="line">  <span class="string">"$&#123;PROJECT_SOURCE_DIR&#125;/TutorialConfig.h.in"</span></div><div class="line">  <span class="string">"$&#123;PROJECT_BINARY_DIR&#125;/TutorialConfig.h"</span></div><div class="line">  )</div><div class="line"> </div><div class="line"><span class="comment"># add the binary tree to the search path for include files</span></div><div class="line"><span class="comment"># so that we will find TutorialConfig.h</span></div><div class="line"><span class="keyword">include_directories</span>(<span class="string">"$&#123;PROJECT_BINARY_DIR&#125;"</span>)</div><div class="line"> </div><div class="line"><span class="comment"># add the executable</span></div><div class="line"><span class="keyword">add_executable</span>(Tutorial tutorial.cxx)</div></pre></td></tr></table></figure>
+<p>使用的时候：</p>
+<p>第一步：根据CMakeLists.txt生成Makefile，命令如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mkdir path-to-build</div><div class="line"><span class="built_in">cd</span> path-to-build</div><div class="line">cmake path-to-source</div></pre></td></tr></table></figure>
+<p>cmake的过程可以分为<strong>配置</strong>和<strong>生成</strong>过程。配置的时候优先从CMakeCache.txt中读取设置，然后再扫一遍CMakeList.txt中的设置，该步骤会检查第三方库和构建过程的变量；生成步骤则根据当前的环境和平台，生成不同的构建脚本，如Linux的Makefile，Windows的VC工程文件。</p>
+<p><img src="/images/cmake-process.png" alt="CMake的过程"></p>
+<p>第二步：编译。没啥好说的，Linux下直接<code>make -jxx</code>，其他的操作系统的IDE直接打开点一下build按钮即可。</p>
+<h3 id="非基于make的"><a href="#非基于make的" class="headerlink" title="非基于make的"></a>非基于make的</h3><p>非基于make的构建系统五花八门，这里只大概介绍一下我所知的几个。</p>
+<h4 id="SCons"><a href="#SCons" class="headerlink" title="SCons"></a>SCons</h4><p>SCons 是一个开放源代码、以 Python 语言编写的下一代的程序建造工具。作为下一代的软件建造工具，SCons 的设计目标就是让开发人员更容易、更可靠和更快速的建造软件。与传统的 make 工具比较，SCons 具有以下优点：</p>
+<ul>
+<li>使用 Python 脚本做为配置文件。</li>
+<li>对于 C，C++,Fortran，内建支持可靠自动依赖分析 。不用像 make 工具那样需要 执行”make depends”和”make clean”就可以获得所有的依赖关系。</li>
+<li>内建支持 C, C++, D, Java, Fortran, Yacc, Lex, Qt，SWIG 以及 Tex/Latex。 用户还可以根据自己的需要进行扩展以获得对需要编程语言的支持。</li>
+<li>支持 make -j 风格的并行建造。相比 make -j, SCons 可以同时运行 N 个工作，而 不用担心代码的层次结构。</li>
+<li>使用 Autoconf 风格查找头文件，函数库，函数和类型定义。</li>
+<li>良好的夸平台性。SCons 可以运行在 Linux, AIX, BSD, HP/UX, IRIX, Solaris, Windows, Mac OS X 和 OS/2 上。</li>
+</ul>
+<p>SCons架构：</p>
+<p><img src="/images/scons-arch.jpg" alt="SCons架构"></p>
+<p>SCons的脚本名为SConstruct， 内容看起来是这样的：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Program(<span class="string">'helloscons2'</span>, [<span class="string">'helloscons2.c'</span>, <span class="string">'file1.c'</span>, <span class="string">'file2.c'</span>], </div><div class="line">    LIBS = <span class="string">'m'</span>, </div><div class="line">    LIBPATH = [<span class="string">'/usr/lib'</span>, <span class="string">'/usr/local/lib'</span>], </div><div class="line">    CCFLAGS = <span class="string">'-DHELLOSCONS'</span>)</div></pre></td></tr></table></figure>
+<p>其中，</p>
+<ul>
+<li>LIBS： 显示的指明要在链接过程中使用的库，如果有多个库，应该把它们放在一个列表里面。这个例子里，我们使用一个称为 m 的库。</li>
+<li>LIBPATH： 链接库的搜索路径，多个搜索路径放在一个列表中。这个例子里，库的搜索路径是 /usr/lib 和 /usr/local/lib。</li>
+<li>CCFLAGS： 编译选项，可以指定需要的任意编译选项，如果有多个选项，应该放在一个列表中。这个例子里，编译选项是通过 -D 这个 gcc 的选项定义了一个宏 HELLOSCONS。</li>
+</ul>
+<p>编译命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ scons -Q </div><div class="line"> gcc -o file1.o -c -DHELLOSCONS file1.c </div><div class="line"> gcc -o file2.o -c -DHELLOSCONS file2.c </div><div class="line"> gcc -o helloscons2.o -c -DHELLOSCONS helloscons2.c </div><div class="line"> gcc -o helloscons2 helloscons2.o file1.o file2.o -L/usr/lib -L/usr/<span class="built_in">local</span>/lib -lm</div></pre></td></tr></table></figure>
+<h4 id="WAF"><a href="#WAF" class="headerlink" title="WAF"></a>WAF</h4><h4 id="b2"><a href="#b2" class="headerlink" title="b2"></a>b2</h4><h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><a href="https://www.softprayog.in/tutorials/understanding-gnu-build-system" target="_blank" rel="external">https://www.softprayog.in/tutorials/understanding-gnu-build-system</a></li>
+<li><a href="https://www.gnu.org/software/make/" target="_blank" rel="external">https://www.gnu.org/software/make/</a></li>
+<li><a href="http://www.cmake.org/" target="_blank" rel="external">http://www.cmake.org/</a></li>
+<li><a href="http://scons.org/" target="_blank" rel="external">http://scons.org/</a></li>
+<li><a href="http://scons.org/doc/production/PDF/scons-design.pdf" target="_blank" rel="external">http://scons.org/doc/production/PDF/scons-design.pdf</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag">#C++</a>
+          
+            <a href="/tags/make/" rel="tag">#make</a>
+          
+            <a href="/tags/cmake/" rel="tag">#cmake</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/10/30/review-editing/" rel="next" title="每周回顾：写作得有个好工具才行">
+                <i class="fa fa-chevron-left"></i> 每周回顾：写作得有个好工具才行
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2016/10/28/build-system/"
+     data-title="C++构建系统的选择"
+     data-content=""
+     data-url="http://yoursite.com/2016/10/28/build-system/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/10/28/build-system/"
+           data-title="C++构建系统的选择" data-url="http://yoursite.com/2016/10/28/build-system/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#对构建系统的要求"><span class="nav-number">1.</span> <span class="nav-text">对构建系统的要求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于make的"><span class="nav-number">2.</span> <span class="nav-text">基于make的</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GNU-Make"><span class="nav-number">2.1.</span> <span class="nav-text">GNU Make</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Microsoft-NMake"><span class="nav-number">2.2.</span> <span class="nav-text">Microsoft NMake</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自动生成make脚本的"><span class="nav-number">3.</span> <span class="nav-text">自动生成make脚本的</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GNU-Build-System"><span class="nav-number">3.1.</span> <span class="nav-text">GNU Build System</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CMake"><span class="nav-number">3.2.</span> <span class="nav-text">CMake</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#非基于make的"><span class="nav-number">4.</span> <span class="nav-text">非基于make的</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SCons"><span class="nav-number">4.1.</span> <span class="nav-text">SCons</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WAF"><span class="nav-number">4.2.</span> <span class="nav-text">WAF</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#b2"><span class="nav-number">4.3.</span> <span class="nav-text">b2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

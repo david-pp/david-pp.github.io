@@ -1,0 +1,835 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。
+使用集群的目的就是提高可用性。高可用性H">
+<meta property="og:type" content="article">
+<meta property="og:title" content="高可用的MongoDB集群">
+<meta property="og:url" content="http://yoursite.com/2015/09/08/mongodb-cluster/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。
+使用集群的目的就是提高可用性。高可用性H">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-master-slave.png">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-replica-set-1.png">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-replica-set-2.png">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-replica-set-3.png">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-sharded-collection.png">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-sharded-cluster-production-architecture.png">
+<meta property="og:image" content="http://yoursite.com/images/mongodb-sharded-cluster-primary-shard.png">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.515Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="高可用的MongoDB集群">
+<meta name="twitter:description" content="刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。
+使用集群的目的就是提高可用性。高可用性H">
+<meta name="twitter:image" content="http://yoursite.com/images/mongodb-master-slave.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/09/08/mongodb-cluster/"/>
+
+
+  <title> 高可用的MongoDB集群 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                高可用的MongoDB集群
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2015-09-08T22:46:00+09:00" content="2015-09-08">
+              2015-09-08
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/09/08/mongodb-cluster/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/09/08/mongodb-cluster/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>刚接触MongoDB，就要用到它的集群，只能硬着头皮短时间去看文档和尝试自行搭建。迁移历史数据更是让人恼火，近100G的数据文件，导入、清理垃圾数据执行的速度蜗牛一样的慢。趁着这个时间，把这几天关于Mongod集群相关的内容整理一下。大概介绍一下MongoDB集群的几种方式：Master-Slave、Relica Set、Sharding，并做简单的演示。</p>
+<p>使用集群的目的就是提高可用性。高可用性H.A.（High Availability）指的是通过尽量缩短因日常维护操作（计划）和突发的系统崩溃（非计划）所导致的停机时间，以提高系统和应用的可用性。它与被认为是不间断操作的容错技术有所不同。HA系统是目前企业防止核心计算机系统因故障停机的最有效手段。</p>
+<p>HA的三种工作方式：</p>
+<ul>
+<li><p>主从方式 （非对称方式）</p>
+<p> 工作原理：主机工作，备机处于监控准备状况；当主机宕机时，备机接管主机的一切工作，待主机恢复正常后，按使用者的设定以自动或手动方式将服务切换到主机上运行，数据的一致性通过共享存储系统解决。</p>
+</li>
+<li><p>双机双工方式（互备互援）</p>
+<p> 工作原理：两台主机同时运行各自的服务工作且相互监测情况，当任一台主机宕机时，另一台主机立即接管它的一切工作，保证工作实时，应用服务系统的关键数据存放在共享存储系统中。</p>
+</li>
+<li><p>集群工作方式（多服务器互备方式）</p>
+<p>工作原理：多台主机一起工作，各自运行一个或几个服务，各为服务定义一个或多个备用主机，当某个主机故障时，运行在其上的服务就可以被其它主机接管</p>
+</li>
+</ul>
+<a id="more"></a>
+<h3 id="主从架构（Master-Slave）"><a href="#主从架构（Master-Slave）" class="headerlink" title="主从架构（Master-Slave）"></a>主从架构（Master-Slave）</h3><p><img src="/images/mongodb-master-slave.png" alt="Mater-Slaves"></p>
+<p>主从架构一般用于备份或者做读写分离。由两种角色构成：</p>
+<ul>
+<li><p>主(Master)</p>
+<p>可读可写，当数据有修改的时候，会将oplog同步到所有连接的salve上去。</p>
+</li>
+<li><p>从(Slave)</p>
+<p>只读不可写，自动从Master同步数据。</p>
+</li>
+</ul>
+<p>特别的，对于Mongodb来说，并不推荐使用Master-Slave架构，因为Master-Slave其中Master宕机后不能自动恢复，推荐使用Replica Set，后面会有介绍，除非Replica的节点数超过50，才需要使用Master-Slave架构，正常情况是不可能用那么多节点的。</p>
+<p>还有一点，Master-Slave不支持链式结构，Slave只能直接连接Master。Redis的Master-Slave支持链式结构，Slave可以连接Slave，成为Slave的Slave。</p>
+<p>下面演示一下搭建过程：</p>
+<p>1&gt;. 启动Master</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongod --port 2000 --master --dbpath masterdb/</div></pre></td></tr></table></figure>
+<p>2&gt;. 启动Slave</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --slave --source 127.0.0.1:2000 --dbpath slavedb/</div></pre></td></tr></table></figure>
+<p>3&gt;. 给Master里面导入数据，查看Master和Slave的数据。你会发现导入Master的数据同时也会在Slave中出现。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongoimport --port 2000 <span class="_">-d</span> <span class="built_in">test</span> -c dataset dataset.json</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 2000 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; 25359</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 2001 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; 25359</div></pre></td></tr></table></figure>
+<p>4&gt;. 试一下Master和Slave的写操作。你会发现，只有Master才可以对数据进行修改，Slave修改时候会报错。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">mongo --port 2001 <span class="built_in">test</span></div><div class="line">db.dataset.drop()</div><div class="line"></div><div class="line">&gt;  Error: drop failed: &#123; <span class="string">"note"</span> : <span class="string">"from execCommand"</span>, <span class="string">"ok"</span> : 0, <span class="string">"errmsg"</span> : <span class="string">"not master"</span> &#125;</div><div class="line"></div><div class="line">mongoimport --port 2001 <span class="_">-d</span> <span class="built_in">test</span> -c dataset dataset.json</div><div class="line"></div><div class="line">&gt; Failed: error checking connected node <span class="built_in">type</span>: no reachable servers</div></pre></td></tr></table></figure>
+<h3 id="副本集架构（Replica-Set）"><a href="#副本集架构（Replica-Set）" class="headerlink" title="副本集架构（Replica Set）"></a>副本集架构（Replica Set）</h3><p>为了防止单点故障就需要引副本（Replication），当发生硬件故障或者其它原因造成的宕机时，可以使用副本进行恢复，最好能够自动的故障转移（failover）。有时引入副本是为了读写分离，将读的请求分流到副本上，减轻主（Primary）的读压力。而Mongodb的Replica Set都能满足这些要求。</p>
+<p>Replica Set的一堆<code>mongod</code>的实例集合，它们有着同样的数据内容。包含三类角色：</p>
+<ul>
+<li><p>主节点（Primary）</p>
+<p>接收所有的写请求，然后把修改同步到所有Secondary。一个Replica Set只能有一个Primary节点，当Primar挂掉后，其他Secondary或者Arbiter节点会重新选举出来一个主节点。默认读请求也是发到Primary节点处理的，需要转发到Secondary需要客户端修改一下连接配置。</p>
+</li>
+<li><p>副本节点（Secondary）</p>
+<p>与主节点保持同样的数据集。当主节点挂掉的时候，参与选主。</p>
+</li>
+<li><p>仲裁者（Arbiter）</p>
+<p>不保有数据，不参与选主，只进行选主投票。使用Arbiter可以减轻数据存储的硬件需求，Arbiter跑起来几乎没什么大的硬件资源需求，但重要的一点是，在生产环境下它和其他数据节点不要部署在同一台机器上。</p>
+</li>
+</ul>
+<p>注意，一个自动failover的Replica Set节点数必须为奇数，目的是选主投票的时候要有一个大多数才能进行选主决策。</p>
+<h5 id="应用客户端"><a href="#应用客户端" class="headerlink" title="应用客户端"></a>应用客户端</h5><p>客户端连接单个<code>mongod</code>和副本集的操作是相同，只需要配置好连接选项即可，比如下面是node.js连接Replica Set的方式：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongoose.connect(<span class="string">'mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]'</span> [, options]);</div></pre></td></tr></table></figure>
+<h5 id="Primary和Secondary搭建的Replica-Set"><a href="#Primary和Secondary搭建的Replica-Set" class="headerlink" title="Primary和Secondary搭建的Replica Set"></a>Primary和Secondary搭建的Replica Set</h5><p><img src="/images/mongodb-replica-set-1.png" alt="Replica Set"></p>
+<p>奇数个数据节点构成的Replica Set，下面演示精典的3个数据节点的搭建过程。</p>
+<p>1&gt; 启动3个数据节点，<code>--relSet</code>指定同一个副本集的名字 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --dbpath rs0-1 --replSet rs0</div><div class="line">mongod --port 2002 --dbpath rs0-2 --replSet rs0</div><div class="line">mongod --port 2003 --dbpath rs0-3 --replSet rs0</div></pre></td></tr></table></figure>
+<p>2&gt; 连接到其中一个，配置Replica Set，同时正在执行<code>rs.add</code>的节点被选为Primary。开发环境中<code>&lt;hostname&gt;</code>指的是机器名，生产环境下就是机器的IP。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">mongo --port <span class="number">2001</span></div><div class="line"></div><div class="line">rs.initiate()</div><div class="line">rs.add(<span class="string">"&lt;hostname&gt;:2002"</span>)</div><div class="line">rs.add(<span class="string">"&lt;hostname&gt;:2003"</span>)</div><div class="line">rs.conf()</div></pre></td></tr></table></figure>
+<p>3&gt; 连接Primary节点，导入数据成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mongoimport --port 2001 <span class="_">-d</span> <span class="built_in">test</span> -c dataset dataset.json</div><div class="line">mongo --port 2001 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; 25359</div></pre></td></tr></table></figure>
+<p>4&gt; 默认情况下，Secondary不能读和写。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 2003 <span class="built_in">test</span></div><div class="line">db.dataset.count()</div><div class="line"></div><div class="line">&gt; Error: count failed: &#123; <span class="string">"note"</span> : <span class="string">"from execCommand"</span>, <span class="string">"ok"</span> : 0, <span class="string">"errmsg"</span> : <span class="string">"not master"</span> &#125;</div></pre></td></tr></table></figure>
+<p>注意，其中Secondary宕机，不受影响，若Primary宕机，会进行重新选主：</p>
+<p><img src="/images/mongodb-replica-set-2.png" alt="Replica Set"></p>
+<h5 id="使用Arbiter搭建Replica-Set"><a href="#使用Arbiter搭建Replica-Set" class="headerlink" title="使用Arbiter搭建Replica Set"></a>使用Arbiter搭建Replica Set</h5><p>偶数个数据节点，加一个Arbiter构成的Replica Set，下面演示精典的2个数据节点加一个仲裁者的搭建过程。<br>特别的，生产环境中的Arbiter节点，需要修改一下配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">journal.enabled = false</div><div class="line">smallFiles = true</div></pre></td></tr></table></figure>
+<p><img src="/images/mongodb-replica-set-3.png" alt="Replica Set"></p>
+<p>1&gt; 启动两个数据节点和一个Arbiter节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --dbpath rs0-1 --replSet rs0</div><div class="line">mongod --port 2002 --dbpath rs0-2 --replSet rs0</div><div class="line"></div><div class="line">mongod --port 2003 --dbpath arb --replSet rs0</div></pre></td></tr></table></figure>
+<p>2&gt; 连接到其中一个，添加Secondary和Arbiter。当仅需要添加Aribiter的时候，只需连接当前Replica Set的Primary，然后执行<code>rs.addArb</code>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">mongo --port <span class="number">2001</span></div><div class="line"></div><div class="line">rs.initiate()</div><div class="line">rs.add(<span class="string">"&lt;hostname&gt;:2002"</span>)</div><div class="line">rs.addArb(<span class="string">"&lt;hostname&gt;:2003"</span>)</div><div class="line">rs.conf()</div></pre></td></tr></table></figure>
+<h3 id="数据分片架构（Sharding）"><a href="#数据分片架构（Sharding）" class="headerlink" title="数据分片架构（Sharding）"></a>数据分片架构（Sharding）</h3><p>当数据量比较大的时候，我们需要把数据分片运行在不同的机器中，以降低CPU、内存和IO的压力，Sharding就是这样的技术。数据库主要由两种方式做Sharding：纵向，横向，纵向的方式就是添加更多的CPU，内存，磁盘空间等。横向就是上面说的方式，如图所示：</p>
+<p><img src="/images/mongodb-sharded-collection.png" alt="Sharding"></p>
+<h5 id="MongoDB的Sharding架构："><a href="#MongoDB的Sharding架构：" class="headerlink" title="MongoDB的Sharding架构："></a>MongoDB的Sharding架构：</h5><p><img src="/images/mongodb-sharded-cluster-production-architecture.png" alt="Sharding"></p>
+<h5 id="MongoDB分片架构中的角色："><a href="#MongoDB分片架构中的角色：" class="headerlink" title="MongoDB分片架构中的角色："></a>MongoDB分片架构中的角色：</h5><ul>
+<li><p>数据分片（Shards）</p>
+<p>保存数据，保证数据的高可用性和一致性。可以是一个单独的<code>mongod</code>实例，也可以是一个副本集。在生产环境下Shard是一个Replica Set，以防止该数据片的单点故障。所有Shard中有一个PrimaryShard，里面包含未进行划分的数据集合：</p>
+<p><img src="/images/mongodb-sharded-cluster-primary-shard.png" alt="Sharding"></p>
+</li>
+<li><p>查询路由（Query Routers）</p>
+<p><code>mongos</code>的实例，客户端直接连接<code>mongos</code>，由<code>mongos</code>把读写请求路由到指定的Shard上去。一个Sharding集群，可以有一个<code>mongos</code>，也可以有多<code>mongos</code>以减轻客户端请求的压力。</p>
+</li>
+</ul>
+<ul>
+<li><p>配置服务器（Config servers）</p>
+<p>保存集群的元数据（metadata），包含各个Shard的路由规则。</p>
+</li>
+</ul>
+<h5 id="搭建一个有2个shard的集群"><a href="#搭建一个有2个shard的集群" class="headerlink" title="搭建一个有2个shard的集群"></a>搭建一个有2个shard的集群</h5><p>1&gt; 启动两个数据分片节点。在此仅演示单个<code>mongod</code>的方式，Replica Set类似。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mongod --port 2001 --shardsvr --dbpath shard1/</div><div class="line">mongod --port 2002 --shardsvr --dbpath shard2/</div></pre></td></tr></table></figure>
+<p>2&gt; 启动配置服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mongod --port 3001 --dbpath cfg1/</div><div class="line">mongod --port 3002 --dbpath cfg2/</div><div class="line">mongod --port 3003 --dbpath cfg3/</div></pre></td></tr></table></figure>
+<p>3&gt; 启动查询路由<code>mongos</code>服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mongos --port 5000 --configdb 127.0.0.1:3001,127.0.0.1:3002,127.0.0.1:3003</div></pre></td></tr></table></figure>
+<p>4&gt; 连接mongos，为集群添加数据分片节点。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongo --port 5000 amdmin</div><div class="line"></div><div class="line">sh.addShard(<span class="string">"127.0.0.1:2001"</span>)</div><div class="line">sh.addShard(<span class="string">"127.0.0.1:2002"</span>)</div></pre></td></tr></table></figure>
+<p>如果Shard是Replica Set，添加Shard的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">sh.addShard(<span class="string">"rsname/host1:port,host2:port,..."</span>)</div><div class="line"></div><div class="line">rsname - 副本集的名字</div></pre></td></tr></table></figure>
+<p>5&gt; 可以连接<code>mongos</code>进行数据操作了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mongo --port 5000 <span class="built_in">test</span></div><div class="line"></div><div class="line">mongoimport.exe --port 5000 <span class="_">-d</span> <span class="built_in">test</span> dataset.json</div><div class="line">&gt; 25359</div><div class="line">`</div></pre></td></tr></table></figure>
+<h3 id="数据的备份和恢复"><a href="#数据的备份和恢复" class="headerlink" title="数据的备份和恢复"></a>数据的备份和恢复</h3><p>MongodDB的备份有多种方式，这里只简单介绍一下<code>mongodump</code>和<code>mongorestore</code>的用法。</p>
+<p>1&gt; 备份和恢复所有db</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mongodump -h IP --port PORT -o BACKUPPATH</div><div class="line"></div><div class="line">mongorestore -h IP --port PORT BACKUPPATH</div></pre></td></tr></table></figure>
+<p>2&gt; 备份和恢复指定db</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongodump -h IP --port PORT <span class="_">-d</span> DBNAME -o BACKUPPATH</div><div class="line"></div><div class="line">mongorestore -h IP --port PORT  <span class="_">-d</span> DBNAME BACKUPPATH</div><div class="line">mongorestore -h IP --port PORT --drop <span class="_">-d</span> DBNAME BACKUPPATH</div></pre></td></tr></table></figure>
+<p>3&gt; 备份和恢复指定collection</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongodump -h IP --port PORT <span class="_">-d</span> DBNAME -c COLLECTION -o xxx.bson</div><div class="line"></div><div class="line">mongorestore -h IP --port PORT  <span class="_">-d</span> DBNAME -c COLLECTION xxx.bson</div><div class="line">mongorestore -h IP --port PORT --drop <span class="_">-d</span> DBNAME -c COLLECTION xxx.bson</div></pre></td></tr></table></figure>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>MongoDB的集群能力还是很强的，搭建还算是简单。最关键的是要明白上面提到的3种架构的原理，才能用的得心应手。当然不限于MongoDB，或许其他数据库也多多少少支持类似的架构。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li>百度百科： <a href="http://baike.baidu.com/view/2850255.htm" target="_blank" rel="external">http://baike.baidu.com/view/2850255.htm</a></li>
+<li>MongodDB官网文档：<a href="http://docs.mongodb.org/" target="_blank" rel="external">http://docs.mongodb.org/</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/09/06/review201509-1/" rel="next" title="每周回顾：直觉的力量">
+                <i class="fa fa-chevron-left"></i> 每周回顾：直觉的力量
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/09/11/review201509-2/" rel="prev" title="每周回顾：重复就是犯罪">
+                每周回顾：重复就是犯罪 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2015/09/08/mongodb-cluster/"
+     data-title="高可用的MongoDB集群"
+     data-content=""
+     data-url="http://yoursite.com/2015/09/08/mongodb-cluster/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2015/09/08/mongodb-cluster/"
+           data-title="高可用的MongoDB集群" data-url="http://yoursite.com/2015/09/08/mongodb-cluster/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#主从架构（Master-Slave）"><span class="nav-number">1.</span> <span class="nav-text">主从架构（Master-Slave）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#副本集架构（Replica-Set）"><span class="nav-number">2.</span> <span class="nav-text">副本集架构（Replica Set）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#应用客户端"><span class="nav-number">2.0.1.</span> <span class="nav-text">应用客户端</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Primary和Secondary搭建的Replica-Set"><span class="nav-number">2.0.2.</span> <span class="nav-text">Primary和Secondary搭建的Replica Set</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#使用Arbiter搭建Replica-Set"><span class="nav-number">2.0.3.</span> <span class="nav-text">使用Arbiter搭建Replica Set</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据分片架构（Sharding）"><span class="nav-number">3.</span> <span class="nav-text">数据分片架构（Sharding）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#MongoDB的Sharding架构："><span class="nav-number">3.0.1.</span> <span class="nav-text">MongoDB的Sharding架构：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#MongoDB分片架构中的角色："><span class="nav-number">3.0.2.</span> <span class="nav-text">MongoDB分片架构中的角色：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#搭建一个有2个shard的集群"><span class="nav-number">3.0.3.</span> <span class="nav-text">搭建一个有2个shard的集群</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据的备份和恢复"><span class="nav-number">4.</span> <span class="nav-text">数据的备份和恢复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

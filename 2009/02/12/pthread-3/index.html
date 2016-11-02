@@ -1,0 +1,751 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="多线程,pthread," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="继续昨天的线程同步，条件变量（Condition Variables）是用于线程间，通信共享数据状态改变的机制。
+简介当线程互斥地访问一些共享的状态时，往往会有些线程需要等到这些状态改变后才应该继续执行。如：有一个共享的队列，一个线程往队列里面插入数据，另一个线程从队列中取数据，当队列为空的时候，后者应该等待队列里面有值才能取数据。而共享数据（队列）应该用mutex来保护，为了检查共享数据的状态（">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入Phtread(三)：线程的同步-Condition Variables">
+<meta property="og:url" content="http://yoursite.com/2009/02/12/pthread-3/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="继续昨天的线程同步，条件变量（Condition Variables）是用于线程间，通信共享数据状态改变的机制。
+简介当线程互斥地访问一些共享的状态时，往往会有些线程需要等到这些状态改变后才应该继续执行。如：有一个共享的队列，一个线程往队列里面插入数据，另一个线程从队列中取数据，当队列为空的时候，后者应该等待队列里面有值才能取数据。而共享数据（队列）应该用mutex来保护，为了检查共享数据的状态（">
+<meta property="og:image" content="http://yoursite.com/images/2009-02-12-1.jpg">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.462Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入Phtread(三)：线程的同步-Condition Variables">
+<meta name="twitter:description" content="继续昨天的线程同步，条件变量（Condition Variables）是用于线程间，通信共享数据状态改变的机制。
+简介当线程互斥地访问一些共享的状态时，往往会有些线程需要等到这些状态改变后才应该继续执行。如：有一个共享的队列，一个线程往队列里面插入数据，另一个线程从队列中取数据，当队列为空的时候，后者应该等待队列里面有值才能取数据。而共享数据（队列）应该用mutex来保护，为了检查共享数据的状态（">
+<meta name="twitter:image" content="http://yoursite.com/images/2009-02-12-1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2009/02/12/pthread-3/"/>
+
+
+  <title> 深入Phtread(三)：线程的同步-Condition Variables | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                深入Phtread(三)：线程的同步-Condition Variables
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2009-02-12T21:28:00+09:00" content="2009-02-12">
+              2009-02-12
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Linux开发/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux开发</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2009/02/12/pthread-3/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2009/02/12/pthread-3/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>继续昨天的线程同步，条件变量（Condition Variables）是用于线程间，通信共享数据状态改变的机制。</p>
+<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>当线程互斥地访问一些共享的状态时，往往会有些线程需要等到这些状态改变后才应该继续执行。如：有一个共享的队列，一个线程往队列里面插入数据，另一个线程从队列中取数据，当队列为空的时候，后者应该等待队列里面有值才能取数据。而共享数据（队列）应该用mutex来保护，为了检查共享数据的状态（队列是否为空），线程必须先锁定mutex，然后检查，最后解锁mutex。</p>
+<p>问题出来了：当另外一个线程B锁定mutex后，往队列里面插入了一个值，B并不知道A在等着它往队列里面放入一个值。，线程A（等待状态改变）一直在运行，线程B可能已经检查过队列是空的，并不知道队列里已经有值了，所以一直阻塞着自己。为了解决这样的问题引入了条件变量机制。线程B等待于一个条件变量，当线程A插入了一个值后，signal或broadcast这个条件变量，通知线程B状态已改变，A发现条件变量被signaled了，就继续执行。就这样，当一个线程改变共享数据状态后，可以及时通知那些等待于该状态的线程。图示下：</p>
+<p><img src="/images/2009-02-12-1.jpg" alt="条件变量"></p>
+<p>中间的矩形代表条件变量，当线程线位于矩形内，表示线程等待该条件变量。位于中心线下下方，则表示signal了该条件变量。</p>
+<p>开始线程1 signal 了条件变量，由于没有其他线程等待于该条件变量，所以没什么效果。然后，线程1和线程2先后等待该条件变量，过了一会，线程3 signal了条件变量，线程3的信号解除了线程1的阻塞。然后，线程3等待该条件变量。最后线程1 broadcast了该条件变量，同时解除了等待于条件变量的线程1和线程2。</p>
+<h3 id="条件变量的创建和销毁"><a href="#条件变量的创建和销毁" class="headerlink" title="条件变量的创建和销毁"></a>条件变量的创建和销毁</h3><pre><code>pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+int pthread_cond_init(pthread_cond_t* cond, pthread_condattr_t* condattr);
+int pthread_cond_destroy(pthread_cond_t* cond);
+</code></pre><p>和互斥量一样，可以动态创建和静态创建。</p>
+<p><strong>静态创建</strong>：条件变量声明为extern或static变量时。</p>
+<p>例程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">#include &lt;pthread.h&gt;  </div><div class="line">#include &quot;error.h&quot;  </div><div class="line">  </div><div class="line">typedef struct my_struct_tag  </div><div class="line">&#123;  </div><div class="line">    pthread_mutex_t mutex;  </div><div class="line">    pthread_cond_t cond;  </div><div class="line">    int value;  </div><div class="line">&#125; my_struct_t;  </div><div class="line">  </div><div class="line">my_struct_t data = &#123;PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0&#125;;  </div><div class="line">  </div><div class="line">int main()  </div><div class="line">&#123;  </div><div class="line">    return 0;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>动态创建</strong>：一般情况下，条件变量要和它的判定条件定义在一起，此时若包含该条件变量的数据动态创建了，则条件变量也需要动态创建，不过记得不用时用pthread_cond_destroy销毁。</p>
+<p>例程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">#include &lt;pthread.h&gt;  </div><div class="line">#include &quot;error.h&quot;  </div><div class="line">  </div><div class="line">typedef struct my_struct_tag  </div><div class="line">&#123;  </div><div class="line">    pthread_mutex_t mutex;  </div><div class="line">    pthread_cond_t cond;  </div><div class="line">    int value;  </div><div class="line">&#125; my_struct_t;  </div><div class="line">  </div><div class="line">int main()  </div><div class="line">&#123;  </div><div class="line">    my_struct_t* data;  </div><div class="line">    data = (my_struct_t*)malloc(sizeof(my_struct_t));  </div><div class="line">    if(data == NULL)  </div><div class="line">        ERROR_ABORT(errno,&quot;Allocate structure&quot;);  </div><div class="line">  </div><div class="line">    int status;  </div><div class="line">    status = pthread_mutex_init(&amp;data-&gt;mutex, NULL);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Initial mutex&quot;);  </div><div class="line">    status = pthread_cond_init(&amp;data-&gt;cond, NULL);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Initial condition&quot;);  </div><div class="line">  </div><div class="line">    /* .... */  </div><div class="line">      </div><div class="line">    status = pthread_cond_destroy(&amp;data-&gt;cond);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Destroy cond&quot;);  </div><div class="line">    status = pthread_mutex_destroy(&amp;data-&gt;mutex);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Destroy mutex&quot;);  </div><div class="line">  </div><div class="line">    free(data);  </div><div class="line">  </div><div class="line">    return 0;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="等待条件变量"><a href="#等待条件变量" class="headerlink" title="等待条件变量"></a>等待条件变量</h3><pre><code>int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex);
+int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, struct timespec* expiration);
+</code></pre><p>条件变量与互斥量一起使用，调用pthread_cond_wait或pthread_cond_timedwait时，记得在前面锁定mutex，尽可能多的判断判定条件。上面提到的两个等待条件变量的函数，显示解锁mutex，然后阻塞线程等待状态改变，等待的条件变量signaled后，锁定mutex，返回。记着，这两个函数返回时，mutex一定是锁定的。</p>
+<p>多个条件变量可以共享一个互斥变量，相反则不成立。</p>
+<p>例程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">#include &lt;pthread.h&gt;  </div><div class="line">#include &lt;time.h&gt;  </div><div class="line">#include &quot;error.h&quot;  </div><div class="line">#include &lt;errno.h&gt;  </div><div class="line">  </div><div class="line">typedef struct my_struct_tag  </div><div class="line">&#123;  </div><div class="line">    pthread_mutex_t mutex;  </div><div class="line">    pthread_cond_t cond;  </div><div class="line">    int value;  </div><div class="line">&#125; my_struct_t;  </div><div class="line">  </div><div class="line">my_struct_t data = &#123; PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0&#125;;  </div><div class="line">  </div><div class="line">int hibernation = 1;  </div><div class="line">  </div><div class="line">void* wait_thread(void* arg)  </div><div class="line">&#123;  </div><div class="line">    int  status;  </div><div class="line">    sleep(hibernation);  </div><div class="line">  </div><div class="line">    status = pthread_mutex_lock(&amp;data.mutex);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Lock mutex&quot;);  </div><div class="line">  </div><div class="line">    data.value = 1;  </div><div class="line">    status = pthread_cond_signal(&amp;data.cond);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Singal cond&quot;);  </div><div class="line">  </div><div class="line">    status = pthread_mutex_unlock(&amp;data.mutex);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Unlock mutex&quot;);  </div><div class="line">  </div><div class="line">    return NULL;  </div><div class="line">&#125;  </div><div class="line">  </div><div class="line">int main(int argc, char* argv[])  </div><div class="line">&#123;  </div><div class="line">    pthread_t tid;  </div><div class="line">    int status;  </div><div class="line">    struct timespec timeout;  </div><div class="line">  </div><div class="line">    if(argc &gt; 1)  </div><div class="line">        hibernation = atoi(argv[1]);  </div><div class="line">  </div><div class="line">    status = pthread_create(&amp;tid, NULL, wait_thread, NULL);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Create wait thread&quot;);  </div><div class="line">  </div><div class="line">    timeout.tv_sec = time(NULL) + 2;  </div><div class="line">    timeout.tv_nsec = 0;  </div><div class="line">  </div><div class="line">    status = pthread_mutex_lock(&amp;data.mutex);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Lock mutex&quot;);  </div><div class="line">  </div><div class="line">    while(data.value == 0)  </div><div class="line">    &#123;  </div><div class="line">        status = pthread_cond_timedwait(&amp;data.cond, &amp;data.mutex, &amp;timeout);  </div><div class="line">        if(status == ETIMEDOUT)  </div><div class="line">        &#123;  </div><div class="line">            printf(&quot;Condition wait timed out./n&quot;);  </div><div class="line">            break;  </div><div class="line">        &#125;else  </div><div class="line">        if(status != 0)  </div><div class="line">            ERROR_ABORT(status, &quot;timewait&quot;);  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    if(data.value != 0)  </div><div class="line">        printf(&quot;Condition wa signaled!/n&quot;);  </div><div class="line">  </div><div class="line">    status = pthread_mutex_unlock(&amp;data.mutex);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;Unlock mutex&quot;);  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="唤醒等待条件变量的线程"><a href="#唤醒等待条件变量的线程" class="headerlink" title="唤醒等待条件变量的线程"></a>唤醒等待条件变量的线程</h3><pre><code>int pthread_cond_signal(pthread_cond_t* cond);
+int pthread_cond_broadcast(pthread_cond_t* cond);
+</code></pre><p>一但有线程由于某些判定条件（predicate）没满足，等待条件变量。我们就有必要当条件满足时，发送信号去唤醒这些线程。</p>
+<p>注意：broadcast通常很容易被认为是signal的通用版，其实不能这样理解，准确一点应该说，signal是broadcast的优化版。具体区别不大，但signal效率较broadcast高些。但你不确信有几个线程等待条件变量时用broadcast（When in doubt, broadcast!）。</p>
+<p>例程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">#include &quot;error.h&quot;  </div><div class="line">#include &lt;pthread.h&gt;  </div><div class="line">#include &lt;time.h&gt;  </div><div class="line">#include &lt;string.h&gt;  </div><div class="line">#include &lt;errno.h&gt;  </div><div class="line">  </div><div class="line">typedef struct alarm_tag  </div><div class="line">&#123;  </div><div class="line">    struct alarm_tag* link;  </div><div class="line">    int seconds;  </div><div class="line">    time_t time;  </div><div class="line">    char message[64];  </div><div class="line">&#125; alarm_t;  </div><div class="line">  </div><div class="line">pthread_mutex_t alarm_mutex = PTHREAD_MUTEX_INITIALIZER;  </div><div class="line">pthread_cond_t alarm_cond = PTHREAD_COND_INITIALIZER;  </div><div class="line">alarm_t* alarm_list = NULL;  </div><div class="line">time_t current_alarm = 0;  </div><div class="line">  </div><div class="line">/** </div><div class="line"> * alarm_mutex need to be locked   </div><div class="line"> */  </div><div class="line">void alarm_insert(alarm_t* alarm)  </div><div class="line">&#123;  </div><div class="line">    int status;  </div><div class="line">  </div><div class="line">    alarm_t* next;  </div><div class="line">    alarm_t** last;  </div><div class="line">    last = &amp;alarm_list;  </div><div class="line">    next = *last;  </div><div class="line">  </div><div class="line">    while(next != NULL)  </div><div class="line">    &#123;  </div><div class="line">        if(next-&gt;time &gt;= alarm-&gt;time)  </div><div class="line">        &#123;  </div><div class="line">            alarm-&gt;link = next;  </div><div class="line">            *last = alarm;  </div><div class="line">            break;  </div><div class="line">        &#125;  </div><div class="line">  </div><div class="line">        last = &amp;next-&gt;link;  </div><div class="line">        next = next-&gt;link;  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    if(next == NULL)&#123;  </div><div class="line">        *last = alarm;  </div><div class="line">        alarm-&gt;link = NULL;  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    /*for test: output the list*/  </div><div class="line">    printf(&quot;[list: &quot;);  </div><div class="line">    for(next = alarm_list; next != NULL; next = next-&gt;link)  </div><div class="line">    &#123;  </div><div class="line">        printf(&quot;%d(%d)[/&quot;%s/&quot;]  &quot;, next-&gt;time, next-&gt;time-time(NULL), next-&gt;message);  </div><div class="line">    &#125;  </div><div class="line">    printf(&quot;]/n&quot;);  </div><div class="line">  </div><div class="line">    if(current_alarm ==0  || alarm-&gt;time &lt; current_alarm)  </div><div class="line">    &#123;  </div><div class="line">        current_alarm = alarm-&gt;time;  </div><div class="line">        status = pthread_cond_signal(&amp;alarm_cond);  </div><div class="line">        if(status != 0)  </div><div class="line">            ERROR_ABORT(status,&quot;Signal cond&quot;);  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">&#125;  </div><div class="line">  </div><div class="line">void* alarm_thread(void* arg)  </div><div class="line">&#123;  </div><div class="line">    alarm_t* alarm;  </div><div class="line">    int sleep_time;  </div><div class="line">    time_t now;  </div><div class="line">    int status, expired;  </div><div class="line">    struct timespec cond_time;  </div><div class="line">  </div><div class="line">    while(1)  </div><div class="line">    &#123;  </div><div class="line">        status = pthread_mutex_lock(&amp;alarm_mutex);  </div><div class="line">        if(status != 0)  </div><div class="line">            ERROR_ABORT(status, &quot;lock&quot;);  </div><div class="line">  </div><div class="line">        current_alarm = 0;  </div><div class="line">  </div><div class="line">        while(alarm_list == NULL)  </div><div class="line">        &#123;  </div><div class="line">            status = pthread_cond_wait(&amp;alarm_cond, &amp;alarm_mutex);  </div><div class="line">            if(status != 0 )  </div><div class="line">                ERROR_ABORT(status, &quot;Wait cond&quot;);  </div><div class="line">        &#125;  </div><div class="line">  </div><div class="line">        alarm = alarm_list;  </div><div class="line">        alarm_list = alarm-&gt;link;  </div><div class="line">        now = time(NULL);  </div><div class="line">        expired = 0;  </div><div class="line">  </div><div class="line">        if(alarm-&gt;time &gt; now)  </div><div class="line">        &#123;  </div><div class="line">            printf(&quot;[wating: %d(%d)/&quot;%s/&quot;]/n&quot;, alarm-&gt;time, alarm-&gt;time - time(NULL), alarm-&gt;message);  </div><div class="line">  </div><div class="line">            cond_time.tv_sec = alarm-&gt;time;  </div><div class="line">            cond_time.tv_nsec = 0;  </div><div class="line">            current_alarm = alarm-&gt;time;  </div><div class="line">            while(current_alarm == alarm-&gt;time)  </div><div class="line">            &#123;  </div><div class="line">                status = pthread_cond_timedwait(&amp;alarm_cond, &amp;alarm_mutex,&amp;cond_time);  </div><div class="line">                if(status == ETIMEDOUT)  </div><div class="line">                &#123;  </div><div class="line">                    expired = 1;  </div><div class="line">                    break;  </div><div class="line">                &#125;  </div><div class="line">            &#125;  </div><div class="line">  </div><div class="line">            if(!expired)  </div><div class="line">                alarm_insert(alarm);  </div><div class="line">        &#125;else  </div><div class="line">            expired = 1;  </div><div class="line">  </div><div class="line">        if(expired)  </div><div class="line">        &#123;  </div><div class="line">            printf(&quot;(%d) %s/n&quot;, alarm-&gt;seconds, alarm-&gt;message);  </div><div class="line">            free(alarm);  </div><div class="line">        &#125;  </div><div class="line">  </div><div class="line">        status = pthread_mutex_unlock(&amp;alarm_mutex);  </div><div class="line">        if(status != 0)  </div><div class="line">            ERROR_ABORT(status, &quot;Unlock mutex&quot;);  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    return 0;  </div><div class="line">&#125;  </div><div class="line">  </div><div class="line">int main()  </div><div class="line">&#123;  </div><div class="line">    pthread_t pid;  </div><div class="line">    int status;  </div><div class="line">    char line[128];  </div><div class="line">  </div><div class="line">    status = pthread_create(&amp;pid, NULL, alarm_thread, NULL);  </div><div class="line">    if(status != 0)  </div><div class="line">        ERROR_ABORT(status, &quot;pthread_create&quot;);  </div><div class="line">  </div><div class="line">    while(1)  </div><div class="line">    &#123;  </div><div class="line">        fprintf(stdout, &quot;Alarm&gt;&quot;);  </div><div class="line">        fgets(line, sizeof(line), stdin);  </div><div class="line">        if(strlen(line) &lt;= 0)  </div><div class="line">            continue;  </div><div class="line">  </div><div class="line">        alarm_t* alarm = (alarm_t*)malloc(sizeof(alarm_t));  </div><div class="line">        if(alarm == NULL)  </div><div class="line">            ERROR_ABORT(errno,&quot;memory can&apos;t allocated!&quot;);  </div><div class="line">  </div><div class="line">        if(sscanf(line, &quot;%d %s&quot;, &amp;alarm-&gt;seconds, alarm-&gt;message) != 2)  </div><div class="line">        &#123;  </div><div class="line">            printf(&quot;Bad Command/n&quot;);  </div><div class="line">            free(alarm);  </div><div class="line">            continue;  </div><div class="line">        &#125;  </div><div class="line">  </div><div class="line">        status = pthread_mutex_lock(&amp;alarm_mutex);  </div><div class="line">        if(status != 0)  </div><div class="line">            ERROR_ABORT(status, &quot;pthread mutex locking..&quot;);  </div><div class="line">  </div><div class="line">        alarm-&gt;time = time(NULL) + alarm-&gt;seconds;  </div><div class="line">  </div><div class="line">        /* insert into list*/  </div><div class="line">  </div><div class="line">        alarm_insert(alarm);  </div><div class="line">  </div><div class="line">        status = pthread_mutex_unlock(&amp;alarm_mutex);  </div><div class="line">        if(status != 0)  </div><div class="line">            ERROR_ABORT(status, &quot;pthread mutex unlocking...&quot;);  </div><div class="line">    &#125;  </div><div class="line">  </div><div class="line">    return 0;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/多线程/" rel="tag">#多线程</a>
+          
+            <a href="/tags/pthread/" rel="tag">#pthread</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2009/02/11/pthread-2/" rel="next" title="深入Phtread(二)：线程的同步-Mutex">
+                <i class="fa fa-chevron-left"></i> 深入Phtread(二)：线程的同步-Mutex
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2009/02/16/pthread-4/" rel="prev" title="深入Pthread(四)：一次初始化-pthread_once_t">
+                深入Pthread(四)：一次初始化-pthread_once_t <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2009/02/12/pthread-3/"
+     data-title="深入Phtread(三)：线程的同步-Condition Variables"
+     data-content=""
+     data-url="http://yoursite.com/2009/02/12/pthread-3/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2009/02/12/pthread-3/"
+           data-title="深入Phtread(三)：线程的同步-Condition Variables" data-url="http://yoursite.com/2009/02/12/pthread-3/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#条件变量的创建和销毁"><span class="nav-number">2.</span> <span class="nav-text">条件变量的创建和销毁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#等待条件变量"><span class="nav-number">3.</span> <span class="nav-text">等待条件变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#唤醒等待条件变量的线程"><span class="nav-number">4.</span> <span class="nav-text">唤醒等待条件变量的线程</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

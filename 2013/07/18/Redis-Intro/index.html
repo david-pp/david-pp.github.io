@@ -1,0 +1,795 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="开源架构,redis," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="Redis是一个开源的，先进的key-value持久化产品。它通常被称为数据结构服务器，它的值可以是字符串（String）、哈希（Map）、列表（List）、集合（Sets）和有序集合（Sorted sets）等类型。
+可以在这些类型上面做一些原子操作，如：字符串追加、增加Hash里面的值、添加元素到列表、计算集合的交集，并集和差集；或者区有序集合中排名最高的成员。为了取得好的性能，Redis是一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis：简介">
+<meta property="og:url" content="http://yoursite.com/2013/07/18/Redis-Intro/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="Redis是一个开源的，先进的key-value持久化产品。它通常被称为数据结构服务器，它的值可以是字符串（String）、哈希（Map）、列表（List）、集合（Sets）和有序集合（Sorted sets）等类型。
+可以在这些类型上面做一些原子操作，如：字符串追加、增加Hash里面的值、添加元素到列表、计算集合的交集，并集和差集；或者区有序集合中排名最高的成员。为了取得好的性能，Redis是一">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.504Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis：简介">
+<meta name="twitter:description" content="Redis是一个开源的，先进的key-value持久化产品。它通常被称为数据结构服务器，它的值可以是字符串（String）、哈希（Map）、列表（List）、集合（Sets）和有序集合（Sorted sets）等类型。
+可以在这些类型上面做一些原子操作，如：字符串追加、增加Hash里面的值、添加元素到列表、计算集合的交集，并集和差集；或者区有序集合中排名最高的成员。为了取得好的性能，Redis是一">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2013/07/18/Redis-Intro/"/>
+
+
+  <title> Redis：简介 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Redis：简介
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2013-07-18T22:13:00+09:00" content="2013-07-18">
+              2013-07-18
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index">
+                    <span itemprop="name">架构</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2013/07/18/Redis-Intro/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2013/07/18/Redis-Intro/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Redis是一个开源的，先进的key-value持久化产品。它通常被称为数据结构服务器，它的值可以是字符串（String）、哈希（Map）、列表（List）、集合（Sets）和有序集合（Sorted sets）等类型。</p>
+<p>可以在这些类型上面做一些原子操作，如：字符串追加、增加Hash里面的值、添加元素到列表、计算集合的交集，并集和差集；或者区有序集合中排名最高的成员。为了取得好的性能，Redis是一个内存型数据库。不限于此，看你怎么用了，也可以吧数据dump到磁盘中，或者把数据操作指令追加了一个日志文件，把它用于持久化。也可以用Redis容易的搭建master-slave架构用于数据复制。</p>
+<a id="more"></a>
+<p>其它让它像缓存的特性包括，简单的check-and-set机制，pub/sub和配置设置。</p>
+<p>Redis可以用大部分程序语言来操作：C、C++、C#、Java、Node.js、php、ruby等等。</p>
+<p>Redis是用ANSI C写的，可以运行在多数POSIX系统，如：Linux，*BSD，OS X和Soloris等。官方版本不支持Windows下构建，可以选择一些修改过的版本，照样可以使用Redis。</p>
+<h3 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h3><h4 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h4><p>Strings是Redis最基本的值类型，Redis的字符串是二进制安全的，意味着一个Redis字符串可以包含任何种类的数据，如：一个JPEG图片，一个序列化的Ruby对象。</p>
+<p>一个字符串值最多可以有512MB的长度。</p>
+<p>Redis的字符串有很多有趣的用法，你可以：</p>
+<ul>
+<li>String作为一个原子操作的计数器，使用INCR、DECR、INCRBY命令即可</li>
+<li>用APPEND命令去追加字符串</li>
+<li>使用String去随机访问vectors，使用GETRANGE和SETRANGE命令</li>
+<li>大量数据编码成占据少量空间，或者创建一个用Redis作为后端的Bloom Filter，使用GETBIT和SETBIT命令</li>
+</ul>
+<p>查更多字符串相关的命令：<a href="http://redis.io/commands#string" target="_blank" rel="external">http://redis.io/commands#string</a></p>
+<h4 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h4><p>Redis Lists是简单的字符串列表，依照插入顺序。可以把元素添加到Redis列表的头部和尾部，LPUSH命令在List的头部插入一个元素，RPUSH在尾部插入一个元素，使用上面两个元素插入到一个空的List就会创建一个List。示例：</p>
+<pre><code>LPUSH mylist a   # now the list is &quot;a&quot;
+LPUSH mylist b   # now the list is &quot;b&quot;,&quot;a&quot;
+RPUSH mylist c   # now the list is &quot;b&quot;,&quot;a&quot;,&quot;c&quot; (RPUSH was used this time)
+</code></pre><p>List的最大长度是2^32-1。</p>
+<p>Redis List主要特点就是在列表的首部和尾部O(1)时间复杂度的插入和删除。访问靠近首尾的元素速度比较快，访问中间的元素效率有所下降，访问的时间复杂度为O(N).</p>
+<p>List可以用于：</p>
+<ul>
+<li>为社交网络的timeline提供数据模型，使用LPUSH在用户的timeline上添加一条记录，使用LRANGE取到最近发布的一些记录。</li>
+<li>可以用LPUSH和LTRIM创建一个固定大小的队列，只记着最近N个元素。</li>
+<li>List可以用作消息传递原语，参见Ruby的广为人知的Resque，它是一个创建后台任务的Ruby库。</li>
+</ul>
+<p>查看更多命令：<a href="http://redis.io/commands#list" target="_blank" rel="external">http://redis.io/commands#list</a> </p>
+<h4 id="集合"><a href="#集合" class="headerlink" title="集合"></a>集合</h4><p>Redis Sets是一个无序的字符串集合，可以在O(1)时间复杂度添加、删除、检查元素的存在性。Sets不能有重复的元素，当添加多个同样的元素时候，只保持一份COPY，意味着添加元素的时候，不用做元素存在的检查后添加这个操作。</p>
+<p>Sets有趣的事情是，它支持服务器端完成快速完成一些诸如交集、并集、差集等操作。</p>
+<p>Sets可用于：</p>
+<ul>
+<li>用Sets记录不同值得元素集合。想要知道访问当前博客的IP数量？在每次访问页面时，简单地用SADD命令把IP添加到Sets即可。</li>
+<li>Sets比较擅长表达关系。可以用Sets创建一个标签系统，用于标签展示。</li>
+<li>使用SPOP和SRANDMEMBER随机弹出元素。</li>
+</ul>
+<p>查看更多命令：<a href="http://redis.io/commands#set" target="_blank" rel="external">http://redis.io/commands#set</a></p>
+<h4 id="哈希（字典）"><a href="#哈希（字典）" class="headerlink" title="哈希（字典）"></a>哈希（字典）</h4><p>Redis Hash是属性字段到值得映射，能够比较完美地表示对象（如：User有name，surname，age等字段）</p>
+<pre><code>redis&gt; HMSET user:1000 username antirez password P1pp0 age 34
+OK
+redis&gt; HGETALL user:1000
+1) &quot;username&quot;
+2) &quot;antirez&quot;
+3) &quot;password&quot;
+4) &quot;P1pp0&quot;
+5) &quot;age&quot;
+6) &quot;34&quot;
+redis&gt; HSET user:1000 password 12345
+(integer) 0
+redis&gt; HGETALL user:1000
+1) &quot;username&quot;
+2) &quot;antirez&quot;
+3) &quot;password&quot;
+4) &quot;12345&quot;
+5) &quot;age&quot;
+6) &quot;34&quot;
+redis&gt; 
+</code></pre><p>字段比较少的Hash（最多100个左右）能够以占据数量空间的方式存储，所以可以用一个小Redis实例存储百万级对象。    </p>
+<p>Hash主要用于表示对象，可以存储多个元素，也可以用于其它任务。</p>
+<p>查看更多操作Hash的命令：<a href="http://redis.io/commands#hash" target="_blank" rel="external">http://redis.io/commands#hash</a></p>
+<h4 id="有序集合"><a href="#有序集合" class="headerlink" title="有序集合"></a>有序集合</h4><p>Redis Sorted Sets类似于Sets，是一个存储非重复的元素的集合。两者的区别是，Sorted Set的每个元素会有一个score属性，Sorted Set根据score从小到达进行排序。</p>
+<p>可以以快速的方式添加，删除和更新元素（大约Log(N)时间复杂度）。因为元素师插入时候进行排序的，可以快速地根据score或者排名来取一个区间的元素，取有序集合的中间元素速度也是很快的。因此可以把Sorted Set当做一个智能的非重复元素的集合：元素顺序存储，快速存在性检查，快速访问中间元素。</p>
+<p>使用Sorted Set可以高效地做很多其他类型数据库很难完成的任务。</p>
+<p>Sorted Set可以用于：</p>
+<ul>
+<li>一个大型在线游戏的领袖排行榜，每有新的score提交的时候使用ZADD，可以轻而易举地用ZRANGE取得前几名，也可以根据指定用户名，用ZRANK得到用户的排名。使用ZRANK和ZRANGE一起可以把分值接近的用户显示出来。所有这些操作都能快速地完成。</li>
+<li><p>Sorted Sets经常用于存储在Redis中的数据的索引。例如：有很多表示用户的hashes，你可以把年龄作为score创建一个sorted set，value是用户的ID，这时，你可以使用ZRANGEBYSCORE快速获取某个年龄范围的所有用户。</p>
+</li>
+<li><p>Sorted Sets可能是最先进的数据类型，抽空了解更多相关命令吧！<a href="http://redis.io/commands#sorted_set" target="_blank" rel="external">http://redis.io/commands#sorted_set</a></p>
+</li>
+</ul>
+<h3 id="自言自语"><a href="#自言自语" class="headerlink" title="自言自语"></a>自言自语</h3><p>很早就听说过key-value NoSQL，一直没有机会去使用，直到最近项目有台全局服务器（单点）用MySQL存储了大量的数据，每次维护和游戏玩家上线时数据库超时非常严重，对MySQL进行分表情况还是不得好转，只好分库，好一番折腾后还是不妙，单点问题让人头疼。最后狠心花一个多月时间把其改造成逻辑和数据分离的架构，数据用Redis做缓存和持久化。下周做一些压力测试，不出问题的话可以投放生产环境跑一下。</p>
+<p>PS. 上面的简介是翻译自Redis官网，有所不当或错误之处还望指出，不胜感激！</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/开源架构/" rel="tag">#开源架构</a>
+          
+            <a href="/tags/redis/" rel="tag">#redis</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2013/07/17/OA-ZeroMQ/" rel="next" title="开源架构：ZeroMQ">
+                <i class="fa fa-chevron-left"></i> 开源架构：ZeroMQ
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2013/09/03/about-threading-lib/" rel="prev" title="关于线程化库">
+                关于线程化库 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2013/07/18/Redis-Intro/"
+     data-title="Redis：简介"
+     data-content=""
+     data-url="http://yoursite.com/2013/07/18/Redis-Intro/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2013/07/18/Redis-Intro/"
+           data-title="Redis：简介" data-url="http://yoursite.com/2013/07/18/Redis-Intro/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据类型"><span class="nav-number">1.</span> <span class="nav-text">数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#字符串"><span class="nav-number">1.1.</span> <span class="nav-text">字符串</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#列表"><span class="nav-number">1.2.</span> <span class="nav-text">列表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#集合"><span class="nav-number">1.3.</span> <span class="nav-text">集合</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#哈希（字典）"><span class="nav-number">1.4.</span> <span class="nav-text">哈希（字典）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#有序集合"><span class="nav-number">1.5.</span> <span class="nav-text">有序集合</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自言自语"><span class="nav-number">2.</span> <span class="nav-text">自言自语</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

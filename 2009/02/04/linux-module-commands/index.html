@@ -1,0 +1,813 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Linux命令," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="lsmod功能：列出内核已载入模块的状态
+用法：lsmod
+描述：
+lsmod 以美观的方式列出/proc/modules的内容。输出为：
+Module(模块名)    Size(模块大小)   Used by(被...使用)
+
+eg. ne2k_pci           8928               0
+8390                 9472              1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内核模块相关命令：lsmod,depmod,modprob...">
+<meta property="og:url" content="http://yoursite.com/2009/02/04/linux-module-commands/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="lsmod功能：列出内核已载入模块的状态
+用法：lsmod
+描述：
+lsmod 以美观的方式列出/proc/modules的内容。输出为：
+Module(模块名)    Size(模块大小)   Used by(被...使用)
+
+eg. ne2k_pci           8928               0
+8390                 9472              1">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.458Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="内核模块相关命令：lsmod,depmod,modprob...">
+<meta name="twitter:description" content="lsmod功能：列出内核已载入模块的状态
+用法：lsmod
+描述：
+lsmod 以美观的方式列出/proc/modules的内容。输出为：
+Module(模块名)    Size(模块大小)   Used by(被...使用)
+
+eg. ne2k_pci           8928               0
+8390                 9472              1">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2009/02/04/linux-module-commands/"/>
+
+
+  <title> 内核模块相关命令：lsmod,depmod,modprob... | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                内核模块相关命令：lsmod,depmod,modprob...
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2009-02-04T19:06:00+09:00" content="2009-02-04">
+              2009-02-04
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2009/02/04/linux-module-commands/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2009/02/04/linux-module-commands/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="lsmod"><a href="#lsmod" class="headerlink" title="lsmod"></a>lsmod</h3><p><strong>功能</strong>：列出内核已载入模块的状态</p>
+<p><strong>用法</strong>：lsmod</p>
+<p><strong>描述</strong>：</p>
+<p>lsmod 以美观的方式列出/proc/modules的内容。输出为：</p>
+<pre><code>Module(模块名)    Size(模块大小)   Used by(被...使用)
+
+eg. ne2k_pci           8928               0
+8390                 9472              1 ne2k_pci
+</code></pre><p>在/proc/modules中相应的是：</p>
+<pre><code>(模块名，模块大小，被...使用，模块地址(猜的，以后确认)) 
+ne2k_pci 8928 0 - Live 0x3086400
+8390 9472 1 ne2k_pci , Live 0xe086000
+</code></pre><h3 id="depmod"><a href="#depmod" class="headerlink" title="depmod"></a>depmod</h3><p><strong>功能</strong>：分析可加载模块的依赖性，生成modules.dep文件和映射文件。</p>
+<p><strong>用法</strong>：<br>    depmod [-b basedir] [-e] [-F System.map] [-n] [-v] [version] [-A]<br>    depmod [-e] [-F System.map] [-n] [-v] [version] [filename…]</p>
+<p><strong>描述</strong>：</p>
+<p>Linux内核模块可以为其它模块提供提供服务(在代码中使用EXPORT_SYMBOL)，这种服务被称作”symbols”。若第二个模块使用了这个symbol，则该模块很明显依赖于第一个模块。这些依赖关系是非常繁杂的。</p>
+<p>depmod读取在/lib/modules/version 目录下的所有模块，并检查每个模块导出的symbol和需要的symbol，然后创建一个依赖关系列表。默认地，该列表写入到/lib/moudules/version目录下的modules.dep文件中。若命令中的filename有指定的话，则仅检查这些指定的模块(不是很有用)。</p>
+<p>若命令中提供了version参数，则会使用version所指定的目录生成依赖，而不是当前内核的版本(uname -r 返回的)。</p>
+<p><strong>选项</strong>：</p>
+<pre><code>-b basedir  --basedir basedir  若你的模块并没有正确的在/lib/mdules/version下，可以指定目录生成依赖。
+-e  --errsyms  和-F选项一起使用，当一个模块需要的symbol在其它模块里面没有提供时，做出报告。正常情况下，模块没有提供的symbol都在内核中有提供。
+-F  --filesyms System.map 提供一个System.map文件(在内核编译时生成的)许-e选项报告出unresolved symbol。
+-n  --dry_run  将结果modules.dep和各种映射文件输出到标准输出(stdout)，而不是写到模块目录下。
+-A --quick  检查是否有模块比modues.dep中的模块新，若没有，则退出不重新生成文件。
+</code></pre><h3 id="modprobe"><a href="#modprobe" class="headerlink" title="modprobe"></a>modprobe</h3><p><strong>功能</strong>：Linux内核添加删除模块</p>
+<p><strong>用法</strong>：</p>
+<pre><code>modprobe [ -v ] [ -V ] [-C config-file] [ -n ] [ -i ] [ -q ] [ -o modulename] [ modulename ] [ module parameters ... ]
+modprobe [ -r ] [ -v ] [ -n ] [ -i ] [ modulename ... ]
+modprobe [ -l ] [ -t dirname ] [ wildcard ]
+modprobe [ -c ]
+</code></pre><p><strong>描述</strong>：</p>
+<pre><code>modprobe可智能地添加和删除Linux内核模块(为简便起见，模块名中&apos;_&apos;和&apos;-&apos;是一样的)。modprobe会查看模块目录/lib/modules/&apos;uname -r&apos;里面的所有模块和文件，除了可选的/etc/modprobe.conf配置文件和/etc/modprobe.d目录外。
+
+modprobe需要一个最新的modules.dep文件，可以用depmod来生成。该文件列出了每一个模块需要的其他模块，modprobe使用这个去自动添加或删除模块的依赖。
+</code></pre><p><strong>选项</strong>：</p>
+<pre><code>-v --verbose  显示程序在干什么，通常在出问题的情况下，modprobe才显示信息。
+-C --config  重载(^_^,意思取C++的重载)默认配置文件(/etc/modprobe.conf或/etc/modprobe.d)。
+-c --showconfig  输出配置文件并退出
+-n --dry-run  可以和-v选项一起使用，调试非常有用
+-i --ignore-install --ignore-remove 该选项会使得modprobe忽略配置文件中的，在命令行上输入的install和remove命令。
+-q --quiet 一般modprobe删除或插入一个模块时，若没有找到会提示错误。使用该选项，会忽略指定的模块，并不提示任何错误信息。
+-r --remove  该选项会导致modprobe去删除，而不是插入一个模块。通常没有没有理由去删除内核模块，除非是一些有bug的模块。你的内核也不一定支持模块的卸载。
+-V --verssion 版本信息
+-f --force  和同时使用--force-vermagic ，--force-modversion一样。使用该选项是比较危险的。
+-l --list 列出所有模块
+-a --all 插入所有命令行中的模块
+-t --type 强制 -l 显示dirname中的模块
+-s --syslog 错误信息写入syslog
+</code></pre><h3 id="modinfo"><a href="#modinfo" class="headerlink" title="modinfo"></a>modinfo</h3><p><strong>功能</strong>：显示内核模块的信息</p>
+<p><strong>用法</strong>：</p>
+<pre><code>modinfo [ -0 ] [ -F field] [modulename | filename ... ]
+modinfo -V
+modinfo -h
+</code></pre><p><strong>描述</strong>：</p>
+<p>modinfo列出Linux内核中命令行指定的模块的信息。若模块名不是一个文件名，则会在/lib/modules/version 目录中搜索，就像modprobe一样。</p>
+<p>modinfo默认情况下，为了便于阅读，以下面的格式列出模块的每个属性：fieldname : value。</p>
+<p><strong>选项</strong>：</p>
+<pre><code>-V --version 版本
+-F --field 仅在一行上显示field值，这对于脚本较为有用。常用的field有：author, description, licence, param, depends, alias, filename。
+-0 --NULL 使用&apos;/0&apos;字符分隔field值，而不是一个新行。对脚本比较有用。
+-a -d -l -p -n 这些分别是author, description, license, param ,filename的简短形式。
+</code></pre><h3 id="insmod"><a href="#insmod" class="headerlink" title="insmod"></a>insmod</h3><p><strong>功能</strong>：向Linux内核中插入一个模块</p>
+<p><strong>用法</strong>：insmod [filename] [modue options …]</p>
+<p><strong>描述</strong>：</p>
+<p>insmod是一个向内核插入模块的小程序：若文件名是一个连字符’-‘，模块从标准输入输入。大多数用户使用modprobe，因为它比较智能化。</p>
+<h3 id="rmmod"><a href="#rmmod" class="headerlink" title="rmmod"></a>rmmod</h3><p><strong>功能</strong>：删除内核中的一模块</p>
+<p><strong>用法</strong>：rmmod [ -f ] [ -w ] [ -s ] [ -v ] [ modulename ]</p>
+<p><strong>描述</strong>：</p>
+<p>rmmod是一个可以从内核中删除模块的小程序，大多数用户使用modprobe -r去删除模块。</p>
+<p><strong>选项</strong>：</p>
+<pre><code>-v --verbose  显示程序正在做些什么，一般只显示执行时的错误信息。
+-f --force  该选项是非常危险：除非编译内核时，CONFIG_MODULE_FORCE_UNLOAD被设置该命令才有效果，否则没效果。用该选项可以删除正在被使用的模块，设计为不能删除的模块，或者标记为unsafe的模块。
+-w --wait 通常，rmmod拒绝删除正在被使用的模块。使用该选项后，指定的模块会被孤立起来，直到不被使用。
+-s  --syslog  将错误信息写入syslog，而不是标准错误(stderr)。
+-V  --version 版本信息
+</code></pre><p>以上内容是参考man翻译的，若有疑问请用man …查看原始文档，翻译有误之处还望见谅。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux命令/" rel="tag">#Linux命令</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2009/02/02/diary/" rel="next" title="杂想">
+                <i class="fa fa-chevron-left"></i> 杂想
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2009/02/05/posix-thread-cn/" rel="prev" title="POSIX多线程程序设计">
+                POSIX多线程程序设计 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2009/02/04/linux-module-commands/"
+     data-title="内核模块相关命令：lsmod,depmod,modprob..."
+     data-content=""
+     data-url="http://yoursite.com/2009/02/04/linux-module-commands/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2009/02/04/linux-module-commands/"
+           data-title="内核模块相关命令：lsmod,depmod,modprob..." data-url="http://yoursite.com/2009/02/04/linux-module-commands/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#lsmod"><span class="nav-number">1.</span> <span class="nav-text">lsmod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#depmod"><span class="nav-number">2.</span> <span class="nav-text">depmod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#modprobe"><span class="nav-number">3.</span> <span class="nav-text">modprobe</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#modinfo"><span class="nav-number">4.</span> <span class="nav-text">modinfo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#insmod"><span class="nav-number">5.</span> <span class="nav-text">insmod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rmmod"><span class="nav-number">6.</span> <span class="nav-text">rmmod</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

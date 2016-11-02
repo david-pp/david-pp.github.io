@@ -1,0 +1,754 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="重构,编码规范," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="面向对象编程是一种模拟现实的编程范式。问题领域的一些概念，我们会抽象成类；概念的实体，我们会抽象为对象。面向对象的思想已经比较成熟了，前人在使用面向对象编程的过程中已经总结了许多经验，然后记录下来，如：设计模式、OOD、OOP等。下面整理一下，比较大的几个指导原则，深刻理解这些原则一定能做出好的设计，写出漂亮、可维护的代码。或许你已经这么做了，只是还没有意识到而已。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编码之道：面向对象的五大原则">
+<meta property="og:url" content="http://yoursite.com/2015/03/31/zoc-cleancode-5/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="面向对象编程是一种模拟现实的编程范式。问题领域的一些概念，我们会抽象成类；概念的实体，我们会抽象为对象。面向对象的思想已经比较成熟了，前人在使用面向对象编程的过程中已经总结了许多经验，然后记录下来，如：设计模式、OOD、OOP等。下面整理一下，比较大的几个指导原则，深刻理解这些原则一定能做出好的设计，写出漂亮、可维护的代码。或许你已经这么做了，只是还没有意识到而已。">
+<meta property="og:image" content="http://yoursite.com/images/ocp.jpg">
+<meta property="og:image" content="http://yoursite.com/images/dip-1.png">
+<meta property="og:image" content="http://yoursite.com/images/dip-2.png">
+<meta property="og:image" content="http://yoursite.com/images/lsp.png">
+<meta property="og:image" content="http://yoursite.com/images/isp-1.jpg">
+<meta property="og:image" content="http://yoursite.com/images/isp-2.jpg">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.511Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="编码之道：面向对象的五大原则">
+<meta name="twitter:description" content="面向对象编程是一种模拟现实的编程范式。问题领域的一些概念，我们会抽象成类；概念的实体，我们会抽象为对象。面向对象的思想已经比较成熟了，前人在使用面向对象编程的过程中已经总结了许多经验，然后记录下来，如：设计模式、OOD、OOP等。下面整理一下，比较大的几个指导原则，深刻理解这些原则一定能做出好的设计，写出漂亮、可维护的代码。或许你已经这么做了，只是还没有意识到而已。">
+<meta name="twitter:image" content="http://yoursite.com/images/ocp.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/03/31/zoc-cleancode-5/"/>
+
+
+  <title> 编码之道：面向对象的五大原则 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                编码之道：面向对象的五大原则
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2015-03-31T09:37:00+09:00" content="2015-03-31">
+              2015-03-31
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/编码之道/" itemprop="url" rel="index">
+                    <span itemprop="name">编码之道</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/03/31/zoc-cleancode-5/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/03/31/zoc-cleancode-5/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>面向对象编程是一种模拟现实的编程范式。问题领域的一些概念，我们会抽象成类；概念的实体，我们会抽象为对象。面向对象的思想已经比较成熟了，前人在使用面向对象编程的过程中已经总结了许多经验，然后记录下来，如：设计模式、OOD、OOP等。下面整理一下，比较大的几个指导原则，深刻理解这些原则一定能做出好的设计，写出漂亮、可维护的代码。或许你已经这么做了，只是还没有意识到而已。</p>
+<a id="more"></a>
+<h3 id="SRP：单一职责原则"><a href="#SRP：单一职责原则" class="headerlink" title="SRP：单一职责原则"></a>SRP：单一职责原则</h3><p>SRP（Single Responsibility Principle）：一个类应该仅有一个引起它变化的原因。</p>
+<p>漂亮的程序一般都是：高内聚、低耦合。系统应该由许多短小的类组成，每一个类应该只有一个职责。过多的职责会导致臃肿的设计和比较弱的重用性。</p>
+<p>遵循单一职责原的优点有：</p>
+<ol>
+<li>可以降低类的复杂度，一个类只负责一项职责，其逻辑肯定要比负责多项职责简单的多；</li>
+<li>提高类的可读性，提高系统的可维护性；</li>
+<li>变更引起的风险降低，变更是必然的，如果单一职责原则遵守的好，当修改一个功能时，可以显著降低对其他功能的影响。</li>
+</ol>
+<p>需要说明的一点是单一职责原则不只是面向对象编程思想所特有的，只要是模块化的程序设计，都适用单一职责原则。</p>
+<h3 id="OCP：开放封闭原则"><a href="#OCP：开放封闭原则" class="headerlink" title="OCP：开放封闭原则"></a>OCP：开放封闭原则</h3><p>OCP（Open Close Principle）：为扩展开放、为修改关闭。</p>
+<p>开闭原则（OCP）是面向对象设计中“可复用设计”的基石，是面向对象设计中最重要的原则之一，其它很多的设计原则都是实现开闭原则的一种手段。</p>
+<p>1988年，勃兰特·梅耶（Bertrand Meyer）在他的著作《面向对象软件构造（Object Oriented Software Construction）》中提出了开闭原则，它的原文是这样：“Software entities should be open for extension,but closed for modification”。翻译过来就是：“软件实体应当对扩展开放，对修改关闭”。这句话说得略微有点专业，我们把它讲得更通俗一点，也就是：软件系统中包含的各种组件，例如模块（Modules）、类（Classes）以及功能（Functions）等等，应该在不修改现有代码的基础上，引入新功能。开闭原则中“开”，是指对于组件功能的扩展是开放的，是允许对其进行功能扩展的；开闭原则中“闭”，是指对于原有代码的修改是封闭的，即不应该修改原有的代码。</p>
+<p><img src="/images/ocp.jpg" alt="OCP"></p>
+<p>当你在设计一个库的时候，必须考虑这个原则，因为库或一些底层代码，一旦成行几乎不允许做修改。所以必须给使用者留下足够的扩展机制，否则就会被放弃或者被上层使用者随意修改，就有可能破坏设计者的初衷。</p>
+<h3 id="DIP：依赖倒置原则"><a href="#DIP：依赖倒置原则" class="headerlink" title="DIP：依赖倒置原则"></a>DIP：依赖倒置原则</h3><p>DIP（Dependency Inverse Principle）：逆转高层依赖底层。</p>
+<p>所谓依赖倒置原则（Dependence Inversion Principle）就是要依赖于抽象，不要依赖于具体。简单的说就是要求对抽象进行编程，不要对实现进行编程，这样就降低了客户与实现模块间的耦合。</p>
+<p><img src="/images/dip-1.png" alt="DIP"><br><img src="/images/dip-2.png" alt="DIP"></p>
+<h3 id="LSP：Liskov替换原则"><a href="#LSP：Liskov替换原则" class="headerlink" title="LSP：Liskov替换原则"></a>LSP：Liskov替换原则</h3><p>LSP（Liskov Substitution Principle）：子类可以替换父类并且出现在父类能够出现的地方（面向接口编程）。</p>
+<p>里氏代换原则(Liskov Substitution Principle LSP)面向对象设计的基本原则之一。 里氏代换原则中说，任何基类可以出现的地方，子类一定可以出现。 LSP是继承复用的基石，只有当衍生类可以替换掉基类，软件单位的功能不受到影响时，基类才能真正被复用，而衍生类也能够在基类的基础上增加新的行为。里氏代换原则是对“开-闭”原则的补充。实现“开-闭”原则的关键步骤就是抽象化。而基类与子类的继承关系就是抽象化的具体实现，所以里氏代换原则是对实现抽象化的具体步骤的规范。</p>
+<p><img src="/images/lsp.png" alt="LSP"></p>
+<h3 id="ISP：接口隔离原则"><a href="#ISP：接口隔离原则" class="headerlink" title="ISP：接口隔离原则"></a>ISP：接口隔离原则</h3><p>ISP（Interface Isolation Principle）： 使用多个专门的接口比使用单个接口要好的多。</p>
+<p><img src="/images/isp-1.jpg" alt="ISP"><br><img src="/images/isp-2.jpg" alt="ISP"></p>
+<p>使用多个专门的接口比使用单一的总接口要好。</p>
+<p>一个类对另外一个类的依赖性应当是建立在最小的接口上的。</p>
+<p>一个接口代表一个角色，不应当将不同的角色都交给一个接口。没有关系的接口合并在一起，形成一个臃肿的大接口，这是对角色和接口的污染。</p>
+<p>“不应该强迫客户依赖于它们不用的方法。接口属于客户，不属于它所在的类层次结构。”这个说得很明白了，再通俗点说，不要强迫客户使用它们不用的方法，如果强迫用户使用它们不使用的方法，那么这些客户就会面临由于这些不使用的方法的改变所带来的改变。</p>
+<p>PS. 以上内容，大多都来自网络，编辑整理而来，不标明出处。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/重构/" rel="tag">#重构</a>
+          
+            <a href="/tags/编码规范/" rel="tag">#编码规范</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/03/15/zoc-cleancode-4/" rel="next" title="编码之道：结构体 vs. 对象">
+                <i class="fa fa-chevron-left"></i> 编码之道：结构体 vs. 对象
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/08/21/pyinstaller/" rel="prev" title="将Python脚本打包成可执行文件">
+                将Python脚本打包成可执行文件 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2015/03/31/zoc-cleancode-5/"
+     data-title="编码之道：面向对象的五大原则"
+     data-content=""
+     data-url="http://yoursite.com/2015/03/31/zoc-cleancode-5/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2015/03/31/zoc-cleancode-5/"
+           data-title="编码之道：面向对象的五大原则" data-url="http://yoursite.com/2015/03/31/zoc-cleancode-5/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#SRP：单一职责原则"><span class="nav-number">1.</span> <span class="nav-text">SRP：单一职责原则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OCP：开放封闭原则"><span class="nav-number">2.</span> <span class="nav-text">OCP：开放封闭原则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DIP：依赖倒置原则"><span class="nav-number">3.</span> <span class="nav-text">DIP：依赖倒置原则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LSP：Liskov替换原则"><span class="nav-number">4.</span> <span class="nav-text">LSP：Liskov替换原则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ISP：接口隔离原则"><span class="nav-number">5.</span> <span class="nav-text">ISP：接口隔离原则</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

@@ -1,0 +1,724 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="大学时代,Windows," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="TinyLab" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.2" />
+
+
+
+
+
+
+<meta name="description" content="下面是两个函数， SaveBmp函数用于设备相关位图(DIB)保存为bmp格式的文件。DrawBitmapFile则用于将bmp格式的文件打开并显示在指定的设备环境上。
+1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162">
+<meta property="og:type" content="article">
+<meta property="og:title" content="位图文件的打开和保存">
+<meta property="og:url" content="http://yoursite.com/2008/05/24/bitmap-open-save/index.html">
+<meta property="og:site_name" content="TinyLab">
+<meta property="og:description" content="下面是两个函数， SaveBmp函数用于设备相关位图(DIB)保存为bmp格式的文件。DrawBitmapFile则用于将bmp格式的文件打开并显示在指定的设备环境上。
+1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162">
+<meta property="og:updated_time" content="2016-11-02T09:51:27.451Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="位图文件的打开和保存">
+<meta name="twitter:description" content="下面是两个函数， SaveBmp函数用于设备相关位图(DIB)保存为bmp格式的文件。DrawBitmapFile则用于将bmp格式的文件打开并显示在指定的设备环境上。
+1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2008/05/24/bitmap-open-save/"/>
+
+
+  <title> 位图文件的打开和保存 | TinyLab </title>
+</head>
+
+<body itemscope itemtype="//schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?32177a2b43f11f13565131b8c1239878";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="//schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">TinyLab</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Keep eyes on the star and feet on the ground.</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                位图文件的打开和保存
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2008-05-24T16:12:00+09:00" content="2008-05-24">
+              2008-05-24
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index">
+                    <span itemprop="name">Windows</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2008/05/24/bitmap-open-save/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2008/05/24/bitmap-open-save/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>下面是两个函数， SaveBmp函数用于设备相关位图(DIB)保存为bmp格式的文件。DrawBitmapFile则用于将bmp格式的文件打开并显示在指定的设备环境上。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">BOOL SaveBmp(HBITMAP hBitmap, const char *FileName)</div><div class="line">&#123;</div><div class="line">     HDC     hDC;       </div><div class="line">     //当前分辨率下每象素所占字节数       </div><div class="line">     int     iBits;       </div><div class="line">     //位图中每象素所占字节数       </div><div class="line">     WORD    wBitCount;       </div><div class="line">    //定义调色板大小，位图中像素字节大小，位图文件大小，写入文件字节数   </div><div class="line">     DWORD   dwPaletteSize=0,dwBmBitsSize=0, dwDIBSize=0, dwWritten=0;           </div><div class="line">     //位图属性结构           </div><div class="line">     BITMAP  Bitmap;               </div><div class="line">     //位图文件头结构       </div><div class="line">     BITMAPFILEHEADER   bmfHdr;               </div><div class="line">     //位图信息头结构           </div><div class="line">     BITMAPINFOHEADER   bi;               </div><div class="line">     //指向位图信息头结构               </div><div class="line">     LPBITMAPINFOHEADER lpbi;               </div><div class="line">     //定义文件，分配内存句柄，调色板句柄           </div><div class="line">     HANDLE  fh,hDib,hPal,hOldPal=NULL;           </div><div class="line">                              </div><div class="line">     //计算位图文件每个像素所占字节数           </div><div class="line">     hDC=::CreateDC(&quot;DISPLAY&quot;,NULL, NULL, NULL);  </div><div class="line">     iBits=::GetDeviceCaps(hDC,BITSPIXEL)* ::GetDeviceCaps(hDC,PLANES);  </div><div class="line">     ::DeleteDC(hDC);  </div><div class="line"></div><div class="line">      if(iBits &lt;= 1)         </div><div class="line">          wBitCount = 1;  </div><div class="line">      else if(iBits &lt;= 4)</div><div class="line">          wBitCount = 4;           </div><div class="line">      else if(iBits &lt;= 8)</div><div class="line">          wBitCount =  8;           </div><div class="line">      else                                                                                                                      wBitCount = 24;           </div><div class="line">                              </div><div class="line">      ::GetObject(hBitmap,sizeof(Bitmap),(LPSTR)&amp;Bitmap);       </div><div class="line">     bi.biSize = sizeof(BITMAPINFOHEADER);       </div><div class="line">     bi.biWidth = Bitmap.bmWidth;       </div><div class="line">     bi.biHeight = Bitmap.bmHeight;       </div><div class="line">     bi.biPlanes = 1;       </div><div class="line">     bi.biBitCount = wBitCount;       </div><div class="line">     bi.biCompression = BI_RGB;       </div><div class="line">     bi.biSizeImage = 0;       </div><div class="line">     bi.biXPelsPerMeter = 0;       </div><div class="line">     bi.biYPelsPerMeter = 0;       </div><div class="line">     bi.biClrImportant = 0;       </div><div class="line">     bi.biClrUsed = 0;       </div><div class="line">                              </div><div class="line">     dwBmBitsSize = ((Bitmap.bmWidth * wBitCount + 31) / 32) * 4 * Bitmap.bmHeight;       </div><div class="line">                              </div><div class="line">     //为位图内容分配内存           </div><div class="line">     hDib = ::GlobalAlloc(GHND,dwBmBitsSize + dwPaletteSize + sizeof(BITMAPINFOHEADER));           </div><div class="line">     lpbi =(LPBITMAPINFOHEADER)::GlobalLock(hDib);           </div><div class="line">     *lpbi = bi;           </div><div class="line">      </div><div class="line">     //     处理调色板               </div><div class="line">     hPal = GetStockObject(DEFAULT_PALETTE);           </div><div class="line">     if(hPal)           </div><div class="line">     &#123;           </div><div class="line">         hDC = ::GetDC(NULL);           </div><div class="line">         hOldPal = ::SelectPalette(hDC,(HPALETTE)hPal,FALSE);           </div><div class="line">         RealizePalette(hDC);           </div><div class="line">     &#125;       </div><div class="line">      </div><div class="line">     //     获取该调色板下新的像素值           </div><div class="line">     GetDIBits(hDC,hBitmap,0,(UINT)Bitmap.bmHeight,(LPSTR)lpbi + sizeof(BITMAPINFOHEADER) +dwPaletteSize,</div><div class="line">               (BITMAPINFO*)lpbi,DIB_RGB_COLORS);           </div><div class="line">                              </div><div class="line">     //恢复调色板               </div><div class="line">     if (hOldPal)           </div><div class="line">     &#123;           </div><div class="line">         ::SelectPalette(hDC,     (HPALETTE)hOldPal,     TRUE);           </div><div class="line">         RealizePalette(hDC);           </div><div class="line">         ::ReleaseDC(NULL,hDC);           </div><div class="line">     &#125;           </div><div class="line">      </div><div class="line">     //创建位图文件               </div><div class="line">     fh = CreateFile(FileName,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,</div><div class="line">                     FILE_ATTRIBUTE_NORMAL|FILE_FLAG_SEQUENTIAL_SCAN,NULL);           </div><div class="line">                              </div><div class="line">     if(fh == INVALID_HANDLE_VALUE)        </div><div class="line">         return     FALSE;           </div><div class="line">                              </div><div class="line">     //     设置位图文件头           </div><div class="line">     bmfHdr.bfType = 0x4D42;     //     &quot;BM&quot;           </div><div class="line">     dwDIBSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dwPaletteSize + dwBmBitsSize;               </div><div class="line">     bmfHdr.bfSize = dwDIBSize;           </div><div class="line">     bmfHdr.bfReserved1 = 0;           </div><div class="line">     bmfHdr.bfReserved2 = 0;           </div><div class="line">     bmfHdr.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER) + dwPaletteSize;           </div><div class="line">     //     写入位图文件头           </div><div class="line">     WriteFile(fh,(LPSTR)&amp;bmfHdr,sizeof(BITMAPFILEHEADER),&amp;dwWritten,NULL);           </div><div class="line">     //     写入位图文件其余内容           </div><div class="line">     WriteFile(fh,(LPSTR)lpbi,dwDIBSize,&amp;dwWritten,NULL);           </div><div class="line">     //清除               </div><div class="line">     GlobalUnlock(hDib);           </div><div class="line">     GlobalFree(hDib);           </div><div class="line">     CloseHandle(fh);   </div><div class="line"></div><div class="line">     return     TRUE;       </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div></pre></td><td class="code"><pre><div class="line">  </div><div class="line">BOOL DrawBitmapFile(HDC hdc, int left, int top, char *szFilename)</div><div class="line">&#123;</div><div class="line">    // 打开要映射的位图文件</div><div class="line">    HANDLE   hFile = CreateFile( szFilename, GENERIC_READ, FILE_SHARE_READ,</div><div class="line">        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL , NULL ) ;</div><div class="line">    if( hFile == INVALID_HANDLE_VALUE )</div><div class="line">        return FALSE ;</div><div class="line"></div><div class="line">    // 创建内存映象对象</div><div class="line">    HANDLE   hMap = CreateFileMapping( hFile , NULL, PAGE_READONLY, NULL, NULL, NULL ) ;</div><div class="line"></div><div class="line">    // 映射整个位图文件到内存，返回内存的首地址</div><div class="line">    LPVOID   lpBase = MapViewOfFile( hMap , FILE_MAP_READ, 0, 0, 0 ) ;</div><div class="line"></div><div class="line">    // 获取BMP文件信息</div><div class="line">    BITMAPFILEHEADER     *pFileHeader ;</div><div class="line">    BITMAPINFO           *pInfoHeader ;</div><div class="line"></div><div class="line">    // 获取位图象素</div><div class="line">    pFileHeader  =  (BITMAPFILEHEADER *) lpBase ;</div><div class="line">    if( pFileHeader-&gt;bfType != MAKEWORD( &apos;B&apos; , &apos;M&apos; ) )</div><div class="line">    &#123;</div><div class="line">        UnmapViewOfFile( lpBase ) ;</div><div class="line">        CloseHandle( hMap ) ;</div><div class="line">        CloseHandle( hFile ) ;</div><div class="line">        return FALSE ;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    BYTE *pBits = (BYTE *)lpBase + pFileHeader-&gt;bfOffBits ;</div><div class="line"></div><div class="line">    // 获取文件大小</div><div class="line">    pInfoHeader  =  (BITMAPINFO *)( (BYTE *)lpBase + sizeof(BITMAPFILEHEADER) ) ;</div><div class="line">    LONG  width  =  pInfoHeader-&gt;bmiHeader.biHeight ;</div><div class="line">    LONG  height =  pInfoHeader-&gt;bmiHeader.biWidth  ;</div><div class="line"></div><div class="line">    // 显示位图文件至hdc指定的设备</div><div class="line">    HDC        hMemDC   = CreateCompatibleDC( hdc ) ;</div><div class="line">    HBITMAP    hBitmap  = CreateCompatibleBitmap( hdc, width, height ) ;</div><div class="line">    SelectObject( hMemDC, hBitmap ) ;</div><div class="line"></div><div class="line">    // 把图象数据放到建立的内存设备中</div><div class="line">    int nRet = SetDIBitsToDevice( hMemDC, 0, 0, width, height, </div><div class="line">        0, 0, 0, height , pBits, pInfoHeader, DIB_RGB_COLORS ) ;</div><div class="line"></div><div class="line">    // 绘制图象到hdc中</div><div class="line">    BitBlt( hdc, left, top, width, height, hMemDC , 0 , 0, SRCCOPY ) ;</div><div class="line"></div><div class="line">    DeleteObject( hBitmap ) ;</div><div class="line">    UnmapViewOfFile( lpBase ) ;</div><div class="line">    DeleteDC ( hMemDC ) ;</div><div class="line">    CloseHandle( hMap ) ;</div><div class="line">    CloseHandle( hFile ) ;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/大学时代/" rel="tag">#大学时代</a>
+          
+            <a href="/tags/Windows/" rel="tag">#Windows</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2008/05/24/mem-file/" rel="next" title="内存映射文件">
+                <i class="fa fa-chevron-left"></i> 内存映射文件
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2008/06/06/chart-class/" rel="prev" title="一个用于显示数值曲线的类">
+                一个用于显示数值曲线的类 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2008/05/24/bitmap-open-save/"
+     data-title="位图文件的打开和保存"
+     data-content=""
+     data-url="http://yoursite.com/2008/05/24/bitmap-open-save/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2008/05/24/bitmap-open-save/"
+           data-title="位图文件的打开和保存" data-url="http://yoursite.com/2008/05/24/bitmap-open-save/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="//schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="David++" />
+          <p class="site-author-name" itemprop="name">David++</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/david-pp" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/davidpp" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/gamelab" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/future_fighter/" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">此文章未包含目录</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2007 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David++</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.2"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"tiny-lab"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
