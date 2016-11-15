@@ -258,6 +258,162 @@
             
               
                 
+                <a class="post-title-link" href="/2008/04/27/LMS/" itemprop="url">
+                  什么是滤波器？
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2008-04-27T05:42:00+08:00" content="2008-04-27">
+              2008-04-27
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/课程设计/" itemprop="url" rel="index">
+                    <span itemprop="name">课程设计</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2008/04/27/LMS/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2008/04/27/LMS/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>帮同学编个LMS（Least Mean Squre）自适应滤波器算法，有许多基本概念都不知道，所以就上网搜了搜，长长见识。</p>
+<p>滤波器是一种用来消除干扰杂讯的器件，将输入或输出经过过滤而得到纯净的交流电。您可以通过基本的滤波器积木块——二阶通用滤波器传递函数，推导出最通用的滤波器类型：低通、带通、高通、陷波和椭圆型滤波器。</p>
+<p>传递函数的参数——f0、d、hHP、hBP 和hLP，可用来构造所有类型的滤波器。转降频率f0为s项开始占支配作用时的频率。设计者将低于此值的频率看作是低频，而将高于此值的频率看作是高频，并将在此值附近的频率看作是带内频率。阻尼d用于测量滤波器如何从低频率转变至高频率，它是滤波器趋向振荡的一个指标。实际阻尼值从0至2变化（表1）。高通系数hHP是对那些高于转降频率的频率起支配作用的分子的系数。带通系数hBP是对那些在转降频率附近的频率起支配作用的分子的系数。低通系数hLP是对那些低于转降频率的频率起支配作用的分子的系数。设计者只需这5个参数即可定义一个滤波器。</p>
+<h3 id="滤波器的过去、现在与未来"><a href="#滤波器的过去、现在与未来" class="headerlink" title="滤波器的过去、现在与未来"></a>滤波器的过去、现在与未来</h3><p>凡是有能力进行信号处理的装置都可以称为滤波器。在近代电信装备和各类控制系统中，滤波器应用极为广泛；在所有的电子部件中，使用最多，技术最复杂要算滤波器了。滤波器的优劣直接决定产品的优劣，所以，对滤波器的研究和生产历来为各国所重视。</p>
+<h3 id="滤波器的发展过程"><a href="#滤波器的发展过程" class="headerlink" title="滤波器的发展过程"></a>滤波器的发展过程</h3><p>1917年美国和德国科学家分别发明了LC滤波器，次年导致了美国第一个多路复用系统的出现。50年代无源滤波器日趋成熟。自60年代起由于计算机技术、集成工艺和材料工业的发展，滤波器发展上了一个新台阶，并且朝着低功耗、高精度、小体积、多功能、稳定可靠和价廉方向努力，其中小体积、多功能、高精度、稳定可靠成为70年代以后的主攻方向，导致RC有源滤波器 、数字滤波器、开关电容滤波器和电荷转移器等各种滤波器的飞速发展。到70年代后期，上述几种滤波器的单片集成被研制出来并得到应用。80年代致力于各类新型滤波器性能提高的研究并逐渐扩大应用范围。90年代至今在主要致力于把各类滤波器应用于各类产品的开发和研制。当然，对滤波器本身的研究仍在不断进行。</p>
+<p>我国广泛使用滤波器是50年代后的事，当时主要用于话路滤波和报路滤波。经过半个世纪的发展，我国滤波器在研制、生产应用等方面已有一定进步，但由于缺少专门研制机构，集成工艺和材料工业跟不上来，使许多新型滤波器的研制应用与国际水平有一段距离。</p>
+<h3 id="滤波器分类"><a href="#滤波器分类" class="headerlink" title="滤波器分类"></a>滤波器分类</h3><h4 id="按处理信号类型分类"><a href="#按处理信号类型分类" class="headerlink" title="按处理信号类型分类"></a>按处理信号类型分类</h4><p>滤波器可分为模拟滤波器和离散滤波器两大类。其中模拟滤波器又可分为有源、无源、异类三个分类；离散滤波器又可分为数字、取样模拟、混合三个分类。当然，每个分类又可继续分下去，总之，它们的分类可以形成一个树形结构。</p>
+<p><strong>按选择物理量分类</strong></p>
+<p>滤波器可分为频率选择、幅度选择、时间选择（例如PCM制中的话路信号）和信息选择（例如匹配滤波器）等四类滤波器。</p>
+<p><strong>按频率通带范围分类</strong></p>
+<p>滤波器可分为低通、高通、带通、带阻、全通五个类别，而梳形滤波器属于带通和带阻滤波器，因为它有周期性的通带和阻带。</p>
+<p>滤波器种类繁多，下面着重介绍近年来发展很快的几种滤波器。</p>
+<p><strong>有源滤波器</strong></p>
+<p>有源滤波器由下列一些有源元件组成：运算放大器、负电阻、负电容、负电感、频率变阻器（FDNR）、广义阻抗变换器（GIC）、负阻抗变换器（NIC）、正阻抗变换器（PIC）、负阻抗倒置器（NII）、正阻抗倒置器（PII）、四种受控源，另外，还有病态元件极子和零子。</p>
+<p>1965年单片集成运算放大器问世后，为有源滤波器开辟了广阔的前景，到70年代初期，有源滤波器发展最为注目，1978年单片RC有源滤波器问世，为滤波器集成迈进了可喜的一步。由于运放的增益和相移均为频率的函数，这就限制了RC有源滤波器的频率范围，一般工作频率为20KHz左右，经过补偿后，工作频率也限制在100KHz以内。1974年产生了有源滤波器，使工作频率可达GB/4（GB为运放增益与带宽之积）。由于R(电阻)的存在，给集成工艺造成困难，于是又出现了有源C(电容)滤波器：就是说，滤波器由C和运放组成。这样容易集成，更重要是提高了滤波器的精度，因为有源C滤波器的性能只取决于电容之比，与电容绝对值无关。但它有一个主要问题：由于各支路元件均为电容，所以运放没有直流反馈通道，使稳定性成为难题。1982年由Geiger、Allen和Ngo提出用连续的开关电阻（SR）去替代有源RC滤波器中的电阻R，就构成了SRC滤波器，它仍属于模拟滤波器。但由于采用预置电路和复杂的相位时钟，这种滤波器发展前途不大。</p>
+<p>总之，以RC有源滤波器为原型的各类变种有源滤波器去掉了电感器，体积小，Q值可达1000，克服了RLC无源滤波器体积大、Q值小的缺点。但它仍有许多课题有待进一步研究：理想运放与实际特性的偏差；由于有源滤波器混合集成工艺的不断改进，单片集成有待进一步研究；应用线性变换方法探索最少有源元件的滤波器需要继续探索；元件的绝对值容差的存在，影响滤波器精度和性能等问题仍未解决；由于R存在，占芯片面积大、电阻误差大(20~30%)、线性度差等缺点，大规模集成仍然有困难。</p>
+<p><strong>开关电容滤波器（SCF）</strong></p>
+<p>80年代技术改造一个重大课题是实现各种电子系统全面大规模集成（LSI），使用最多的滤波器成为”拦路虎”，RC有源滤波器不能实现LSI，无源滤波器和机械滤波器更不用说。人们只能另辟新径。50年代有人提出SCF的概念，由于当时集成工艺不过关，并没有引起人们的重视，直到72年，美国一个叫Fried的科学家用开关和电容模拟电阻R，说SCF的性能只取决于电容之比，与电容绝对值无关，这样才引起人们的重视。1979年一些发达国家单片SCF已成为商品（属于高度保密技术），现在SC技术已趋成熟。SCF并用MOS工艺加以实现公认为80年代网络理论与集成工艺的一大突破。当前MOS电容值一般为几PF~100PF之内，它具有（10~100） 10-6/V的电压系数与（10~100） 10-6/℃的温度系数，这两个系数几乎接近理想的境界。SCF具有下列一些优点：可以大规模集成；精度高；功能多，几乎所有电子部件和功能均可以由SC技术来实现；比数字滤波器简单，因为不需要A/D，D/A转换；功能小，可以做到。</p>
+<p>SCF的应用情况：以声频范围应用为主体，工作频率在100KHz之内；在信号处理方面的应用有：程控SCF、模拟信号处理、振动分析、自适应性滤波器、音乐综合、共振谱、语言综合器、音调选择、语声编码、声频分析、均衡器、解调器、锁相电路、离散傅氏变换……。总之，SCF在仪表测量、医疗仪器、数据或信息处理等许多领域都有广泛的应用前景。</p>
+<p>在我国，1978年，有的导师和在校研究生开始进行这项研究工作，真正引起人们重视是80年以后。83年清华大学已制成单片SCF，成都工程学院与工厂联合，也研制成单片SCF。现在关键是MOS工艺实现SCF及推广应用问题，由于用户还不了解它，SCF的应用还没有普及。</p>
+<p>SCF还有许多课题有待研究：1、由于运放和控制MOS开关的采样频率所限制，SCF只能在音频范围内应用。近年虽然出现无运放的SC电路，但由于采样频率的限制，工作频率最高只在1MHZ之内。2、非零的MOS开关的沟道电阻以及非理想的运放特性，均可使SCF造成误差。3、开关电容本身的寄生电容将使SCF的频响发生畸变。4、MOS开关与MOS运放的热噪声将使SCF的动态范围受到限制。5、最终要以MOS工艺来实现的SCF，由于它是时变网络，想用分立元件精确模拟是不可能的，因此，设计完善的CAD技术是解决这一问题的唯一手段。此外，在灵敏度分析、噪声分析等方面均有许多课题有待研究。</p>
+<h3 id="几种新型数字滤波器（DF）"><a href="#几种新型数字滤波器（DF）" class="headerlink" title="几种新型数字滤波器（DF）"></a>几种新型数字滤波器（DF）</h3><p>大家对DF并不陌生，这里不作系统综述，但对一些新型DF做一些介绍：</p>
+<p>1.自适应DF</p>
+<p>最优控制、自适应控制和自学习控制都涉及到多参数、多变量的复杂控制系统，都属于现代控制理论研究的课题。自适应DF具有很强的自学习、自跟踪功能。它在雷达和声纳的波束形成、缓变噪声干扰的抑制、噪声信号的处理、通信信道的自适应均衡、远距离电话的回声抵消等领域获得了广泛的应用，促进了现代控制理论的发展。</p>
+<p>自适应DF有如下一些简单算法：W-LMS算法；M-LMS算法；TDO算法；差值LMS算法和C-LMS算法。</p>
+<p>2.复数DF</p>
+<p>在输入信号为窄带信号处理系统中，常采用复数DF技术。为了降低采样率而保存信号所包含的全部信息，可利用正交双路检波法，取出窄带信号的复包络，然后通过A/D变换，将复包络转化为复数序列进行处理，这个信号处理系统即为复数DF。它具有许多功能。MTI雷达中抑制具有卜勒频移的杂波干扰；数字通信网与模拟通信网之间多路TDM/FDM信号变换复接等等。</p>
+<p>3.多维DF<br>在图象处理、地震、石油勘探的数据处理中都用到多维DF（常用是二维DF），多维DF的设计，往往将一维DF优化设计直接推广到多维DF中去。对于模糊和随机噪声干扰的二维图象的处理，多维DF也能发挥很好的作用。</p>
+<p>此外，还有波DF，它便于实现大规模集成；便于无源和有源滤波网络的数字模拟。</p>
+<p>对于DF有待研究的课题有：系数灵敏度；舍入噪声和极限环；多维逆归滤波器的稳定性；各种硬件和软件实现DF的研究等等。</p>
+<h3 id="其它新型滤波器"><a href="#其它新型滤波器" class="headerlink" title="其它新型滤波器"></a>其它新型滤波器</h3><p>介绍几种已得到广泛应用的新型滤波器：</p>
+<p>1.电控编程CCD横向滤波器（FPCCDTF）</p>
+<p>电荷耦合器（CCD）固定加权的横向滤波器（TF）在信号处理中，其性能和造价均可与数字滤波器和各种信号处理部件媲美。这种滤波器主要用于自适应滤波；P-N序列和Chirp波形的匹配滤波；通用化的频域滤波器以及作相关、褶积运算；语音信号和相位均衡；相阵系统的波束合成和电视信号的重影消除等。</p>
+<p>2.晶体滤波器</p>
+<p>它是适应单边带技术而发展起来的。在70年代，集成晶体滤波器的产生，使它发展产生一个飞跃，近十年来，对晶体滤波器致力于下面一些研究：实现最佳设计，除具有优良的选择外，还具有良好的时域响应；寻求新型材料；扩展工作频率；改造工艺，使其向集成化发展。它广泛应用于多路复用系统中作为载波滤波器，在收发信中、单边带通信机中作为选频滤波器，在频谱分析仪和声纳装置中作为中频滤波器。</p>
+<p>3.声表面波滤波器</p>
+<p>它是理想的超高频器件。它的幅频特性和相位特性可以分别控制，以达到要求，体积小，长时间稳定性好和工艺简单。通常应用于：电视广播发射机中作为残留边带滤波器；彩色电视接收机中调谐系统的表面梳形滤波器，此外，在国防卫星通信系统中已广泛采用。声表面波滤波器是电子学和声学相结合的产物，而且可以集成。所以，它在所有无源滤波器中最有发展前途。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2008/04/20/psp-development-enviroment/" itemprop="url">
                   PSP游戏开放环境的建立
                 </a>
@@ -272,7 +428,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-04-20T18:30:00+09:00" content="2008-04-20">
+            <time itemprop="dateCreated" datetime="2008-04-20T17:30:00+08:00" content="2008-04-20">
               2008-04-20
             </time>
           </span>
@@ -410,7 +566,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-04-03T20:57:00+09:00" content="2008-04-03">
+            <time itemprop="dateCreated" datetime="2008-04-03T19:57:00+08:00" content="2008-04-03">
               2008-04-03
             </time>
           </span>
@@ -537,7 +693,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-04-01T00:00:00+09:00" content="2008-04-01">
+            <time itemprop="dateCreated" datetime="2008-04-01T00:00:00+08:00" content="2008-04-01">
               2008-04-01
             </time>
           </span>
@@ -704,7 +860,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-03-19T13:20:00+09:00" content="2008-03-19">
+            <time itemprop="dateCreated" datetime="2008-03-19T12:20:00+08:00" content="2008-03-19">
               2008-03-19
             </time>
           </span>
@@ -829,7 +985,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-03-11T00:00:00+09:00" content="2008-03-11">
+            <time itemprop="dateCreated" datetime="2008-03-11T00:00:00+08:00" content="2008-03-11">
               2008-03-11
             </time>
           </span>
@@ -960,7 +1116,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-02-29T00:00:00+09:00" content="2008-02-29">
+            <time itemprop="dateCreated" datetime="2008-02-29T00:00:00+08:00" content="2008-02-29">
               2008-02-29
             </time>
           </span>
@@ -1135,7 +1291,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-02-28T00:00:00+09:00" content="2008-02-28">
+            <time itemprop="dateCreated" datetime="2008-02-28T00:00:00+08:00" content="2008-02-28">
               2008-02-28
             </time>
           </span>
@@ -1312,7 +1468,7 @@ WH_DEBUG                       用来给钩子函数除错。
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2008-02-27T00:00:00+09:00" content="2008-02-27">
+            <time itemprop="dateCreated" datetime="2008-02-27T00:00:00+08:00" content="2008-02-27">
               2008-02-27
             </time>
           </span>
@@ -1454,7 +1610,7 @@ WH_DEBUG                       用来给钩子函数除错。
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2007-07-15T00:00:00+09:00" content="2007-07-15">
+            <time itemprop="dateCreated" datetime="2007-07-15T00:00:00+08:00" content="2007-07-15">
               2007-07-15
             </time>
           </span>
@@ -1538,127 +1694,6 @@ WH_DEBUG                       用来给钩子函数除错。
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2007/04/04/hanio-game-cpp/" itemprop="url">
-                  汉诺塔游戏的C++实现
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2007-04-04T00:00:00+09:00" content="2007-04-04">
-              2007-04-04
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/课程设计/" itemprop="url" rel="index">
-                    <span itemprop="name">课程设计</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2007/04/04/hanio-game-cpp/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2007/04/04/hanio-game-cpp/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>昨天没事在用别人的文曲星查字!突然看到那个汉诺塔游戏…..</p>
-<p>反正这两天刚好手有点痒,于是就有了:</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div><div class="line">191</div><div class="line">192</div><div class="line">193</div><div class="line">194</div><div class="line">195</div><div class="line">196</div><div class="line">197</div><div class="line">198</div><div class="line">199</div><div class="line">200</div><div class="line">201</div><div class="line">202</div><div class="line">203</div><div class="line">204</div><div class="line">205</div><div class="line">206</div><div class="line">207</div><div class="line">208</div><div class="line">209</div><div class="line">210</div><div class="line">211</div><div class="line">212</div><div class="line">213</div><div class="line">214</div><div class="line">215</div><div class="line">216</div><div class="line">217</div><div class="line">218</div><div class="line">219</div><div class="line">220</div><div class="line">221</div><div class="line">222</div><div class="line">223</div><div class="line">224</div><div class="line">225</div><div class="line">226</div><div class="line">227</div><div class="line">228</div><div class="line">229</div><div class="line">230</div><div class="line">231</div><div class="line">232</div><div class="line">233</div><div class="line">234</div><div class="line">235</div><div class="line">236</div><div class="line">237</div><div class="line">238</div><div class="line">239</div><div class="line">240</div><div class="line">241</div><div class="line">242</div><div class="line">243</div><div class="line">244</div><div class="line">245</div><div class="line">246</div><div class="line">247</div><div class="line">248</div><div class="line">249</div><div class="line">250</div><div class="line">251</div><div class="line">252</div><div class="line">253</div><div class="line">254</div><div class="line">255</div><div class="line">256</div><div class="line">257</div><div class="line">258</div><div class="line">259</div><div class="line">260</div><div class="line">261</div><div class="line">262</div><div class="line">263</div><div class="line">264</div><div class="line">265</div><div class="line">266</div><div class="line">267</div><div class="line">268</div><div class="line">269</div><div class="line">270</div><div class="line">271</div><div class="line">272</div><div class="line">273</div><div class="line">274</div><div class="line">275</div><div class="line">276</div><div class="line">277</div><div class="line">278</div><div class="line">279</div><div class="line">280</div><div class="line">281</div><div class="line">282</div><div class="line">283</div><div class="line">284</div><div class="line">285</div><div class="line">286</div><div class="line">287</div><div class="line">288</div><div class="line">289</div><div class="line">290</div><div class="line">291</div><div class="line">292</div><div class="line">293</div><div class="line">294</div><div class="line">295</div><div class="line">296</div><div class="line">297</div><div class="line">298</div><div class="line">299</div><div class="line">300</div><div class="line">301</div><div class="line">302</div><div class="line">303</div><div class="line">304</div><div class="line">305</div><div class="line">306</div><div class="line">307</div><div class="line">308</div><div class="line">309</div><div class="line">310</div><div class="line">311</div><div class="line">312</div><div class="line">313</div><div class="line">314</div><div class="line">315</div><div class="line">316</div><div class="line">317</div><div class="line">318</div><div class="line">319</div><div class="line">320</div><div class="line">321</div><div class="line">322</div><div class="line">323</div><div class="line">324</div><div class="line">325</div><div class="line">326</div><div class="line">327</div></pre></td><td class="code"><pre><div class="line">#ifndef  HANIO_H_</div><div class="line">#define HANIO_H</div><div class="line">class  Stack</div><div class="line">&#123;</div><div class="line">private:</div><div class="line"> enum&#123; MAX=50 &#125;;</div><div class="line"> int m_node[MAX];</div><div class="line"> int m_top;     </div><div class="line"> int m_size;</div><div class="line"> int m_index;  </div><div class="line">public:</div><div class="line"> Stack();</div><div class="line"> ~Stack() &#123; &#125;;</div><div class="line"> bool  Isfull()  &#123; return m_top==MAX-1 ;&#125;;   //堆栈满则返回TRUE</div><div class="line"> bool  Isempty()  &#123; return m_top==-1;&#125;;      //堆栈空则返回TRUE</div><div class="line"> int Top()  &#123; return m_top; &#125;;</div><div class="line"> int TopValue() &#123; return m_node[m_top];&#125;;</div><div class="line"> int GetDataFromIndex(int i) &#123; return m_node[i]; &#125;;</div><div class="line"> int GetIndex() &#123; return m_index; &#125; ;</div><div class="line"> void SetIndex(int index) &#123; m_index = index; &#125;;</div><div class="line"> int Size()  &#123; return m_top+1; &#125;;</div><div class="line"> </div><div class="line"> bool Push(int data);</div><div class="line"> bool Pop(int * pData);</div><div class="line"> int  MoveToNext();</div><div class="line"> void OutPrint();</div><div class="line"></div><div class="line">&#125;;</div><div class="line"></div><div class="line">class Hanio</div><div class="line">&#123;</div><div class="line"> Stack  m_stack[3];</div><div class="line"> int m_num;             //盘数</div><div class="line"> int m_steps;           //移动次数</div><div class="line"> int m_times;           //完成所用时间</div><div class="line"> void print(char ch,int n);</div><div class="line">public:</div><div class="line"> Hanio(int num=3);</div><div class="line"> ~Hanio() &#123;&#125;;</div><div class="line"> void GameStart();</div><div class="line"> bool MoveFromTo(int x,int y);  //从x号盘移动到y号盘</div><div class="line"> void DrawPaletes(char ch='*');            //打印3个堆的盘子</div><div class="line"> bool IsFinished() ;               //结束返回TURE;</div><div class="line">     </div><div class="line"> int Solve(char from,char to,char auxiliary,int n);          //求解其解法路径</div><div class="line">&#125;;</div><div class="line"></div><div class="line">#endif</div><div class="line">//hanio.cpp</div><div class="line">#include "hanio.h"</div><div class="line">#include &lt;iostream&gt;</div><div class="line">#include&lt;cstdlib&gt;</div><div class="line">#include&lt;cstring&gt;</div><div class="line">#include&lt;cctype&gt;</div><div class="line">#include&lt;windows.h&gt;</div><div class="line">Stack::Stack()</div><div class="line">&#123;</div><div class="line"> m_top=-1;</div><div class="line"> m_index=m_top;</div><div class="line"> for(int i=0;i&lt;MAX;i++)</div><div class="line">  m_node[i]=0;</div><div class="line">&#125;</div><div class="line">bool Stack::Push(int data)</div><div class="line">&#123;</div><div class="line"> if(Isfull())</div><div class="line">  return false;</div><div class="line"> m_top++;</div><div class="line"> m_node[m_top]=data;</div><div class="line"> m_index=m_top;</div><div class="line"> return true;</div><div class="line">&#125;</div><div class="line">bool Stack::Pop(int *pData)</div><div class="line">&#123;</div><div class="line"> if(Isempty())</div><div class="line">  return false;</div><div class="line"> *pData=m_node[m_top];</div><div class="line"> m_node[m_top]=0;</div><div class="line"> m_top--;</div><div class="line"> m_index=m_top;</div><div class="line"> return true;</div><div class="line">&#125;</div><div class="line">int Stack::MoveToNext()</div><div class="line">&#123;</div><div class="line"> int temp=m_index;</div><div class="line"> m_index--;</div><div class="line"> return m_node[temp];</div><div class="line">&#125;</div><div class="line">void Stack::OutPrint()</div><div class="line">&#123;  </div><div class="line"> if(m_top!=-1)</div><div class="line"> &#123;</div><div class="line">     for(int i=0;i&lt;=m_top;i++)</div><div class="line">   std::cout&lt;&lt;"["&lt;&lt;m_node[i]&lt;&lt;"]";</div><div class="line"> &#125;</div><div class="line">&#125;</div><div class="line"> </div><div class="line"> </div><div class="line">///////////////////////////////////////</div><div class="line">Hanio::Hanio(int num)</div><div class="line">&#123;</div><div class="line"> m_num=num;</div><div class="line"> m_steps=0;</div><div class="line"> m_times=0;</div><div class="line"> for(int i=num;i&gt;=1;i--)</div><div class="line">  m_stack[0].Push(i);</div><div class="line"> //m_stack[0].OutPrint();</div><div class="line">&#125;</div><div class="line">void Hanio::print(char ch,int n)</div><div class="line">&#123;</div><div class="line"> for(int i=1;i&lt;=n;i++)</div><div class="line">  std::cout&lt;&lt;ch;</div><div class="line">&#125;</div><div class="line">void Hanio::DrawPaletes(char ch)</div><div class="line">&#123;   </div><div class="line"> int max;</div><div class="line"> max=m_stack[0].Size()&gt;m_stack[1].Size() ? m_stack[0].Size() : m_stack[1].Size();</div><div class="line"> max=m_stack[2].Size()&gt;max               ? m_stack[2].Size() : max;</div><div class="line">    </div><div class="line"> //std::cout&lt;&lt;"Max:"&lt;&lt;max&lt;&lt;std::endl;</div><div class="line"> m_stack[0].SetIndex(max-1);</div><div class="line"> m_stack[1].SetIndex(max-1);</div><div class="line"> m_stack[2].SetIndex(max-1);</div><div class="line"></div><div class="line"> for(int i=1;i&lt;=max;i++)</div><div class="line"> &#123;</div><div class="line">  int data1=m_stack[0].MoveToNext();</div><div class="line">  int data2=m_stack[1].MoveToNext();</div><div class="line">  int data3=m_stack[2].MoveToNext();</div><div class="line">  if(data1==0)</div><div class="line">   print(' ',20);</div><div class="line">  else</div><div class="line">  &#123;</div><div class="line">   print(' ',10-data1);</div><div class="line">   print(ch,2*data1);</div><div class="line">   print(' ',10-data1);</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  if(data2==0)</div><div class="line">   print(' ',20);</div><div class="line">  else</div><div class="line">  &#123;</div><div class="line">   print(' ',10-data2);</div><div class="line">   print(ch,2*data2);</div><div class="line">   print(' ',10-data2);</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  if(data3==0)</div><div class="line">   print(' ',20);</div><div class="line">  else</div><div class="line">  &#123;</div><div class="line">   print(' ',10-data3);</div><div class="line">   print(ch,2*data3);</div><div class="line">   print(' ',10-data1);</div><div class="line">  &#125;</div><div class="line">  std::cout&lt;&lt;std::endl;</div><div class="line"> &#125;</div><div class="line"> </div><div class="line">&#125;</div><div class="line"></div><div class="line">bool Hanio::MoveFromTo(int x,int y)</div><div class="line">&#123;   </div><div class="line"> m_steps++;     //计算所走的步数</div><div class="line"> if(m_stack[x].Isempty())</div><div class="line"> &#123;</div><div class="line">  std::cout&lt;&lt;x&lt;&lt;" pallete  is empty ! continue !"&lt;&lt;std::endl;</div><div class="line">  std::cin.get();</div><div class="line">  return false;</div><div class="line"> &#125;</div><div class="line">   </div><div class="line"> if(m_stack[y].Isempty())</div><div class="line"> &#123;   </div><div class="line">  int data;</div><div class="line">  m_stack[x].Pop(&amp;data);</div><div class="line">  m_stack[y].Push(data);</div><div class="line">  return true;</div><div class="line"> &#125;</div><div class="line"> else</div><div class="line"> &#123;</div><div class="line">  if(m_stack[x].TopValue()&gt;m_stack[y].TopValue())</div><div class="line">  &#123;</div><div class="line">   std::cout&lt;&lt;"The board can't move from "&lt;&lt;x&lt;&lt;" plate to " &lt;&lt;y&lt;&lt;" plate!"&lt;&lt;std::endl;</div><div class="line">   std::cin.get();</div><div class="line">   return false;</div><div class="line">  &#125;</div><div class="line">  else</div><div class="line">  &#123;</div><div class="line">     int data;</div><div class="line">     m_stack[x].Pop(&amp;data);</div><div class="line">     m_stack[y].Push(data);</div><div class="line">     return true;</div><div class="line">  &#125;</div><div class="line"> &#125;</div><div class="line">&#125;</div><div class="line">bool Hanio::IsFinished()</div><div class="line">&#123;</div><div class="line"> return m_stack[2].Top()==m_num-1;</div><div class="line">&#125;</div><div class="line"> </div><div class="line">void Hanio::GameStart()</div><div class="line">&#123;   </div><div class="line"> using namespace std;</div><div class="line"> UINT StartTime=::GetTickCount();</div><div class="line"> UINT EndTime;</div><div class="line"> while(1)</div><div class="line"> &#123;   </div><div class="line">  </div><div class="line">   system("cls");</div><div class="line">   print('-',80);</div><div class="line">   cout&lt;&lt;"steps: "&lt;&lt;m_steps; print(' ',20);</div><div class="line">   cout&lt;&lt;"Used time: "&lt;&lt;m_times&lt;&lt;endl;</div><div class="line">   print('-',80);</div><div class="line">   cout&lt;&lt;endl; cout&lt;&lt;endl; print(' ',10); cout&lt;&lt;"A";</div><div class="line">   print(' ',19); cout&lt;&lt;"B"; print(' ',19);</div><div class="line">   cout&lt;&lt;"C"&lt;&lt;endl&lt;&lt;endl;</div><div class="line">      Hanio::DrawPaletes();</div><div class="line">   cout&lt;&lt;endl; cout&lt;&lt;endl;</div><div class="line">      print('-',80);</div><div class="line">         </div><div class="line">   //测试游戏是否结束</div><div class="line">   if(Hanio::IsFinished()) </div><div class="line">  &#123;</div><div class="line">   cout&lt;&lt;"你好强呀!从今天开始,维护世界和平的任务就交给你那!"&lt;&lt;endl;</div><div class="line">   cin.get();</div><div class="line">   break;</div><div class="line">  &#125;</div><div class="line">        //输入命令并左相应的处理</div><div class="line">  char szCommand[50];</div><div class="line">  cout&lt;&lt;"&gt;&gt;";</div><div class="line">  cin.getline(szCommand,50);</div><div class="line">  if(stricmp(szCommand,"QUIT")==0 || stricmp(szCommand,"Q")==0)</div><div class="line">   break;</div><div class="line">  if(stricmp(szCommand,"HELP")==0 || stricmp(szCommand,"H")==0)</div><div class="line">  &#123;</div><div class="line">   cout&lt;&lt;" 本游戏说明  :"&lt;&lt;endl;</div><div class="line">   cout&lt;&lt;" 该游戏由DAVID用C++编程,花费了一个多下午的时间呢!!!,由命令行来控制铁饼的移动:"&lt;&lt;endl;</div><div class="line">   cout&lt;&lt;"     QUIT / Q   :   退出程序"&lt;&lt;endl;</div><div class="line">   cout&lt;&lt;"     HELP / H   :   查看该说明"&lt;&lt;endl;</div><div class="line">   cout&lt;&lt;"     XY         :   X,Y的取值为A,B,C,意思时把X木桩最上面的铁饼移到Y木桩"&lt;&lt;endl;</div><div class="line">   cout&lt;&lt;"     SOLVE / S  :   显示求解该问题(移动铁饼)的最优路径..."&lt;&lt;endl;</div><div class="line">   cin.get();</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  char ch1=toupper(szCommand[0]);</div><div class="line">  char ch2=toupper(szCommand[1]);</div><div class="line">     </div><div class="line">  if( ch1=='A' &amp;&amp; ch2=='B')</div><div class="line">   Hanio::MoveFromTo(0,1);</div><div class="line">  else if ( ch1=='A' &amp;&amp; ch2=='C')</div><div class="line">   MoveFromTo(0,2);</div><div class="line">  else if ( ch1=='B' &amp;&amp; ch2=='A')</div><div class="line">   MoveFromTo(1,0);</div><div class="line">  else if ( ch1=='B' &amp;&amp;  ch2=='C')</div><div class="line">   MoveFromTo(1,2);</div><div class="line">  else if ( ch1=='C' &amp;&amp;  ch2=='A')</div><div class="line">   MoveFromTo(2,0);</div><div class="line">  else if ( ch1=='C' &amp;&amp;  ch2=='B')</div><div class="line">   MoveFromTo(2,1);</div><div class="line">  else</div><div class="line">  &#123;</div><div class="line">   cout&lt;&lt;"Bad command !"&lt;&lt;endl;</div><div class="line">   cin.get();</div><div class="line">  &#125;</div><div class="line">         //统计游戏所用时间</div><div class="line">         EndTime=GetTickCount();</div><div class="line">   m_times=(EndTime-StartTime)/1000;</div><div class="line"> &#125;</div><div class="line"> </div><div class="line">&#125;</div><div class="line">int Hanio::Solve(char from,char to,char auxiliary,int n)</div><div class="line">&#123;</div><div class="line">    if(n==1)</div><div class="line"> return 0;</div><div class="line">&#125;</div><div class="line">//main.cpp</div><div class="line">#include&lt;iostream&gt;</div><div class="line">#include"hanio.h"</div><div class="line">#include&lt;cstdlib&gt;</div><div class="line">using namespace std;</div><div class="line">int StartPicture();//返回选择的盘数</div><div class="line">int main()</div><div class="line">&#123;   </div><div class="line"> int number;</div><div class="line"> number=StartPicture();</div><div class="line">    Hanio hanio(number);</div><div class="line"> hanio.GameStart();</div><div class="line"> return 0;</div><div class="line">&#125;</div><div class="line"></div><div class="line">void print(char ch,int n)</div><div class="line">&#123;</div><div class="line"> for(int i=1;i&lt;=n;i++)</div><div class="line">  std::cout&lt;&lt;ch;</div><div class="line">&#125;</div><div class="line">int StartPicture()</div><div class="line">&#123;</div><div class="line"> using namespace std;</div><div class="line">    int number;</div><div class="line"> system("cls");</div><div class="line"> system("color fc");</div><div class="line"> print(' ',20);</div><div class="line"> print('-',25);</div><div class="line"> cout&lt;&lt;endl;</div><div class="line"> print(' ',20);</div><div class="line"> cout&lt;&lt;"       Hanio(汉诺塔)"&lt;&lt;endl;</div><div class="line"> print(' ',20);</div><div class="line"> print('-',25);</div><div class="line"> cout&lt;&lt;endl;</div><div class="line"> print(' ',40);</div><div class="line"> print('-',5);</div><div class="line"> cout&lt;&lt;"By  David"&lt;&lt;endl;</div><div class="line"> print('=',80);</div><div class="line"> cout&lt;&lt;"  相传在某一座古庙中有3根木桩,有24个铁盘由小到大放置在一根木柱上,庙中流传者一个传说:/"如果能把24个铁盘, 从一根木桩移动到另一个木桩,且必须遵守如下规则:"&lt;&lt;endl;</div><div class="line"> cout&lt;&lt;endl;</div><div class="line"> print(' ',5);cout&lt;&lt;"1. 每天只能动一个盘,而且只能从最上面的铁盘开始搬动."&lt;&lt;endl;</div><div class="line"> print(' ',5);cout&lt;&lt;"2. 必须维持较小的铁盘在上方的原则"&lt;&lt;endl;</div><div class="line"> cout&lt;&lt;endl;</div><div class="line"> cout&lt;&lt;"这两个原则,则当24个铁盘完全般到另一个木桩时,世界就回永久和平!!"&lt;&lt;endl;</div><div class="line"> cout&lt;&lt;"游戏的玩法可以在命令行中输入HELP查看"&lt;&lt;endl;</div><div class="line"> cout&lt;&lt;endl;cout&lt;&lt;endl;cout&lt;&lt;endl;cout&lt;&lt;endl;cout&lt;&lt;endl;</div><div class="line"> cout&lt;&lt;"再此输入你要搬的铁盘数(建议在1--10值间,太多回花费很长时间的)"&lt;&lt;endl;</div><div class="line"> print('=',80);</div><div class="line"> cout&lt;&lt;"&gt;&gt;";</div><div class="line"> cin&gt;&gt;number;</div><div class="line"> cin.get();</div><div class="line"> system("cls");</div><div class="line"> return number;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1704,7 +1739,7 @@ WH_DEBUG                       用来给钩子函数除错。
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-count">92</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

@@ -258,6 +258,130 @@
             
               
                 
+                <a class="post-title-link" href="/2016/11/11/linux-file-compression/" itemprop="url">
+                  Linux下的文件打包和压缩
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-11-11T15:05:48+08:00" content="2016-11-11">
+              2016-11-11
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/工具/" itemprop="url" rel="index">
+                    <span itemprop="name">工具</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/11/11/linux-file-compression/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/11/linux-file-compression/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>为什么要整理一下Linux下的打包和压缩工具呢？原因很简单，因为遇到问题了：<strong>游戏服务器可执行文件、配置和各种资源文件有4G多，每次在做版本的时候，编译完打包压缩要用掉10分钟多</strong>。我在上篇<a href="/2016/10/28/build-system/">C++构建系统选择</a>里面有提到过，200万行的代码编译用时不到10分钟，而现在一个简单的打包压缩竟然占用了10分钟，虽说这个步骤日常开发过程中很少操作，但每次凌晨做版本的时候，由于需求的变更，需要不断地构建、打包、压缩。做版本的同学苦不堪言，所有开发人员也得等着，这样浪费大家宝贵的时间是极度可耻的！遇到问题就要解决问题，问题解决了如果不记下来，下次遇到了又得去折腾了。下面进入正题。</p>
+<p>虽说打包和压缩的原因各种各样，最重要的目的就是：<strong>减少文件的体积，从而节约磁盘空间和网络带宽</strong>。压缩文件的时候，最注重两个因素：<strong>速度</strong>和<strong>压缩比</strong>。慢如蜗牛还是快如闪电？当然选择越快越好、压缩比越高越好。但是鱼与熊掌不可兼得，往往压缩比高的算法，需要的计算量就比较大，花费的时间就比较多。有没有加速的办法呢？</p>
+<p>下面我会介绍一下我所熟知的Linux下的打包压缩工具，并做下对比，给出建议。上面遇到的问题，最后也会给出解决方法。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/11/11/linux-file-compression/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/10/28/build-system/" itemprop="url">
                   C++构建系统的选择
                 </a>
@@ -272,7 +396,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-10-28T00:00:00+09:00" content="2016-10-28">
+            <time itemprop="dateCreated" datetime="2016-10-28T00:00:00+08:00" content="2016-10-28">
               2016-10-28
             </time>
           </span>
@@ -402,7 +526,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-10-30T23:00:00+09:00" content="2015-10-30">
+            <time itemprop="dateCreated" datetime="2015-10-30T22:00:00+08:00" content="2015-10-30">
               2015-10-30
             </time>
           </span>
@@ -525,7 +649,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-10-23T22:25:00+09:00" content="2015-10-23">
+            <time itemprop="dateCreated" datetime="2015-10-23T21:25:00+08:00" content="2015-10-23">
               2015-10-23
             </time>
           </span>
@@ -647,7 +771,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-10-16T10:35:00+09:00" content="2015-10-16">
+            <time itemprop="dateCreated" datetime="2015-10-16T09:35:00+08:00" content="2015-10-16">
               2015-10-16
             </time>
           </span>
@@ -771,7 +895,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-25T21:00:00+09:00" content="2015-09-25">
+            <time itemprop="dateCreated" datetime="2015-09-25T20:00:00+08:00" content="2015-09-25">
               2015-09-25
             </time>
           </span>
@@ -894,7 +1018,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-18T21:00:00+09:00" content="2015-09-18">
+            <time itemprop="dateCreated" datetime="2015-09-18T20:00:00+08:00" content="2015-09-18">
               2015-09-18
             </time>
           </span>
@@ -1017,7 +1141,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-11T21:00:00+09:00" content="2015-09-11">
+            <time itemprop="dateCreated" datetime="2015-09-11T20:00:00+08:00" content="2015-09-11">
               2015-09-11
             </time>
           </span>
@@ -1143,7 +1267,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-08T22:46:00+09:00" content="2015-09-08">
+            <time itemprop="dateCreated" datetime="2015-09-08T21:46:00+08:00" content="2015-09-08">
               2015-09-08
             </time>
           </span>
@@ -1278,7 +1402,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-06T22:46:00+09:00" content="2015-09-06">
+            <time itemprop="dateCreated" datetime="2015-09-06T21:46:00+08:00" content="2015-09-06">
               2015-09-06
             </time>
           </span>
@@ -1379,129 +1503,6 @@
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="//schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2015/08/28/review201508-4/" itemprop="url">
-                  每周回顾：少一点，再少一点
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-08-28T19:00:00+09:00" content="2015-08-28">
-              2015-08-28
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/每周回顾/" itemprop="url" rel="index">
-                    <span itemprop="name">每周回顾</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2015/08/28/review201508-4/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/08/28/review201508-4/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>信息爆炸，知识爆炸，知识量在以指数级上升，据说近几十年的知识量比过去人类整个历史积累的知识量都要多。而我们的大脑的进化速度，完全赶不上知识的增长，互联网时代给予我们太多便利去获得知识了，各种免费资源取之不尽，只要有求知欲，想学习什么可以轻而易举的获取各种资料，包括书籍、课件、视频等等。有时我就在想，人类的某一个领域，甚至某一领域的某一分支的知识会不会复杂到一个人穷尽一生也学习不完的地步？或许知识的分类会更多，会更精细，届时对于那些求知欲强大的人，企图一窥全貌，知道所有细枝末节几乎是不可能的事情了。貌似现在已经是这样了。</p>
-<p>以上是在学习数据挖掘和机器学习时候，碰到很多新知识，随便google一下，又会扯出一堆信息，有感而发。自叹记忆力大不如前，看过就忘，还有悔不该在学校没有深入学几门数学。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2015/08/28/review201508-4/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1547,7 +1548,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">91</span>
+              <span class="site-state-item-count">92</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
